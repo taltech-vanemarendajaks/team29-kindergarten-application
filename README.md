@@ -1,1 +1,1 @@
-# team29-kindergarden-application
+# team29-kindergarten-application
