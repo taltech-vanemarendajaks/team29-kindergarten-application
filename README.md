@@ -15,4 +15,20 @@ In the backend folder create a `.env` file with your local database credentials 
 ### Running the backend application
 In root folder run `docker compose up` to start the database.
 
-Run `gradle bootRun` in `backend` folder to run the project
+Run `gradle bootRun` in `backend` folder to run the project.
+
+---
+
+## Frontend (Next.js)
+
+### Prerequisites
+
+- Node.js (LTS)
+
+### Setup and run
+
+1. Install dependencies: from repo root run `npm install` in the `frontend` folder (or `cd frontend && npm install`).
+2. Start dev server: in `frontend` run `npm run dev`.
+3. Open [http://localhost:3000](http://localhost:3000) in the browser.
+
+Build for production: `npm run build` in `frontend`. Start production server: `npm run start`.
