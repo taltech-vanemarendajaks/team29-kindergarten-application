@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend (Next.js)
 
-## Getting Started
+Frontend part of the project built with Next.js (App Router).
 
-First, run the development server:
+## Run the project
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+After startup, the app is available at [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```text
+frontend/
+|-- app/                         # Main App Router folder (routes, layout, pages)
+|   |-- favicon.ico              # Website icon (favicon)
+|   |-- globals.css              # Global application styles
+|   |-- layout.tsx               # Root layout for all pages
+|   `-- page.tsx                 # Home page (/)
+|
+|-- public/                      # Public static files
+|   |-- file.svg                 # Example static SVG asset
+|   |-- globe.svg                # Example static SVG asset
+|   |-- next.svg                 # Next.js logo
+|   |-- vercel.svg               # Vercel logo
+|   `-- window.svg               # Example static SVG asset
+|
+|-- .gitignore                   # Files and folders excluded from git
+|-- eslint.config.mjs            # ESLint configuration
+|-- next.config.ts               # Next.js configuration
+|-- package.json                 # Project scripts and dependencies
+|-- package-lock.json            # Locked npm dependency versions
+|-- postcss.config.mjs           # PostCSS configuration (CSS processing)
+|-- tsconfig.json                # TypeScript configuration
+`-- README.md                    # Frontend documentation
+```
 
-## Learn More
+## Purpose of key folders
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `app/`: defines application routes and UI structure (pages, layout, styles).
+- `public/`: stores static files that are directly accessible by URL.
+- `.next/` (generated automatically): Next.js build artifacts, should not be committed.
+- `node_modules/` (created after `npm install`): installed dependencies, should not be committed.
