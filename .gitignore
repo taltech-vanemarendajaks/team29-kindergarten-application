@@ -1,6 +1,7 @@
 # IDE
 .idea/
 .vscode/
+.history/
 
 # OS
 .DS_Store
