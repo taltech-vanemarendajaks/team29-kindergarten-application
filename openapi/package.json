@@ -1,0 +1,13 @@
+{
+  "name": "kindergarten-api-contract",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "bundle": "redocly bundle openapi.yaml -o openapi.bundled.yaml",
+    "lint":   "redocly lint openapi.yaml",
+    "watch":  "redocly bundle openapi.yaml -o openapi.bundled.yaml --watch"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.16.0"
+  }
+}

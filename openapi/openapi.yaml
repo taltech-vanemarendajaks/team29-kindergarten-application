@@ -1,0 +1,26 @@
+openapi: 3.1.0
+
+info:
+  title: Kindergarten API
+  version: 0.1.0
+
+servers:
+  - url: http://localhost:8080/api/v1
+
+tags:
+  - name: teachers
+
+paths:
+  /teachers:
+    $ref: './paths/teacher.yaml#/~1teachers'
+  /teachers/{id}:
+    $ref: './paths/teacher.yaml#/~1teachers~1{id}'
+
+components:
+  schemas:
+    TeacherResponse:
+      $ref: './schemas/teacher.yaml#/TeacherResponse'
+    CreateTeacherRequest:
+      $ref: './schemas/teacher.yaml#/CreateTeacherRequest'
+    UpdateTeacherRequest:
+      $ref: './schemas/teacher.yaml#/UpdateTeacherRequest'

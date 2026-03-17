@@ -2,6 +2,10 @@ spring:
   application:
     name: backend
 
+server:
+  servlet:
+    context-path: /api/v1
+
   dotenv:
     path: ../.env
 
