@@ -1,0 +1,77 @@
+/teachers:
+  get:
+    tags: [teachers]
+    operationId: listTeachers
+    summary: List all teachers
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/teacher.yaml#/TeacherResponse'
+
+  post:
+    tags: [teachers]
+    operationId: createTeacher
+    summary: Create a teacher
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/teacher.yaml#/CreateTeacherRequest'
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/teacher.yaml#/TeacherResponse'
+
+/teachers/{id}:
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+
+  get:
+    tags: [teachers]
+    operationId: getTeacher
+    summary: Get a teacher by ID
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/teacher.yaml#/TeacherResponse'
+
+  put:
+    tags: [teachers]
+    operationId: updateTeacher
+    summary: Update a teacher
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/teacher.yaml#/UpdateTeacherRequest'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/teacher.yaml#/TeacherResponse'
+
+  delete:
+    tags: [teachers]
+    operationId: deleteTeacher
+    summary: Soft-delete a teacher
+    responses:
+      '204':
+        description: Deleted

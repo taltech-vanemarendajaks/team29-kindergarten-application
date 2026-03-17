@@ -1,0 +1,130 @@
+openapi: 3.1.0
+info:
+  title: Kindergarten API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080/api/v1
+tags:
+  - name: teachers
+paths:
+  /teachers:
+    get:
+      tags:
+        - teachers
+      operationId: listTeachers
+      summary: List all teachers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeacherResponse'
+    post:
+      tags:
+        - teachers
+      operationId: createTeacher
+      summary: Create a teacher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTeacherRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherResponse'
+  /teachers/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      tags:
+        - teachers
+      operationId: getTeacher
+      summary: Get a teacher by ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherResponse'
+    put:
+      tags:
+        - teachers
+      operationId: updateTeacher
+      summary: Update a teacher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTeacherRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherResponse'
+    delete:
+      tags:
+        - teachers
+      operationId: deleteTeacher
+      summary: Soft-delete a teacher
+      responses:
+        '204':
+          description: Deleted
+components:
+  schemas:
+    TeacherResponse:
+      type: object
+      required:
+        - id
+        - tenantId
+        - firstName
+        - lastName
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        tenantId:
+          type: integer
+          format: int64
+        firstName:
+          type: string
+        lastName:
+          type: string
+    CreateTeacherRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+    UpdateTeacherRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
