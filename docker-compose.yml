@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:18
+    container_name: kindergarten-postgres-db
+    env_file:
+      - ./backend/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  backend:
+    container_name: kindergarten-backend
+    image: vezama/team29-kindergarten-app-backend:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+    env_file:
+      - ./backend/.env
+    ports:
+      - "4000:4000"
+    depends_on:
+      - postgres
+    restart: always
+
+  frontend:
+    container_name: kindergarten-frontend
+    image: vezama/team29-kindergarten-app-frontend:latest
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: "http://backend:4000"
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  postgres_data:
