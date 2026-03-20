@@ -1,0 +1,60 @@
+name: Fullstack CI/CD
+
+on:
+  push:
+    branches: ["1-vz-devops-cicd-basic-pipeline-github"]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/team29-kindergarten-app-frontend:latest
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/team29-kindergarten-app-backend:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /var/www/kindergarten
+
+            export DATABASE_URL=${{ secrets.DATABASE_URL }}
+            export JWT_SECRET=${{ secrets.JWT_SECRET }}
+            export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/team29-kindergarten-app-frontend:latest
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/team29-kindergarten-app-backend:latest
+
+            docker compose down
+            docker compose up -d --force-recreate
