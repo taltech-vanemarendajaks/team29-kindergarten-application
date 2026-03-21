@@ -18,13 +18,16 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v5
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/team29-kindergarten-app-frontend:latest
+          distribution: 'temurin'
+          java-version: '25'
+
+      - name: Build backend JAR
+        run: |
+          cd backend
+          mvn clean package -DskipTests
 
       - name: Build and push backend image
         uses: docker/build-push-action@v5
@@ -33,6 +36,14 @@ jobs:
           file: ./backend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/team29-kindergarten-app-backend:latest
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/team29-kindergarten-app-frontend:latest
 
   deploy:
     needs: build-and-push
