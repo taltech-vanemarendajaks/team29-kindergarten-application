@@ -72,19 +72,12 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          envs: POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,JWT_SECRET,NEXT_PUBLIC_API_URL
           script: |
-            export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            export POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-            export DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }}
-            export JWT_SECRET=${{ secrets.JWT_SECRET }}
-            export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-            export APP_CORS_ALLOWED_ORIGINS=${{ secrets.APP_CORS_ALLOWED_ORIGINS }}
+            docker pull $DOCKERHUB_USERNAME/kindergarten-backend:latest
+            docker pull $DOCKERHUB_USERNAME/kindergarten-frontend:latest
             
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/kindergarten-backend:latest
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/kindergarten-frontend:latest
-            
-            cd /home/${{ secrets.SSH_USER }}/kindergarten
+            cd /home/${SSH_USER}/kindergarten
             docker compose down
             docker compose up -d
+          
