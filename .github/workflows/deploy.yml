@@ -18,6 +18,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # --------------------------
+      # Build & Push Backend Image
+      # --------------------------
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
@@ -29,43 +32,57 @@ jobs:
           cd backend
           ./gradlew build -x test
 
-      - name: Build and push backend image
-        uses: docker/build-push-action@v5
+      - name: Build backend image
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/kindergarten-backend:latest ./backend
+
+      - name: Push backend image
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/kindergarten-backend:latest
+
+      # --------------------------
+      # Build & Push Frontend Image
+      # --------------------------
+      - name: Build frontend image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/kindergarten-frontend:latest \
+            ./frontend
+
+      - name: Push frontend image
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/kindergarten-frontend:latest
+
+      # --------------------------
+      # Upload docker-compose.yml
+      # --------------------------
+      - name: Upload docker-compose.yml
+        uses: appleboy/scp-action@v0.1.4
         with:
-          context: ./backend
-          file: ./backend/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/team29-kindergarten-app-backend:latest
+          host: ${{ secrets.DEPLOYMENT_VM_HOST }}
+          username: ${{ secrets.DEPLOYMENT_VM_USER }}
+          key: ${{ secrets.DEPLOYMENT_SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml"
+          target: "/var/www/kindergarten/"
 
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/team29-kindergarten-app-frontend:latest
-
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Deploy to server via SSH
+      # --------------------------
+      # Deploy to Server
+      # --------------------------
+      - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /var/www/kindergarten
-
-            export DATABASE_URL=${{ secrets.DATABASE_URL }}
+            export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            export POSTGRES_DB=${{ secrets.POSTGRES_DB }}
             export JWT_SECRET=${{ secrets.JWT_SECRET }}
             export NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/team29-kindergarten-app-frontend:latest
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/team29-kindergarten-app-backend:latest
-
+            export APP_CORS_ALLOWED_ORIGINS=${{ secrets.APP_CORS_ALLOWED_ORIGINS }}
+            
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/kindergarten-backend:latest
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/kindergarten-frontend:latest
+            
+            cd /var/www/kindergarten
             docker compose down
-            docker compose up -d --force-recreate
+            docker compose up -d
