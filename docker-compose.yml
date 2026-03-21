@@ -4,22 +4,24 @@ services:
   postgres:
     image: postgres:18
     container_name: kindergarten-postgres-db
-    env_file:
-      - ./backend/.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     restart: always
 
   backend:
     container_name: kindergarten-backend
-    image: vezama/team29-kindergarten-app-backend:latest
+    image: ${DOCKERHUB_USERNAME}/team29-kindergarten-app-backend:latest
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       JWT_SECRET: ${JWT_SECRET}
-    env_file:
-      - ./backend/.env
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "4000:4000"
     depends_on:
@@ -28,14 +30,12 @@ services:
 
   frontend:
     container_name: kindergarten-frontend
-    image: vezama/team29-kindergarten-app-frontend:latest
+    image: ${DOCKERHUB_USERNAME}/team29-kindergarten-app-frontend:latest
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: "http://backend:4000"
-    depends_on:
-      - backend
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     restart: always
 
 volumes:
