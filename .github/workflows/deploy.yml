@@ -61,7 +61,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           source: "docker-compose.yml"
-          target: "/var/www/kindergarten/"
+          target: "/home/${{ secrets.SSH_USER }}/kindergarten/"
 
       # --------------------------
       # Deploy to Server
@@ -83,6 +83,6 @@ jobs:
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/kindergarten-backend:latest
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/kindergarten-frontend:latest
             
-            cd /var/www/kindergarten
+            cd /home/${SSH_USER}/kindergarten
             docker compose down
             docker compose up -d
