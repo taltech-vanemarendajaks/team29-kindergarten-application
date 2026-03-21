@@ -27,7 +27,7 @@ jobs:
       - name: Build backend JAR
         run: |
           cd backend
-          mvn clean package -DskipTests
+          ./gradlew build -x test
 
       - name: Build and push backend image
         uses: docker/build-push-action@v5
