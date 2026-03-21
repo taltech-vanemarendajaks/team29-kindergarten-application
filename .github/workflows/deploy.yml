@@ -83,6 +83,6 @@ jobs:
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/kindergarten-backend:latest
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/kindergarten-frontend:latest
             
-            cd /home/${SSH_USER}/kindergarten
+            cd /home/${{ secrets.SSH_USER }}/kindergarten
             docker compose down
             docker compose up -d
