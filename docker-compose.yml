@@ -16,7 +16,7 @@ services:
 
   backend:
     container_name: kindergarten-backend
-    image: ${DOCKERHUB_USERNAME}/team29-kindergarten-app-backend:latest
+    image: ${DOCKERHUB_USERNAME}/kindergarten-backend:latest
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
@@ -30,7 +30,7 @@ services:
 
   frontend:
     container_name: kindergarten-frontend
-    image: ${DOCKERHUB_USERNAME}/team29-kindergarten-app-frontend:latest
+    image: ${DOCKERHUB_USERNAME}/kindergarten-frontend:latest
     ports:
       - "3000:3000"
     environment:
