@@ -12,10 +12,16 @@
 
 In the backend folder create a `.env` file with your local database credentials using the `.env.example` file as a template.
 
-### Running the backend application
-In root folder run `docker compose up` to start the database.
+### Running the backend application locally
+#### Database
+In root folder run `docker compose -f docker-compose.dev.yml up -d postgres` to start the database.
 
-Run `gradle bootRun` in `backend` folder to run the project.
+In order to stop the database, run `docker compose -f docker-compose.dev.yml down` in the root folder.
+
+#### Backend
+For macOS users, run `gradle bootRun` in `backend` folder to run the project. 
+
+For Windows users, you may need to run `./gradlew bootRun` instead.
 
 ---
 
