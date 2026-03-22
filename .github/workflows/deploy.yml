@@ -2,7 +2,7 @@ name: Fullstack CI/CD
 
 on:
   push:
-    branches: ["1-vz-devops-cicd-basic-pipeline-github"]
+    branches: ["main"]
 
 jobs:
   build-and-push:
