@@ -1,9 +1,10 @@
 # components/ui
 
-Design system foundation primitives (starter general UI set).
+Design system foundation and interaction-layer primitives.
 
-## Available components
+## 1) Foundation components
 
+- `button.tsx` -> `Button`
 - `input.tsx` -> `Input`
 - `textarea.tsx` -> `Textarea`
 - `select.tsx` -> `Select`
@@ -13,14 +14,27 @@ Design system foundation primitives (starter general UI set).
 - `card.tsx` -> `Card`
 - `badge.tsx` -> `Badge`
 - `chip.tsx` -> `Chip`, `Tag`
-- `index.ts` -> public exports
+
+## 2) Interaction layer components
+
+- `dialog.tsx` -> `Dialog`
+- `modal.tsx` -> `Modal`
+- `drawer-panel.tsx` -> `DrawerPanel`
+- `dropdown.tsx` -> `Dropdown`
+- `popover.tsx` -> `Popover`
+- `tooltip.tsx` -> `Tooltip`
+- `tabs.tsx` -> `Tabs`
+
+## Exports
+
+- `index.ts` is the public entry point for all UI components and types.
 
 ## Import pattern
 
 Use central export whenever possible:
 
 ```ts
-import { Input, Select, Checkbox, Card, Badge, Chip, Tag } from "@/src/components/ui";
+import { Button, Input, Dialog, DrawerPanel, Dropdown, Tabs } from "@/src/components/ui";
 ```
 
 ## Notes

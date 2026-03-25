@@ -4,7 +4,9 @@ Reusable UI component library for the frontend.
 
 ## Current structure
 
-- `ui/` - design system foundation primitives used across app/features/widgets.
+- `ui/` - project UI kit:
+  - foundation primitives (`Button`, `Input`, `Card`, `Badge`, ...)
+  - interaction components (`Dialog`, `Modal`, `DrawerPanel`, `Dropdown`, `Popover`, `Tooltip`, `Tabs`)
 
 ## Layer intent
 

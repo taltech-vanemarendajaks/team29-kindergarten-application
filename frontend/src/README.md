@@ -5,7 +5,7 @@ Main source directory for frontend code.
 ## Structure
 
 - `app/` - Next.js routing and layout layer.
-- `components/` - reusable UI component library (design system foundation).
+- `components/` - reusable UI component library (design system foundation + interaction layer).
 - `modules/` - domain-oriented slices (children, teachers, parents, attendance, ...).
 - `features/` - reusable user/business actions that can be plugged into modules/pages.
 - `widgets/` - larger composed UI blocks (dashboard blocks, panels, tables).

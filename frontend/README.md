@@ -40,14 +40,16 @@ Main app frame is in `src/app/main-layout.tsx` and uses:
 ## Design system foundation
 
 Starter UI components are in `src/components/ui`:
-- Input, Textarea, Select
+- Button, Input, Textarea, Select
 - Checkbox, Radio, Switch
 - Card, Badge, Chip (and Tag alias)
+- Dialog, Modal, DrawerPanel
+- Dropdown, Popover, Tooltip, Tabs
 
 Import from one entry point:
 
 ```ts
-import { Input, Select, Card, Chip } from "@/src/components/ui";
+import { Button, Input, Dialog, Dropdown, Tabs } from "@/src/components/ui";
 ```
 
 ## Folder docs
