@@ -1,6 +1,22 @@
 # widgets
 
-Composite UI blocks used on pages.
+Composite page blocks assembled from `features`, `modules`, and `components/ui`.
 
-Widgets are larger than shared UI components and can include multiple
-features, for example dashboard cards, sidebars, tables, and role-specific panels.
+## Examples
+
+- Dashboard summary section
+- Attendance table panel
+- Teacher profile side panel
+- Parent overview card grid
+
+## Suggested structure
+
+```text
+widgets/
+`-- <widget-name>/
+    |-- ui/
+    |-- model/
+    `-- index.ts
+```
+
+Widgets should stay page-facing and orchestration-oriented.
