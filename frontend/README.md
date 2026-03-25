@@ -45,11 +45,15 @@ Starter UI components are in `src/components/ui`:
 - Card, Badge, Chip (and Tag alias)
 - Dialog, Modal, DrawerPanel
 - Dropdown, Popover, Tooltip, Tabs
+- Loader, Spinner, Skeleton
+- EmptyState, ErrorState
+- Toast, Snackbar, Alert
+- ConfirmDialog
 
 Import from one entry point:
 
 ```ts
-import { Button, Input, Dialog, Dropdown, Tabs } from "@/src/components/ui";
+import { Button, Input, Tabs, Toast, ConfirmDialog, EmptyState } from "@/src/components/ui";
 ```
 
 ## Folder docs

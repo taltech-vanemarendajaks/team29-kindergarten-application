@@ -7,6 +7,7 @@ Reusable UI component library for the frontend.
 - `ui/` - project UI kit:
   - foundation primitives (`Button`, `Input`, `Card`, `Badge`, ...)
   - interaction components (`Dialog`, `Modal`, `DrawerPanel`, `Dropdown`, `Popover`, `Tooltip`, `Tabs`)
+  - states/feedback (`Loader`, `Skeleton`, `EmptyState`, `ErrorState`, `Toast`, `ConfirmDialog`)
 
 ## Layer intent
 

@@ -25,6 +25,18 @@ Design system foundation and interaction-layer primitives.
 - `tooltip.tsx` -> `Tooltip`
 - `tabs.tsx` -> `Tabs`
 
+## 4) States and feedback (early mandatory)
+
+- `loader.tsx` -> `Loader`
+- `spinner.tsx` -> `Spinner`
+- `skeleton.tsx` -> `Skeleton`
+- `empty-state.tsx` -> `EmptyState`
+- `error-state.tsx` -> `ErrorState`
+- `alert.tsx` -> `Alert`
+- `snackbar.tsx` -> `Snackbar`
+- `toast.tsx` -> `Toast`
+- `confirm-dialog.tsx` -> `ConfirmDialog`
+
 ## Exports
 
 - `index.ts` is the public entry point for all UI components and types.
@@ -34,7 +46,7 @@ Design system foundation and interaction-layer primitives.
 Use central export whenever possible:
 
 ```ts
-import { Button, Input, Dialog, DrawerPanel, Dropdown, Tabs } from "@/src/components/ui";
+import { Button, Input, Dialog, DrawerPanel, Tabs, Toast, ConfirmDialog } from "@/src/components/ui";
 ```
 
 ## Notes
