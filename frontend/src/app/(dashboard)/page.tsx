@@ -1,6 +1,7 @@
 "use client";
 
-import { Chip, Paper, Stack, Typography } from "@mui/material";
+import Link from "next/link";
+import { Button, Paper, Stack, Typography } from "@mui/material";
 
 export default function HomePage() {
   return (
@@ -8,12 +9,18 @@ export default function HomePage() {
       <Stack spacing={2}>
         <Typography variant="h4">Team 29 Kindergarten Application</Typography>
         <Typography color="text.secondary">
-          Base layout is connected with React MUI and is shared for all pages.
+          Select one of the module pages below.
         </Typography>
         <Stack direction="row" spacing={1}>
-          <Chip color="primary" label="MUI Theme" />
-          <Chip color="secondary" label="CssBaseline" />
-          <Chip variant="outlined" label="Shared Layout" />
+          <Button component={Link} href="/admin-dashboard" variant="contained">
+            Admin Dashboard
+          </Button>
+          <Button component={Link} href="/teacher" variant="outlined">
+            Teacher
+          </Button>
+          <Button component={Link} href="/parent" variant="outlined">
+            Parent
+          </Button>
         </Stack>
       </Stack>
     </Paper>

@@ -2,8 +2,15 @@
 
 Application-level technical infrastructure.
 
-Use this folder for:
-- HTTP clients and API wrappers;
-- providers setup (React Query, theme, auth);
-- environment config and runtime helpers;
-- adapters to external libraries.
+## Put here
+
+- HTTP clients and API base wrappers
+- Providers setup (React Query, theme, auth)
+- Environment/runtime config
+- Adapters to third-party libraries
+
+## Do not put here
+
+- Route-level UI (`app/`)
+- Domain logic (`modules/`)
+- Generic visual components (`components/ui`)

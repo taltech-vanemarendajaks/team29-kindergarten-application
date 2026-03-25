@@ -1,10 +1,6 @@
 # Frontend (Next.js)
 
-Frontend for Team 29 Kindergarten Application built with **Next.js App Router**.
-
-The structure is prepared for the project scope from the assignment: role-based UI,
-domain modules (children, groups, teachers, attendance, parents), and future extensions
-(menu, billing, notifications, reporting).
+Frontend for Team 29 Kindergarten Application built with Next.js App Router and MUI.
 
 ## Run locally
 
@@ -15,38 +11,54 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Frontend skeleton
+## Where things live
 
 ```text
 frontend/
+|-- public/                      # Static assets (served as /...)
 |-- src/
-|   |-- app/                     # Next.js App Router: routes, layout, global styles
-|   |-- modules/                 # Domain modules (children, groups, teachers, ...)
+|   |-- app/                     # Routing, segment layouts, app-level shell parts
+|   |-- components/              # Reusable UI components (design system foundation)
+|   |-- modules/                 # Domain slices (children, teachers, attendance, ...)
 |   |-- features/                # Reusable business features
-|   |-- widgets/                 # Composite UI blocks
-|   |-- shared/                  # Shared UI/components/utils/types
-|   `-- lib/                     # App infrastructure (api clients, providers, config)
-|
-|-- public/                      # Static assets served from root URL
-|
-|-- .gitignore
-|-- eslint.config.mjs
-|-- next.config.ts
+|   |-- widgets/                 # Page-level composed blocks
+|   |-- shared/                  # Shared cross-domain code
+|   `-- lib/                     # Infrastructure (api, providers, config, adapters)
 |-- package.json
-|-- package-lock.json
-|-- postcss.config.mjs
 |-- tsconfig.json
 `-- README.md
 ```
 
-## Why this structure
+## Current app shell
 
-- Keeps **Next.js conventions** (`src/app` + `public`) clean and scalable.
-- Supports modular growth from current monolith stage to modular architecture.
-- Separates routing, domain logic, reusable features, shared code, and technical setup.
-- Makes it easier to map frontend layers to backend domain modules and endpoints.
+Main app frame is in `src/app/main-layout.tsx` and uses:
+- `src/app/header.tsx`
+- `src/app/drawer.tsx`
+- `src/app/footer.tsx`
+- `src/app/navigation.ts`
 
-## Folder-level documentation
+## Design system foundation
 
-Each skeleton folder includes its own `README.md` describing the folder purpose and
-recommended contents.
+Starter UI components are in `src/components/ui`:
+- Button, Input, Textarea, Select
+- Checkbox, Radio, Switch
+- Card, Badge, Chip (and Tag alias)
+- Dialog, Modal, DrawerPanel
+- Dropdown, Popover, Tooltip, Tabs
+- Loader, Spinner, Skeleton
+- EmptyState, ErrorState
+- Toast, Snackbar, Alert
+- ConfirmDialog
+- Table, Pagination
+- SearchInput, Filters
+- NoResults
+
+Import from one entry point:
+
+```ts
+import { SearchInput, Filters, Table, Pagination, NoResults } from "@/src/components/ui";
+```
+
+## Folder docs
+
+Every major folder in `frontend` has its own `README.md` with local rules and examples.
