@@ -8,6 +8,7 @@ Reusable UI component library for the frontend.
   - foundation primitives (`Button`, `Input`, `Card`, `Badge`, ...)
   - interaction components (`Dialog`, `Modal`, `DrawerPanel`, `Dropdown`, `Popover`, `Tooltip`, `Tabs`)
   - states/feedback (`Loader`, `Skeleton`, `EmptyState`, `ErrorState`, `Toast`, `ConfirmDialog`)
+  - data/list (`Table`, `Pagination`, `SearchInput`, `Filters`, `NoResults`)
 
 ## Layer intent
 

@@ -37,6 +37,14 @@ Design system foundation and interaction-layer primitives.
 - `toast.tsx` -> `Toast`
 - `confirm-dialog.tsx` -> `ConfirmDialog`
 
+## 5) Data and list content
+
+- `table.tsx` -> `Table`
+- `pagination.tsx` -> `Pagination`
+- `search-input.tsx` -> `SearchInput`
+- `filters.tsx` -> `Filters`
+- `no-results.tsx` -> `NoResults`
+
 ## Exports
 
 - `index.ts` is the public entry point for all UI components and types.
@@ -46,7 +54,7 @@ Design system foundation and interaction-layer primitives.
 Use central export whenever possible:
 
 ```ts
-import { Button, Input, Dialog, DrawerPanel, Tabs, Toast, ConfirmDialog } from "@/src/components/ui";
+import { Table, Pagination, SearchInput, Filters, NoResults } from "@/src/components/ui";
 ```
 
 ## Notes

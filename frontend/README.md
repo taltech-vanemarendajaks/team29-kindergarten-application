@@ -49,11 +49,14 @@ Starter UI components are in `src/components/ui`:
 - EmptyState, ErrorState
 - Toast, Snackbar, Alert
 - ConfirmDialog
+- Table, Pagination
+- SearchInput, Filters
+- NoResults
 
 Import from one entry point:
 
 ```ts
-import { Button, Input, Tabs, Toast, ConfirmDialog, EmptyState } from "@/src/components/ui";
+import { SearchInput, Filters, Table, Pagination, NoResults } from "@/src/components/ui";
 ```
 
 ## Folder docs
