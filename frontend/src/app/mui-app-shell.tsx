@@ -31,9 +31,9 @@ const theme = createTheme({
 
 const navItems = [
   { href: "/", label: "Home" },
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/group", label: "Group" },
-  { href: "/contact", label: "Contact" },
+  { href: "/admin-dashboard", label: "Admin Dashboard" },
+  { href: "/teacher", label: "Teacher" },
+  { href: "/parent", label: "Parent" },
 ];
 
 type AppShellProps = {
@@ -44,7 +44,9 @@ export default function AppShell({ children }: AppShellProps) {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
+      <Box
+        sx={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}
+      >
         <AppBar position="static">
           <Toolbar sx={{ gap: 2, flexWrap: "wrap" }}>
             <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
