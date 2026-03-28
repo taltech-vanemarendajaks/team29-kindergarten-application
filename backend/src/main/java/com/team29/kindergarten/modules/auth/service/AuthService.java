@@ -5,9 +5,11 @@ import com.team29.kindergarten.modules.auth.dto.LoginRequest;
 import com.team29.kindergarten.modules.auth.dto.RegisterRequest;
 import com.team29.kindergarten.modules.auth.entity.Role;
 import com.team29.kindergarten.modules.auth.entity.User;
+import com.team29.kindergarten.modules.auth.repository.RoleRepository;
 import com.team29.kindergarten.modules.auth.repository.UserRepository;
 import com.team29.kindergarten.security.JwtService;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,13 +21,16 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RoleRepository roleRepository;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
+                       JwtService jwtService,
+                       RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.roleRepository = roleRepository;
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -51,9 +56,8 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setTenantId(request.tenantId());
 
-        Role role = new Role();
-        role.setName(request.role());
-
+        Role role = roleRepository.findByName(request.role())
+                .orElseThrow(() -> new RuntimeException("Role not found"));
         user.setRoles(Set.of(role));
 
         userRepository.save(user);

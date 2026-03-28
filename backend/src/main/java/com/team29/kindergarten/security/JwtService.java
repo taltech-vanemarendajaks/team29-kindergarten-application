@@ -8,6 +8,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -91,4 +92,10 @@ public class JwtService {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+    @PostConstruct
+    public void debug() {
+        System.out.println("JWT SECRET = " + secretKey);
+    }
+
 }
