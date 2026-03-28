@@ -2,8 +2,8 @@ spring:
   application:
     name: backend
 
-  dotenv:
-    path: ../.env
+  config:
+    import: optional:file:.env[.properties]
 
   datasource:
     url: ${SPRING_DATASOURCE_URL}
