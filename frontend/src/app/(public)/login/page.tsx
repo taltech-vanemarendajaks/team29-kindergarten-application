@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Button, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
+import {login} from "@/src/services/auth";
+import {redirectByRole} from "@/src/shared/utils/redirectByRole";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -12,42 +14,13 @@ export default function LoginPage() {
 
     async function handleLogin() {
         try {
-            const response = await fetch("http://localhost:8080/auth/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
-            });
-
-            if (!response.ok) {
-                alert("Invalid credentials");
-                return;
-            }
-
-            const data = await response.json();
+            const data = await login(email, password);
 
             localStorage.setItem("token", data.token);
             localStorage.setItem("tenantId", data.tenantId);
             localStorage.setItem("roles", JSON.stringify(data.roles));
 
-            const roles = data.roles;
-
-            if (roles.includes("SUPER_ADMIN") || roles.includes("KINDERGARTEN_ADMIN")) {
-                router.push("/dashboard/admin");
-                return;
-            }
-
-            if (roles.includes("TEACHER")) {
-                router.push("/dashboard/teacher");
-                return;
-            }
-
-            if (roles.includes("PARENT")) {
-                router.push("/dashboard/parent");
-                return;
-            }
-
-            // fallback
-            router.push("/dashboard");
+            redirectByRole(data.roles, router);
 
         } catch (error) {
             console.error(error);
