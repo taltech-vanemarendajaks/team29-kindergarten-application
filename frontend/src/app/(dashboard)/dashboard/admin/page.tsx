@@ -6,7 +6,7 @@ export default function AdminDashboardPage() {
       <Stack spacing={1}>
         <Typography variant="h4">Admin Dashboard</Typography>
         <Typography color="text.secondary">
-          Placeholder page for the admin-dashboard module.
+          Placeholder page for the admin module.
         </Typography>
       </Stack>
     </Paper>

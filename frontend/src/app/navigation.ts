@@ -5,7 +5,7 @@ export type NavItem = {
 
 export const dashboardNavItems: NavItem[] = [
   { href: "/", label: "Home" },
-  { href: "/admin-dashboard", label: "Admin Dashboard" },
+  { href: "/admin", label: "Admin Dashboard" },
   { href: "/teacher", label: "Teacher" },
   { href: "/parent", label: "Parent" },
 ];

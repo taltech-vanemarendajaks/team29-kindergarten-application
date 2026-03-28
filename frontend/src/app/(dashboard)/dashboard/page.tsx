@@ -12,7 +12,7 @@ export default function HomePage() {
           Select one of the module pages below.
         </Typography>
         <Stack direction="row" spacing={1}>
-          <Button component={Link} href="/admin-dashboard" variant="contained">
+          <Button component={Link} href="/admin" variant="contained">
             Admin Dashboard
           </Button>
           <Button component={Link} href="/teacher" variant="outlined">
