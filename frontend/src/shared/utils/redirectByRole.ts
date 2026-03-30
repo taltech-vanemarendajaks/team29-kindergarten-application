@@ -1,6 +1,6 @@
 export function redirectByRole(roles: string[], router: any) {
     if (roles.includes("SUPER_ADMIN") || roles.includes("KINDERGARTEN_ADMIN")) {
-        router.push("/dashboard/admin-dashboard");
+        router.push("/dashboard/admin");
         return;
     }
 

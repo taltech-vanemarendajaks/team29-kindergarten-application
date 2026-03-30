@@ -2,36 +2,31 @@
 
 import { useState } from "react";
 import { Button, Paper, Stack, TextField, Typography } from "@mui/material";
+import { login } from "@/src/services/auth";
+import { useAuth } from "@/src/context/AuthContext";
 import { useRouter } from "next/navigation";
-import {login} from "@/src/services/auth";
-import {redirectByRole} from "@/src/shared/utils/redirectByRole";
 
 export default function LoginPage() {
+    const { login: saveToken } = useAuth();
     const router = useRouter();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    async function handleLogin() {
+    const handleLogin = async () => {
         try {
-            const data = await login(email, password);
-
-            localStorage.setItem("token", data.token);
-            localStorage.setItem("tenantId", data.tenantId);
-            localStorage.setItem("roles", JSON.stringify(data.roles));
-
-            redirectByRole(data.roles, router);
-
-        } catch (error) {
-            console.error(error);
+            const res = await login(email, password);
+            saveToken(res.token);
+            router.push("/dashboard/parent");
+        } catch {
             alert("Login failed");
         }
-    }
+    };
 
     return (
         <Paper sx={{ maxWidth: 420, mx: "auto", mt: 8, p: 3 }}>
             <Stack spacing={2}>
-                <Typography variant="h4">Login Page</Typography>
+                <Typography variant="h4">Login</Typography>
 
                 <TextField
                     fullWidth

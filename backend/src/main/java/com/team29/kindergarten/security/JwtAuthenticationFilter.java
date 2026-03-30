@@ -34,7 +34,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getServletPath();
-        if (path.equals("/auth/login") || path.equals("/auth/register")) {
+        if (path.startsWith("/auth/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -47,7 +52,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
 
-        String email = jwtService.extractEmail(token);
+        String email;
+        try {
+            email = jwtService.extractEmail(token);
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             User user = userRepository.findByEmail(email)

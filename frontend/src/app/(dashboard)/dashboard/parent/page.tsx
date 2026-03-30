@@ -1,14 +1,12 @@
-import { Paper, Stack, Typography } from "@mui/material";
+"use client";
 
-export default function ParentPage() {
-  return (
-    <Paper elevation={2} sx={{ p: 3 }}>
-      <Stack spacing={1}>
-        <Typography variant="h4">Parent</Typography>
-        <Typography color="text.secondary">
-          Placeholder page for the parent module.
-        </Typography>
-      </Stack>
-    </Paper>
-  );
+import { Protected } from "@/src/components/Protected";
+import { Typography } from "@mui/material";
+
+export default function ParentDashboardPage() {
+    return (
+        <Protected>
+            <Typography variant="h4">Parent dashboard</Typography>
+        </Protected>
+    );
 }

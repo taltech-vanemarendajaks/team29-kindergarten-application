@@ -5,11 +5,11 @@ import com.team29.kindergarten.modules.auth.dto.LoginRequest;
 import com.team29.kindergarten.modules.auth.dto.RegisterRequest;
 import com.team29.kindergarten.modules.auth.entity.Role;
 import com.team29.kindergarten.modules.auth.entity.User;
+import com.team29.kindergarten.modules.auth.entity.enums.RoleName;
 import com.team29.kindergarten.modules.auth.repository.RoleRepository;
 import com.team29.kindergarten.modules.auth.repository.UserRepository;
 import com.team29.kindergarten.security.JwtService;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -45,20 +45,19 @@ public class AuthService {
         return new AuthResponse(
                 token,
                 user.getId(),
-                user.getTenantId(),
                 user.getRoles().stream().map(Role::getName).collect(Collectors.toSet())
         );
     }
 
     public void register(RegisterRequest request) {
         User user = new User();
+        user.setFullName(request.fullName());
         user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));
-        user.setTenantId(request.tenantId());
 
-        Role role = roleRepository.findByName(request.role())
+        Role defaultRole = roleRepository.findByName(RoleName.PARENT)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
-        user.setRoles(Set.of(role));
+        user.setRoles(Set.of(defaultRole));
 
         userRepository.save(user);
     }
@@ -67,7 +66,6 @@ public class AuthService {
         return new AuthResponse(
                 null,
                 user.getId(),
-                user.getTenantId(),
                 user.getRoles().stream().map(Role::getName).collect(Collectors.toSet())
         );
     }

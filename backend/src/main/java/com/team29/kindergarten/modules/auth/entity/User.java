@@ -20,10 +20,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
+    @Column(name = "password", nullable = false)
     private String password;
 
+    @Column(name = "full_name")
+    private String fullName;
+
+    @Column(name = "tenant_id")
     private Long tenantId;
 
     @ManyToMany(fetch = FetchType.EAGER)
