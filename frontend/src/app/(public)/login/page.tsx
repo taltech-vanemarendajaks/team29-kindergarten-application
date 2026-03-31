@@ -5,6 +5,9 @@ import { Button, Paper, Stack, TextField, Typography } from "@mui/material";
 import { login } from "@/src/services/auth";
 import { useAuth } from "@/src/context/AuthContext";
 import { useRouter } from "next/navigation";
+import {jwtDecode} from "jwt-decode";
+import {redirectByRole} from "@/src/shared/utils/redirectByRole";
+import type { MyJwtPayload } from "@/src/context/AuthContext";
 
 export default function LoginPage() {
     const { login: saveToken } = useAuth();
@@ -17,7 +20,8 @@ export default function LoginPage() {
         try {
             const res = await login(email, password);
             saveToken(res.token);
-            router.push("/dashboard/parent");
+            const payload = jwtDecode<MyJwtPayload>(res.token);
+            redirectByRole(payload.roles, router);
         } catch {
             alert("Login failed");
         }

@@ -1,15 +1,28 @@
 "use client";
 
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
+import * as React from "react";
+import { CssBaseline, ThemeProvider } from "@mui/material";
+import { createTheme } from "@mui/material/styles";
+import createCache from "@emotion/cache";
+import { CacheProvider } from "@emotion/react";
 
-const theme = createTheme();
+const theme = createTheme({
+    palette: {
+        mode: "light",
+    },
+});
 
 export default function ThemeRegistry({ children }: { children: React.ReactNode }) {
+    const [cache] = React.useState(() =>
+        createCache({ key: "mui", prepend: true })
+    );
+
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {children}
-        </ThemeProvider>
+        <CacheProvider value={cache}>
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
+                {children}
+            </ThemeProvider>
+        </CacheProvider>
     );
 }

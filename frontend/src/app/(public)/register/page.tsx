@@ -21,7 +21,7 @@ export default function RegisterPage() {
             const auth = await login(email, password);
             saveToken(auth.token);
 
-            router.push("/dashboard/parent");
+            router.push("/parent/dashboard");
         } catch (err) {
             alert("Registration failed");
         }

@@ -11,7 +11,7 @@ export async function register(data: { fullName: string; email: string; password
         throw new Error("Registration failed");
     }
 
-    return response.json(); // { message: "User registered" }
+    return response.json();
 }
 
 export async function login(email: string, password: string) {
@@ -26,4 +26,8 @@ export async function login(email: string, password: string) {
     }
 
     return response.json(); // { token: "..." }
+}
+
+export function logout() {
+    localStorage.removeItem("token");
 }
