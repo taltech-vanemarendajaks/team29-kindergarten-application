@@ -1,0 +1,28 @@
+{
+  "tenant": {
+    "id": "1",
+    "name": "Sunrise Kindergarten"
+  },
+  "parents": [
+    {
+      "id": "11",
+      "tenantId": "1",
+      "email": "parent1@example.com",
+      "phone": "+1-555-0102",
+      "childName": "Mia Brown"
+    },
+    {
+      "id": "12",
+      "tenantId": "1",
+      "email": "parent2@example.com",
+      "phone": "+1-555-0103",
+      "childName": "Liam Green"
+    }
+  ],
+  "monthlyPayments": {
+    "month": "2026-03-01",
+    "paid": 20,
+    "pending": 3,
+    "failed": 1
+  }
+}

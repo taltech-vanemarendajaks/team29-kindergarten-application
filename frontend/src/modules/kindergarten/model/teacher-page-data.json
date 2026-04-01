@@ -1,0 +1,28 @@
+{
+  "tenant": {
+    "id": "1",
+    "name": "Sunrise Kindergarten"
+  },
+  "teachers": [
+    {
+      "id": "21",
+      "tenantId": "1",
+      "firstName": "Anna",
+      "lastName": "Smith",
+      "groupName": "Stars"
+    },
+    {
+      "id": "22",
+      "tenantId": "1",
+      "firstName": "John",
+      "lastName": "Davis",
+      "groupName": "Rainbow"
+    }
+  ],
+  "dailyAttendance": {
+    "date": "2026-03-08",
+    "present": 18,
+    "absent": 2,
+    "sick": 1
+  }
+}

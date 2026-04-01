@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Box, Container, CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 import Drawer from "./drawer";
 import Footer from "./footer";
@@ -37,7 +37,6 @@ export default function MainLayout({
 }: MainLayoutProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const hasNavigation = navItems.length > 0;
-  const resolvedFooterText = useMemo(() => `${new Date().getFullYear()} - ${footerText}`, [footerText]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -54,7 +53,7 @@ export default function MainLayout({
           {children}
         </Container>
 
-        <Footer text={resolvedFooterText} />
+        <Footer text={footerText} />
       </Box>
     </ThemeProvider>
   );
