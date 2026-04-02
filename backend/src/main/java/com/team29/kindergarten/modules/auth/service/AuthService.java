@@ -50,6 +50,10 @@ public class AuthService {
     }
 
     public void register(RegisterRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+
         User user = new User();
         user.setFullName(request.fullName());
         user.setEmail(request.email());

@@ -1,57 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, LoginFormData } from "@/src/validation/loginSchema";
 import { Button, Paper, Stack, TextField, Typography } from "@mui/material";
 import { login } from "@/src/services/auth";
 import { useAuth } from "@/src/context/AuthContext";
 import { useRouter } from "next/navigation";
-import {jwtDecode} from "jwt-decode";
-import {redirectByRole} from "@/src/shared/utils/redirectByRole";
+import { jwtDecode } from "jwt-decode";
+import { redirectByRole } from "@/src/shared/utils/redirectByRole";
 import type { MyJwtPayload } from "@/src/context/AuthContext";
 
 export default function LoginPage() {
     const { login: saveToken } = useAuth();
     const router = useRouter();
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+    } = useForm<LoginFormData>({
+        resolver: zodResolver(loginSchema),
+    });
 
-    const handleLogin = async () => {
+    const onSubmit = async (data: LoginFormData) => {
         try {
-            const res = await login(email, password);
+            const res = await login(data.email, data.password);
             saveToken(res.token);
+
             const payload = jwtDecode<MyJwtPayload>(res.token);
             redirectByRole(payload.roles, router);
+
         } catch {
-            alert("Login failed");
+            alert("Invalid email or password");
         }
     };
 
     return (
         <Paper sx={{ maxWidth: 420, mx: "auto", mt: 8, p: 3 }}>
-            <Stack spacing={2}>
-                <Typography variant="h4">Login</Typography>
+            <form onSubmit={handleSubmit(onSubmit)}>
+                <Stack spacing={2}>
+                    <Typography variant="h4">Login</Typography>
 
-                <TextField
-                    fullWidth
-                    label="Email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
+                    <TextField
+                        label="Email"
+                        {...register("email")}
+                        error={!!errors.email}
+                        helperText={errors.email?.message}
+                    />
 
-                <TextField
-                    fullWidth
-                    label="Password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
+                    <TextField
+                        label="Password"
+                        type="password"
+                        {...register("password")}
+                        error={!!errors.password}
+                        helperText={errors.password?.message}
+                    />
 
-                <Button variant="contained" onClick={handleLogin}>
-                    Sign in
-                </Button>
-            </Stack>
+                    <Button type="submit" variant="contained" disabled={isSubmitting}>
+                        Sign in
+                    </Button>
+                </Stack>
+            </form>
         </Paper>
     );
 }

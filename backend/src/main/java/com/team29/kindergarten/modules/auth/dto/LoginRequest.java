@@ -1,6 +1,10 @@
 package com.team29.kindergarten.modules.auth.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public record LoginRequest(
-        String email,
-        String password
+        @NotBlank @Email String email,
+        @NotBlank @Size(min = 6) String password
 )  {}

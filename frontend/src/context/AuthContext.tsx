@@ -1,6 +1,6 @@
 "use client";
 
-import {createContext, useContext, useEffect, useState} from "react";
+import { createContext, useContext, useEffect, useState, startTransition } from "react";
 import { jwtDecode } from "jwt-decode";
 
 export interface MyJwtPayload {
@@ -18,33 +18,32 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (token: string) => void;
   logout: () => void;
+  hydrated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Load token once, without useEffect
-  const [token, setToken] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("token");
-    }
+  const [token, setToken] = useState<string | null>(null);
+  const [payload, setPayload] = useState<MyJwtPayload | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
-    return null;
-  });
+  useEffect(() => {
+    const stored = localStorage.getItem("token");
 
-  const [payload, setPayload] = useState<MyJwtPayload | null>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("token");
+    startTransition(() => {
       if (stored) {
+        setToken(stored);
         try {
-          return jwtDecode<MyJwtPayload>(stored);
+          setPayload(jwtDecode<MyJwtPayload>(stored));
         } catch {
-          return null;
+          setPayload(null);
         }
       }
-    }
-    return null;
-  });
+
+      setHydrated(true);
+    });
+  }, []);
 
   const login = (newToken: string) => {
     localStorage.setItem("token", newToken);
@@ -69,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             isAuthenticated: !!token,
             login,
             logout,
+            hydrated,
           }}
       >
         {children}
