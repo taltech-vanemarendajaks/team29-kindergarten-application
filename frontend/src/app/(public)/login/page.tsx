@@ -18,6 +18,7 @@ export default function LoginPage() {
     const {
         register,
         handleSubmit,
+        setError,
         formState: { errors, isSubmitting },
     } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
@@ -31,10 +32,14 @@ export default function LoginPage() {
             const payload = jwtDecode<MyJwtPayload>(res.token);
             redirectByRole(payload.roles, router);
 
-        } catch {
-            alert("Invalid email or password");
+        } catch (err: any) {
+            setError("password", {
+                type: "server",
+                message: "Invalid email or password",
+            });
         }
     };
+
 
     return (
         <Paper sx={{ maxWidth: 420, mx: "auto", mt: 8, p: 3 }}>
