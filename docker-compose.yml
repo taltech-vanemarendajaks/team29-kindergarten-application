@@ -23,7 +23,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
     ports:
-      - "4000:4000"
+      - "4000:8080"
     depends_on:
       - postgres
     restart: always
