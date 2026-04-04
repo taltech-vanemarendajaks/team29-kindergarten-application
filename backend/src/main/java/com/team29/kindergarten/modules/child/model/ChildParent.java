@@ -35,7 +35,7 @@ public class ChildParent {
     @EmbeddedId
     private ChildParentId id;
 
-    @Column(name = "tenant_id", nullable = false, updatable = false)
+    @Column(name = "tenant_id", updatable = false)
     private Long tenantId;
 
     @CreationTimestamp

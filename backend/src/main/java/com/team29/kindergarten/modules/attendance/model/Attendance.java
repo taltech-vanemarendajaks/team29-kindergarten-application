@@ -49,7 +49,7 @@ public class Attendance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tenant_id", nullable = false, updatable = false)
+    @Column(name = "tenant_id", updatable = false)
     private Long tenantId;
 
     @ManyToOne(fetch = FetchType.LAZY)

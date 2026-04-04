@@ -73,7 +73,7 @@ CREATE TABLE tenant (
 
 CREATE TABLE parent (
                         id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                        tenant_id  BIGINT NOT NULL,
+                        tenant_id  BIGINT,
                         email      VARCHAR,
                         phone      VARCHAR,
                         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -88,7 +88,7 @@ CREATE TABLE parent (
 
 CREATE TABLE teacher (
                          id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                         tenant_id  BIGINT NOT NULL,
+                         tenant_id  BIGINT,
                          first_name VARCHAR,
                          last_name  VARCHAR,
                          created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -103,7 +103,7 @@ CREATE TABLE teacher (
 
 CREATE TABLE "group" (
                          id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                         tenant_id  BIGINT NOT NULL,
+                         tenant_id  BIGINT,
                          name       VARCHAR,
                          age_range  VARCHAR,
                          teacher_id BIGINT,
@@ -120,7 +120,7 @@ CREATE TABLE "group" (
 
 CREATE TABLE child (
                        id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                       tenant_id  BIGINT NOT NULL,
+                       tenant_id  BIGINT,
                        first_name VARCHAR,
                        last_name  VARCHAR,
                        birth_date DATE,
@@ -137,7 +137,7 @@ CREATE TABLE child (
 -- =========================
 
 CREATE TABLE child_parent (
-                              tenant_id  BIGINT NOT NULL,
+                              tenant_id  BIGINT,
                               child_id   BIGINT NOT NULL,
                               parent_id  BIGINT NOT NULL,
                               created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -155,7 +155,7 @@ CREATE TABLE child_parent (
 
 CREATE TABLE attendance (
                             id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                            tenant_id  BIGINT NOT NULL,
+                            tenant_id  BIGINT,
                             child_id   BIGINT NOT NULL,
                             date       DATE,
                             status     attendance_status,
@@ -173,7 +173,7 @@ CREATE TABLE attendance (
 
 CREATE TABLE payment (
                          id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                         tenant_id  BIGINT NOT NULL,
+                         tenant_id  BIGINT,
                          parent_id  BIGINT NOT NULL,
                          amount     DECIMAL,
                          month      DATE,
@@ -191,7 +191,7 @@ CREATE TABLE payment (
 
 CREATE TABLE menu (
                       id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                      tenant_id  BIGINT NOT NULL,
+                      tenant_id  BIGINT,
                       date       DATE,
                       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
                       updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -205,7 +205,7 @@ CREATE TABLE menu (
 
 CREATE TABLE meal (
                       id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                      tenant_id   BIGINT NOT NULL,
+                      tenant_id   BIGINT,
                       menu_id     BIGINT NOT NULL,
                       meal_type   meal_type,
                       description VARCHAR,
