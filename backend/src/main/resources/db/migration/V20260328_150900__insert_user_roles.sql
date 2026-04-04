@@ -1,0 +1,5 @@
+INSERT INTO ROLES (name)
+VALUES ('SUPER_ADMIN'),
+       ('KINDERGARTEN_ADMIN'),
+       ('TEACHER'),
+       ('PARENT');
