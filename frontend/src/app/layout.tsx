@@ -1,32 +1,17 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import { AuthProvider } from "@/src/context/AuthContext";
+import ThemeRegistry from "@/src/providers/ThemeRegistry";
+import {ReactNode} from "react";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "Kindergarten Application",
-  description: "Team 29 kindergarten management application",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
-      </body>
-    </html>
-  );
+export default function RootLayout({ children }: { children: ReactNode }) {
+    return (
+        <html lang="en">
+        <body>
+        <ThemeRegistry>
+            <AuthProvider>
+                {children}
+            </AuthProvider>
+        </ThemeRegistry>
+        </body>
+        </html>
+    );
 }
