@@ -25,6 +25,9 @@ jwt:
   secret: ${JWT_SECRET} # secret should be more than 32 chars
   expiration: 86400000 # 24 hours
 
+cors:
+  allowed-origins: "http://localhost:3000,https://kindergarten-team29.ddns.net"
+
 logging:
   level:
     root: INFO
