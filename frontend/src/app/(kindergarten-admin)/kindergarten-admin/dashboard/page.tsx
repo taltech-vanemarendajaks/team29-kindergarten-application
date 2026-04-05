@@ -2,7 +2,7 @@
 
 import { Paper, Typography } from "@mui/material";
 
-export default function AdminDashboardPage() {
+export default function KindergartenAdminDashboardPage() {
     return (
         <Paper sx={{ p: 3, borderRadius: 2 }}>
             <Typography variant="h4" fontWeight={700}>

@@ -1,0 +1,206 @@
+"use client";
+
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import { useState } from "react";
+import type { AlertColor } from "@mui/material";
+import { Button, ConfirmDialog, ErrorState, Spinner, Toast } from "@/src/components/ui";
+import { useAuth } from "@/src/context/AuthContext";
+import type { Group, UpdateGroupPayload } from "@/src/modules/groups";
+import { createGroup, deleteGroup, GroupFormDialog, GroupsTable, updateGroup, useGroups } from "@/src/modules/groups";
+import { useTeachers } from "@/src/modules/teachers";
+
+export default function KindergartenAdminGroupsPage() {
+    const { token, tenantId, hydrated } = useAuth();
+    // TODO: Remove this fallback once tenant context is resolved from auth/JWT instead of request params.
+    const resolvedTenantId = tenantId ?? 1;
+    const { groups, loading, error, refetch } = useGroups(resolvedTenantId, token, hydrated);
+    const {
+        teachers,
+        loading: teachersLoading,
+        error: teachersError,
+    } = useTeachers(resolvedTenantId, token, hydrated);
+    const [createDialogOpen, setCreateDialogOpen] = useState(false);
+    const [groupToEdit, setGroupToEdit] = useState<Group | null>(null);
+    const [groupToDelete, setGroupToDelete] = useState<Group | null>(null);
+    const [submitMode, setSubmitMode] = useState<"create" | "edit" | null>(null);
+    const [notification, setNotification] = useState<{
+        open: boolean;
+        message: string;
+        severity: AlertColor;
+    } | null>(null);
+
+    const handleCreate = async (payload: UpdateGroupPayload) => {
+        if (!token) {
+            return;
+        }
+
+        try {
+            setSubmitMode("create");
+            await createGroup(resolvedTenantId, token, payload);
+            await refetch();
+            setCreateDialogOpen(false);
+            setNotification({
+                open: true,
+                message: "Group created successfully",
+                severity: "success",
+            });
+        } catch (err) {
+            console.error(err);
+            setNotification({
+                open: true,
+                message: "Failed to create group",
+                severity: "error",
+            });
+        } finally {
+            setSubmitMode(null);
+        }
+    };
+
+    const handleDelete = async (groupId: number) => {
+        if (!token) {
+            return;
+        }
+
+        try {
+            await deleteGroup(groupId, resolvedTenantId, token);
+            await refetch();
+            setGroupToDelete(null);
+            setNotification({
+                open: true,
+                message: "Group deleted successfully",
+                severity: "success",
+            });
+        } catch (err) {
+            console.error(err);
+            setNotification({
+                open: true,
+                message: "Failed to delete group",
+                severity: "error",
+            });
+        }
+    };
+
+    const handleSave = async (payload: UpdateGroupPayload) => {
+        if (!token || !groupToEdit) {
+            return;
+        }
+
+        try {
+            setSubmitMode("edit");
+            await updateGroup(groupToEdit.id, resolvedTenantId, token, payload);
+            await refetch();
+            setGroupToEdit(null);
+            setNotification({
+                open: true,
+                message: "Group updated successfully",
+                severity: "success",
+            });
+        } catch (err) {
+            console.error(err);
+            setNotification({
+                open: true,
+                message: "Failed to update group",
+                severity: "error",
+            });
+        } finally {
+            setSubmitMode(null);
+        }
+    };
+
+    return (
+        <Paper sx={{p: 3, borderRadius: 1}}>
+            <Stack spacing={2}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Typography variant="h4" fontWeight={700}>
+                        Groups
+                    </Typography>
+                    <Button color="primary" onClick={() => setCreateDialogOpen(true)}>
+                        Add group
+                    </Button>
+                </Stack>
+
+                {loading ? (
+                    <Paper sx={{p: 3, borderRadius: 2}}>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                            <Spinner centered={false} size={24}/>
+                            <Typography>Loading groups...</Typography>
+                        </Stack>
+                    </Paper>
+                ) : error ? (
+                    <ErrorState
+                        title="Failed to load groups"
+                        description={error}
+                        actionLabel="Try again"
+                        onAction={() => {
+                            void refetch();
+                        }}
+                    />
+                ) : (
+                    <GroupsTable
+                        groups={groups}
+                        onEditAction={(group) => setGroupToEdit(group)}
+                        onDeleteAction={(group) => setGroupToDelete(group)}
+                    />
+                )}
+
+                <GroupFormDialog
+                    key={createDialogOpen ? "create-group-open" : "create-group-closed"}
+                    open={createDialogOpen}
+                    title="Add group"
+                    submitLabel="Create"
+                    teachers={teachers}
+                    teachersLoading={teachersLoading}
+                    teachersError={teachersError}
+                    loading={submitMode === "create"}
+                    onCloseAction={() => setCreateDialogOpen(false)}
+                    onSubmitAction={handleCreate}
+                />
+
+                <GroupFormDialog
+                    key={groupToEdit ? `edit-group-${groupToEdit.id}` : "edit-group-closed"}
+                    open={!!groupToEdit}
+                    title="Edit group"
+                    submitLabel="Save"
+                    group={groupToEdit}
+                    teachers={teachers}
+                    teachersLoading={teachersLoading}
+                    teachersError={teachersError}
+                    loading={submitMode === "edit"}
+                    onCloseAction={() => setGroupToEdit(null)}
+                    onSubmitAction={handleSave}
+                />
+
+                <ConfirmDialog
+                    open={!!groupToDelete}
+                    title="Delete group"
+                    message={
+                        groupToDelete
+                            ? `Are you sure you want to delete "${groupToDelete.name}"?`
+                            : ""
+                    }
+                    confirmLabel="Delete"
+                    cancelLabel="Cancel"
+                    onCancel={() => setGroupToDelete(null)}
+                    onConfirm={() => {
+                        if (groupToDelete) {
+                            void handleDelete(groupToDelete.id);
+                        }
+                    }}
+                />
+
+                <Toast
+                    open={!!notification?.open}
+                    onClose={(_, reason) => {
+                        if (reason !== "clickaway") {
+                            setNotification(null);
+                        }
+                    }}
+                    message={notification?.message ?? ""}
+                    severity={notification?.severity ?? "info"}
+                />
+            </Stack>
+        </Paper>
+    );
+}
