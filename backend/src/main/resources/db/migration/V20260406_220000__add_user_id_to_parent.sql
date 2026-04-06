@@ -1,0 +1,1 @@
+ALTER TABLE parent ADD COLUMN user_id BIGINT REFERENCES users(id);

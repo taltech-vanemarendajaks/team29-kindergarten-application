@@ -16,21 +16,27 @@ import org.springframework.stereotype.Service;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.team29.kindergarten.modules.parent.model.Parent;
+import com.team29.kindergarten.modules.parent.repository.ParentRepository;
+
 @Service
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RoleRepository roleRepository;
+    private final ParentRepository parentRepository;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
-                       RoleRepository roleRepository) {
+                       RoleRepository roleRepository,
+                       ParentRepository parentRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.roleRepository = roleRepository;
+        this.parentRepository = parentRepository;
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -49,29 +55,37 @@ public class AuthService {
         );
     }
 
-    public void register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email already exists");
-        }
-
-        User user = new User();
-        user.setFullName(request.fullName());
-        user.setEmail(request.email());
-        user.setPassword(passwordEncoder.encode(request.password()));
-
-        Role defaultRole = roleRepository.findByName(RoleName.PARENT)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
-        user.setRoles(Set.of(defaultRole));
-
-        userRepository.save(user);
+ public void register(RegisterRequest request) {
+    if (userRepository.existsByEmail(request.email())) {
+        throw new IllegalArgumentException("Email already exists");
     }
 
-    public AuthResponse me(User user) {
-        return new AuthResponse(
-                null,
-                user.getId(),
-                user.getRoles().stream().map(Role::getName).collect(Collectors.toSet())
-        );
+    User user = new User();
+    user.setFullName(request.fullName());
+    user.setEmail(request.email());
+    user.setPassword(passwordEncoder.encode(request.password()));
+
+    Role role = roleRepository.findByName(request.role())
+            .orElseThrow(() -> new RuntimeException("Role not found"));
+    user.setRoles(Set.of(role));
+
+    userRepository.save(user);
+
+    if (request.role() == RoleName.PARENT) {
+        Parent parent = Parent.builder()
+                .userId(user.getId())
+                .tenantId(user.getTenantId())
+                .email(user.getEmail())
+                .build();
+        parentRepository.save(parent);
     }
+}
+public AuthResponse me(User user) {
+    return new AuthResponse(
+            null,
+            user.getId(),
+            user.getRoles().stream().map(Role::getName).collect(Collectors.toSet())
+    );
+}
 
 }
