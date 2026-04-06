@@ -23,8 +23,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.List;
+import com.team29.kindergarten.tenant.TenantContext;
 
 @RestController
 @RequestMapping("/api/v1/teachers")
@@ -34,17 +34,15 @@ public class TeacherController {
 
     private final TeacherService teacherService;
 
-    // TODO: Resolve tenantId from the authenticated principal or token instead
-    // of accepting it as a request parameter once auth is implemented.
-
     @GetMapping
     @Operation(summary = "List teachers for a tenant")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Teachers returned successfully")
     })
-    public ResponseEntity<List<TeacherResponseDto>> findAll(@RequestParam Long tenantId) {
-        return ResponseEntity.ok(teacherService.findAll(tenantId));
-    }
+   public ResponseEntity<List<TeacherResponseDto>> findAll() {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.ok(teacherService.findAll(tenantId));
+}
 
     @GetMapping("/{id}")
     @Operation(summary = "Get teacher by ID")
@@ -56,9 +54,10 @@ public class TeacherController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-    public ResponseEntity<TeacherResponseDto> findById(@PathVariable Long id, @RequestParam Long tenantId) {
-        return ResponseEntity.ok(teacherService.findById(id, tenantId));
-    }
+   public ResponseEntity<TeacherResponseDto> findById(@PathVariable Long id) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.ok(teacherService.findById(id, tenantId));
+}
 
     @PostMapping
     @Operation(summary = "Create teacher")
@@ -70,9 +69,10 @@ public class TeacherController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-    public ResponseEntity<TeacherResponseDto> create(@Valid @RequestBody TeacherRequestDto request, @RequestParam Long tenantId) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(teacherService.create(request, tenantId));
-    }
+ public ResponseEntity<TeacherResponseDto> create(@Valid @RequestBody TeacherRequestDto request) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.status(HttpStatus.CREATED).body(teacherService.create(request, tenantId));
+}
 
     @PutMapping("/{id}")
     @Operation(summary = "Update teacher")
@@ -89,13 +89,13 @@ public class TeacherController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-    public ResponseEntity<TeacherResponseDto> update(
-            @PathVariable Long id,
-            @Valid @RequestBody TeacherRequestDto request,
-            @RequestParam Long tenantId
-    ) {
-        return ResponseEntity.ok(teacherService.update(id, request, tenantId));
-    }
+   public ResponseEntity<TeacherResponseDto> update(
+        @PathVariable Long id,
+        @Valid @RequestBody TeacherRequestDto request
+) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.ok(teacherService.update(id, request, tenantId));
+}
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete teacher")
@@ -107,8 +107,10 @@ public class TeacherController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-    public ResponseEntity<Void> delete(@PathVariable Long id, @RequestParam Long tenantId) {
-        teacherService.delete(id, tenantId);
-        return ResponseEntity.noContent().build();
-    }
+  public ResponseEntity<Void> delete(@PathVariable Long id) {
+    Long tenantId = TenantContext.getTenantId();
+    teacherService.delete(id, tenantId);
+    return ResponseEntity.noContent().build();
+}
+
 }
