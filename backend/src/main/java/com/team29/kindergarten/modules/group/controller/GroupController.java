@@ -21,7 +21,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+
+import com.team29.kindergarten.tenant.TenantContext;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -34,17 +35,15 @@ public class GroupController {
 
     private final GroupService groupService;
 
-    // TODO: Resolve tenantId from the authenticated principal or token instead
-    // of accepting it as a request parameter once auth is implemented.
-
     @GetMapping
     @Operation(summary = "List groups for a tenant")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Groups returned successfully")
     })
-    public ResponseEntity<List<GroupResponseDto>> findAll(@RequestParam Long tenantId) {
-        return ResponseEntity.ok(groupService.findAll(tenantId));
-    }
+  public ResponseEntity<List<GroupResponseDto>> findAll() {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.ok(groupService.findAll(tenantId));
+}
 
     @GetMapping("/{id}")
     @Operation(summary = "Get group by ID")
@@ -56,9 +55,10 @@ public class GroupController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-    public ResponseEntity<GroupResponseDto> findById(@PathVariable Long id, @RequestParam Long tenantId) {
-        return ResponseEntity.ok(groupService.findById(id, tenantId));
-    }
+   public ResponseEntity<GroupResponseDto> findById(@PathVariable Long id) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.ok(groupService.findById(id, tenantId));
+}
 
     @PostMapping
     @Operation(summary = "Create group")
@@ -75,9 +75,10 @@ public class GroupController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-    public ResponseEntity<GroupResponseDto> create(@Valid @RequestBody GroupRequestDto request, @RequestParam Long tenantId) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(groupService.create(request, tenantId));
-    }
+  public ResponseEntity<GroupResponseDto> create(@Valid @RequestBody GroupRequestDto request) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.status(HttpStatus.CREATED).body(groupService.create(request, tenantId));
+}
 
     @PutMapping("/{id}")
     @Operation(summary = "Update group")
@@ -94,13 +95,13 @@ public class GroupController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-    public ResponseEntity<GroupResponseDto> update(
-            @PathVariable Long id,
-            @Valid @RequestBody GroupRequestDto request,
-            @RequestParam Long tenantId
-    ) {
-        return ResponseEntity.ok(groupService.update(id, request, tenantId));
-    }
+   public ResponseEntity<GroupResponseDto> update(
+        @PathVariable Long id,
+        @Valid @RequestBody GroupRequestDto request
+) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.ok(groupService.update(id, request, tenantId));
+}
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete group")
@@ -112,8 +113,9 @@ public class GroupController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-    public ResponseEntity<Void> delete(@PathVariable Long id, @RequestParam Long tenantId) {
-        groupService.delete(id, tenantId);
-        return ResponseEntity.noContent().build();
-    }
+   public ResponseEntity<Void> delete(@PathVariable Long id) {
+    Long tenantId = TenantContext.getTenantId();
+    groupService.delete(id, tenantId);
+    return ResponseEntity.noContent().build();
+}
 }

@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import com.team29.kindergarten.tenant.TenantContext;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -36,20 +38,17 @@ public class ParentController {
 
     private final ParentService parentService;
 
-    // TODO: Resolve tenantId from the authenticated principal or token instead
-    // of accepting it as a request parameter once auth is implemented.
-
     @GetMapping
     @Operation(summary = "List parents for a tenant")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Parents returned successfully")
     })
-    public ResponseEntity<Page<ParentResponseDto>> findAll(
-            @RequestParam Long tenantId,
-            @ParameterObject @PageableDefault(size = 20, sort = "email") Pageable pageable
-    ) {
-        return ResponseEntity.ok(parentService.findAll(tenantId, pageable));
-    }
+  public ResponseEntity<Page<ParentResponseDto>> findAll(
+        @ParameterObject @PageableDefault(size = 20, sort = "email") Pageable pageable
+) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.ok(parentService.findAll(tenantId, pageable));
+}
 
     @GetMapping("/{id}")
     @Operation(summary = "Get parent by ID")
@@ -61,9 +60,10 @@ public class ParentController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-    public ResponseEntity<ParentResponseDto> findById(@PathVariable Long id, @RequestParam Long tenantId) {
-        return ResponseEntity.ok(parentService.findById(id, tenantId));
-    }
+   public ResponseEntity<ParentResponseDto> findById(@PathVariable Long id) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.ok(parentService.findById(id, tenantId));
+}
 
     @PostMapping
     @Operation(summary = "Create parent")
@@ -75,9 +75,11 @@ public class ParentController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-    public ResponseEntity<ParentResponseDto> create(@Valid @RequestBody ParentRequestDto request, @RequestParam Long tenantId) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(parentService.create(request, tenantId));
-    }
+    
+public ResponseEntity<ParentResponseDto> create(@Valid @RequestBody ParentRequestDto request) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.status(HttpStatus.CREATED).body(parentService.create(request, tenantId));
+}
 
     @PutMapping("/{id}")
     @Operation(summary = "Update parent")
@@ -94,13 +96,13 @@ public class ParentController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-    public ResponseEntity<ParentResponseDto> update(
-            @PathVariable Long id,
-            @Valid @RequestBody ParentRequestDto request,
-            @RequestParam Long tenantId
-    ) {
-        return ResponseEntity.ok(parentService.update(id, request, tenantId));
-    }
+   public ResponseEntity<ParentResponseDto> update(
+        @PathVariable Long id,
+        @Valid @RequestBody ParentRequestDto request
+) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.ok(parentService.update(id, request, tenantId));
+}
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete parent")
@@ -112,8 +114,9 @@ public class ParentController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-    public ResponseEntity<Void> delete(@PathVariable Long id, @RequestParam Long tenantId) {
-        parentService.delete(id, tenantId);
-        return ResponseEntity.noContent().build();
-    }
+   public ResponseEntity<Void> delete(@PathVariable Long id) {
+    Long tenantId = TenantContext.getTenantId();
+    parentService.delete(id, tenantId);
+    return ResponseEntity.noContent().build();
+}
 }
