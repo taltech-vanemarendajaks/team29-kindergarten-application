@@ -1,22 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { Box, Button, Chip, Paper, Stack, TextField, Typography } from "@mui/material";
 import Dialog from "@/src/components/ui/dialog";
 import Snackbar from "@/src/components/ui/snackbar";
 import { useAuth } from "@/src/context/AuthContext";
-import { createChild } from "@/src/services/children";
+import { ApiRequestError, createChild, getMyParentProfile } from "@/src/services/children";
 import { childSchema, type ChildFormData } from "@/src/validation/childSchema";
 
 export default function ParentDashboardPage() {
-    const { token, tenantId, userId } = useAuth();
+    const { token } = useAuth();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState("");
     const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
+    const [parentId, setParentId] = useState<number | null>(null);
+    const [isParentLoading, setIsParentLoading] = useState(false);
+    const [parentLoadError, setParentLoadError] = useState<string | null>(null);
     const [localChildren, setLocalChildren] = useState<
         Array<ChildFormData & { id: string; source: "api" | "local" }>
     >([]);
@@ -26,7 +30,7 @@ export default function ParentDashboardPage() {
         handleSubmit,
         reset,
         formState: { errors, isSubmitting, isValid },
-    } = useForm<ChildFormData>({
+    } = useForm<z.input<typeof childSchema>, unknown, ChildFormData>({
         resolver: zodResolver(childSchema),
         defaultValues: {
             firstName: "",
@@ -48,6 +52,35 @@ export default function ParentDashboardPage() {
         setSnackbarOpen(true);
     };
 
+    useEffect(() => {
+        if (!token) {
+            setParentId(null);
+            setParentLoadError(null);
+            setIsParentLoading(false);
+            return;
+        }
+
+        const loadParentProfile = async () => {
+            try {
+                setIsParentLoading(true);
+                setParentLoadError(null);
+                const profile = await getMyParentProfile(token);
+                setParentId(profile.id);
+            } catch (error) {
+                setParentId(null);
+                if (error instanceof ApiRequestError && error.status === 404) {
+                    setParentLoadError("Parent profile not found. Ask administrator to create parent record.");
+                    return;
+                }
+                setParentLoadError("Failed to load parent profile. Try again later.");
+            } finally {
+                setIsParentLoading(false);
+            }
+        };
+
+        void loadParentProfile();
+    }, [token]);
+
     const addLocalChild = (data: ChildFormData, source: "api" | "local") => {
         setLocalChildren((prev) => [
             {
@@ -60,22 +93,45 @@ export default function ParentDashboardPage() {
     };
 
     const onSubmit = async (data: ChildFormData) => {
-        if (!token || !tenantId || !userId) {
-            addLocalChild(data, "local");
-            closeDialog();
-            showFeedback("API auth missing. Child created locally for testing.", "success");
+        if (!token) {
+            showFeedback("You need to sign in before adding a child.", "error");
+            return;
+        }
+
+        if (isParentLoading) {
+            showFeedback("Parent profile is still loading. Please wait a moment.", "error");
+            return;
+        }
+
+        if (!parentId) {
+            showFeedback(parentLoadError ?? "Parent profile is not available.", "error");
             return;
         }
 
         try {
-            await createChild(data, token, tenantId, userId);
+            await createChild(data, token, parentId);
             addLocalChild(data, "api");
             closeDialog();
             showFeedback("Child added successfully", "success");
-        } catch {
-            addLocalChild(data, "local");
-            closeDialog();
-            showFeedback("API rejected request. Created locally for testing.", "success");
+        } catch (error) {
+            if (error instanceof ApiRequestError) {
+                if (error.status === 404) {
+                    showFeedback("Parent profile was not found on backend.", "error");
+                    return;
+                }
+
+                if (error.status === 401 || error.status === 403) {
+                    showFeedback("Session expired or access denied. Sign in again.", "error");
+                    return;
+                }
+
+                if (error.status === 400) {
+                    showFeedback(error.message || "Validation failed. Check input values.", "error");
+                    return;
+                }
+            }
+
+            showFeedback("Failed to add child. Please try again.", "error");
         }
     };
 
@@ -89,6 +145,8 @@ export default function ParentDashboardPage() {
                 <Typography>
                     Welcome! Here you can manage your child’s activities.
                 </Typography>
+
+                {parentLoadError ? <Typography color="error.main">{parentLoadError}</Typography> : null}
 
                 <Stack direction="row" spacing={1}>
                     <Button onClick={openDialog} sx={{ alignSelf: "flex-start" }} variant="contained">
@@ -144,7 +202,7 @@ export default function ParentDashboardPage() {
                     {
                         label: "Create",
                         onClick: handleSubmit(onSubmit),
-                        disabled: isSubmitting || !isValid,
+                        disabled: isSubmitting || !isValid || isParentLoading,
                     },
                 ]}
             >

@@ -41,7 +41,7 @@ function getAgeLabel(birthDate: string | null): string {
 }
 
 export default function ParentChildrenPage() {
-    const { token, tenantId } = useAuth();
+    const { token } = useAuth();
     const [tab, setTab] = useState<ProfileTab>("profile");
     const [children, setChildren] = useState<ChildDto[]>([]);
     const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
@@ -51,7 +51,7 @@ export default function ParentChildrenPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!token || !tenantId) {
+        if (!token) {
             setIsLoadingChildren(false);
             return;
         }
@@ -60,7 +60,7 @@ export default function ParentChildrenPage() {
             try {
                 setError(null);
                 setIsLoadingChildren(true);
-                const page = await getChildren(token, tenantId);
+                const page = await getChildren(token);
                 setChildren(page.content);
                 setSelectedChildId(page.content[0]?.id ?? null);
             } catch {
@@ -71,10 +71,10 @@ export default function ParentChildrenPage() {
         };
 
         void loadChildren();
-    }, [token, tenantId]);
+    }, [token]);
 
     useEffect(() => {
-        if (!token || !tenantId || !selectedChildId) {
+        if (!token || !selectedChildId) {
             setSelectedChild(null);
             return;
         }
@@ -82,7 +82,7 @@ export default function ParentChildrenPage() {
         const loadChildProfile = async () => {
             try {
                 setIsLoadingProfile(true);
-                const child = await getChildById(token, selectedChildId, tenantId);
+                const child = await getChildById(token, selectedChildId);
                 setSelectedChild(child);
             } catch {
                 const fallback = children.find((item) => item.id === selectedChildId) ?? null;
@@ -94,7 +94,7 @@ export default function ParentChildrenPage() {
         };
 
         void loadChildProfile();
-    }, [token, tenantId, selectedChildId, children]);
+    }, [token, selectedChildId, children]);
 
     const fullName = useMemo(() => {
         if (!selectedChild) {
@@ -110,7 +110,7 @@ export default function ParentChildrenPage() {
                     Child Profile
                 </Typography>
 
-                {!token || !tenantId ? (
+                {!token ? (
                     <Typography color="text.secondary">
                         Please sign in to load child profiles from the backend.
                     </Typography>
@@ -125,7 +125,7 @@ export default function ParentChildrenPage() {
 
                 {error ? <Typography color="error.main">{error}</Typography> : null}
 
-                {!isLoadingChildren && children.length === 0 && token && tenantId ? (
+                {!isLoadingChildren && children.length === 0 && token ? (
                     <Typography color="text.secondary">
                         No children found yet. Use Add Child from dashboard to create one.
                     </Typography>

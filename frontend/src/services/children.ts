@@ -26,6 +26,29 @@ interface PageResponse<T> {
     number: number;
 }
 
+interface ApiErrorResponse {
+    message?: string;
+}
+
+export interface ParentProfileDto {
+    id: number;
+    tenantId: number;
+    email: string | null;
+    phone: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export class ApiRequestError extends Error {
+    status: number;
+
+    constructor(message: string, status: number) {
+        super(message);
+        this.name = "ApiRequestError";
+        this.status = status;
+    }
+}
+
 function withQuery(path: string, query: Record<string, string | number | undefined>) {
     const search = new URLSearchParams();
 
@@ -38,13 +61,42 @@ function withQuery(path: string, query: Record<string, string | number | undefin
     return `${path}?${search.toString()}`;
 }
 
+async function throwApiError(response: Response, fallbackMessage: string): Promise<never> {
+    let message = fallbackMessage;
+
+    try {
+        const payload = (await response.json()) as ApiErrorResponse;
+        if (payload?.message && payload.message.trim().length > 0) {
+            message = payload.message;
+        }
+    } catch {
+        // ignore JSON parse errors and keep fallback message
+    }
+
+    throw new ApiRequestError(message, response.status);
+}
+
+export async function getMyParentProfile(token: string) {
+    const response = await fetch(`${API_URL}/api/v1/parents/me`, {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        await throwApiError(response, "Failed to load parent profile");
+    }
+
+    return (await response.json()) as ParentProfileDto;
+}
+
 export async function createChild(
     payload: CreateChildPayload,
     token: string,
-    tenantId: number,
     parentId: number
 ) {
-    const response = await fetch(withQuery(`${API_URL}/api/v1/children`, { tenantId, parentId }), {
+    const response = await fetch(withQuery(`${API_URL}/api/v1/children`, { parentId }), {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -54,48 +106,37 @@ export async function createChild(
     });
 
     if (!response.ok) {
-        throw new Error("Failed to create child");
+        await throwApiError(response, "Failed to create child");
     }
 
     return (await response.json()) as ChildDto;
 }
 
-export async function getChildren(
-    token: string,
-    tenantId: number,
-    page = 0,
-    size = 20
-) {
-    const response = await fetch(
-        withQuery(`${API_URL}/api/v1/children`, { tenantId, page, size }),
-        {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-    );
+export async function getChildren(token: string, page = 0, size = 20) {
+    const response = await fetch(withQuery(`${API_URL}/api/v1/children`, { page, size }), {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
 
     if (!response.ok) {
-        throw new Error("Failed to fetch children");
+        await throwApiError(response, "Failed to fetch children");
     }
 
     return (await response.json()) as PageResponse<ChildDto>;
 }
 
-export async function getChildById(token: string, id: number, tenantId: number) {
-    const response = await fetch(
-        withQuery(`${API_URL}/api/v1/children/${id}`, { tenantId }),
-        {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-    );
+export async function getChildById(token: string, id: number) {
+    const response = await fetch(`${API_URL}/api/v1/children/${id}`, {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
 
     if (!response.ok) {
-        throw new Error("Failed to fetch child profile");
+        await throwApiError(response, "Failed to fetch child profile");
     }
 
     return (await response.json()) as ChildDto;
