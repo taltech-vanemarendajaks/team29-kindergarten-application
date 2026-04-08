@@ -5,11 +5,11 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { Box, Button, Chip, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Paper, Stack, TextField, Typography } from "@mui/material";
 import Dialog from "@/src/components/ui/dialog";
 import Snackbar from "@/src/components/ui/snackbar";
 import { useAuth } from "@/src/context/AuthContext";
-import { ApiRequestError, createChild, getMyParentProfile } from "@/src/services/children";
+import { ApiRequestError, ChildDto, createChild, getChildren, getMyParentProfile } from "@/src/services/children";
 import { childSchema, type ChildFormData } from "@/src/validation/childSchema";
 
 export default function ParentDashboardPage() {
@@ -21,9 +21,9 @@ export default function ParentDashboardPage() {
     const [parentId, setParentId] = useState<number | null>(null);
     const [isParentLoading, setIsParentLoading] = useState(false);
     const [parentLoadError, setParentLoadError] = useState<string | null>(null);
-    const [localChildren, setLocalChildren] = useState<
-        Array<ChildFormData & { id: string; source: "api" | "local" }>
-    >([]);
+    const [children, setChildren] = useState<ChildDto[]>([]);
+    const [isChildrenLoading, setIsChildrenLoading] = useState(false);
+    const [childrenLoadError, setChildrenLoadError] = useState<string | null>(null);
 
     const {
         register,
@@ -57,6 +57,9 @@ export default function ParentDashboardPage() {
             setParentId(null);
             setParentLoadError(null);
             setIsParentLoading(false);
+            setChildren([]);
+            setChildrenLoadError(null);
+            setIsChildrenLoading(false);
             return;
         }
 
@@ -81,16 +84,26 @@ export default function ParentDashboardPage() {
         void loadParentProfile();
     }, [token]);
 
-    const addLocalChild = (data: ChildFormData, source: "api" | "local") => {
-        setLocalChildren((prev) => [
-            {
-                ...data,
-                source,
-                id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-            },
-            ...prev,
-        ]);
+    const loadChildren = async (authToken: string) => {
+        try {
+            setIsChildrenLoading(true);
+            setChildrenLoadError(null);
+            const page = await getChildren(authToken);
+            setChildren(page.content);
+        } catch {
+            setChildrenLoadError("Failed to load children from API.");
+        } finally {
+            setIsChildrenLoading(false);
+        }
     };
+
+    useEffect(() => {
+        if (!token) {
+            return;
+        }
+
+        void loadChildren(token);
+    }, [token]);
 
     const onSubmit = async (data: ChildFormData) => {
         if (!token) {
@@ -110,7 +123,7 @@ export default function ParentDashboardPage() {
 
         try {
             await createChild(data, token, parentId);
-            addLocalChild(data, "api");
+            await loadChildren(token);
             closeDialog();
             showFeedback("Child added successfully", "success");
         } catch (error) {
@@ -157,10 +170,25 @@ export default function ParentDashboardPage() {
                     </Button>
                 </Stack>
 
-                {localChildren.length > 0 && (
+                {isChildrenLoading ? (
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <CircularProgress size={18} />
+                        <Typography color="text.secondary">Loading children...</Typography>
+                    </Stack>
+                ) : null}
+
+                {childrenLoadError ? <Typography color="error.main">{childrenLoadError}</Typography> : null}
+
+                {!isChildrenLoading && children.length === 0 && token ? (
+                    <Typography color="text.secondary">
+                        No children found yet. Use Add Child to create one.
+                    </Typography>
+                ) : null}
+
+                {children.length > 0 && (
                     <Stack spacing={1}>
-                        <Typography variant="h6">Children (temporary local list)</Typography>
-                        {localChildren.map((child) => (
+                        <Typography variant="h6">Children</Typography>
+                        {children.map((child) => (
                             <Box
                                 key={child.id}
                                 sx={{
@@ -174,14 +202,17 @@ export default function ParentDashboardPage() {
                                 }}
                             >
                                 <Typography>
-                                    {child.firstName} {child.lastName} - {child.birthDate}
+                                    {child.firstName} {child.lastName} - {child.birthDate ?? "Not set"}
                                     {child.groupId ? ` (Group #${child.groupId})` : ""}
                                 </Typography>
-                                <Chip
-                                    label={child.source === "api" ? "api" : "local/mock"}
-                                    color={child.source === "api" ? "success" : "warning"}
+                                <Button
+                                    component={Link}
+                                    href={`/parent/children?childId=${child.id}`}
+                                    variant="outlined"
                                     size="small"
-                                />
+                                >
+                                    Open
+                                </Button>
                             </Box>
                         ))}
                     </Stack>

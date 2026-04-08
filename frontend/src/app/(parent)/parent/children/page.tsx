@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
     Avatar,
     Box,
@@ -42,6 +43,8 @@ function getAgeLabel(birthDate: string | null): string {
 
 export default function ParentChildrenPage() {
     const { token } = useAuth();
+    const searchParams = useSearchParams();
+    const initialChildIdParam = searchParams.get("childId");
     const [tab, setTab] = useState<ProfileTab>("profile");
     const [children, setChildren] = useState<ChildDto[]>([]);
     const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
@@ -72,6 +75,22 @@ export default function ParentChildrenPage() {
 
         void loadChildren();
     }, [token]);
+
+    useEffect(() => {
+        if (!initialChildIdParam || children.length === 0) {
+            return;
+        }
+
+        const parsedChildId = Number(initialChildIdParam);
+        if (!Number.isInteger(parsedChildId)) {
+            return;
+        }
+
+        const exists = children.some((child) => child.id === parsedChildId);
+        if (exists) {
+            setSelectedChildId(parsedChildId);
+        }
+    }, [initialChildIdParam, children]);
 
     useEffect(() => {
         if (!token || !selectedChildId) {
