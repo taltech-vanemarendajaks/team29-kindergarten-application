@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Box, Button, Chip, Paper, Stack, TextField, Typography } from "@mui/material";
@@ -11,7 +12,7 @@ import { createChild } from "@/src/services/children";
 import { childSchema, type ChildFormData } from "@/src/validation/childSchema";
 
 export default function ParentDashboardPage() {
-    const { token } = useAuth();
+    const { token, tenantId, userId } = useAuth();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -59,7 +60,7 @@ export default function ParentDashboardPage() {
     };
 
     const onSubmit = async (data: ChildFormData) => {
-        if (!token) {
+        if (!token || !tenantId || !userId) {
             addLocalChild(data, "local");
             closeDialog();
             showFeedback("API auth missing. Child created locally for testing.", "success");
@@ -67,7 +68,7 @@ export default function ParentDashboardPage() {
         }
 
         try {
-            await createChild(data, token);
+            await createChild(data, token, tenantId, userId);
             addLocalChild(data, "api");
             closeDialog();
             showFeedback("Child added successfully", "success");
@@ -89,9 +90,14 @@ export default function ParentDashboardPage() {
                     Welcome! Here you can manage your child’s activities.
                 </Typography>
 
-                <Button onClick={openDialog} sx={{ alignSelf: "flex-start" }} variant="contained">
-                    Add Child
-                </Button>
+                <Stack direction="row" spacing={1}>
+                    <Button onClick={openDialog} sx={{ alignSelf: "flex-start" }} variant="contained">
+                        Add Child
+                    </Button>
+                    <Button component={Link} href="/parent/children" variant="outlined">
+                        Open Children Page
+                    </Button>
+                </Stack>
 
                 {localChildren.length > 0 && (
                     <Stack spacing={1}>
@@ -111,6 +117,7 @@ export default function ParentDashboardPage() {
                             >
                                 <Typography>
                                     {child.firstName} {child.lastName} - {child.birthDate}
+                                    {child.groupId ? ` (Group #${child.groupId})` : ""}
                                 </Typography>
                                 <Chip
                                     label={child.source === "api" ? "api" : "local/mock"}
@@ -165,6 +172,17 @@ export default function ParentDashboardPage() {
                         error={!!errors.birthDate}
                         helperText={errors.birthDate?.message}
                         InputLabelProps={{ shrink: true }}
+                        fullWidth
+                    />
+
+                    <TextField
+                        label="Group ID (optional)"
+                        type="number"
+                        {...register("groupId", {
+                            setValueAs: (value) => (value === "" ? undefined : Number(value)),
+                        })}
+                        error={!!errors.groupId}
+                        helperText={errors.groupId?.message}
                         fullWidth
                     />
                 </Stack>
