@@ -65,13 +65,15 @@ public class AuthService {
     user.setEmail(request.email());
     user.setPassword(passwordEncoder.encode(request.password()));
 
-    Role role = roleRepository.findByName(request.role())
+    // Role role = roleRepository.findByName(request.role())
+    Role role = roleRepository.findByName(RoleName.PARENT)
             .orElseThrow(() -> new RuntimeException("Role not found"));
     user.setRoles(Set.of(role));
 
     userRepository.save(user);
 
-    if (request.role() == RoleName.PARENT) {
+    // if (request.role() == RoleName.PARENT) {
+    if (true) {
         Parent parent = Parent.builder()
                 .userId(user.getId())
                 .tenantId(user.getTenantId())
