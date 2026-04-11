@@ -6,19 +6,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class GroupResponseDto {
+public class GroupTeacherSummaryDto {
     private Long id;
-    private Long tenantId;
-    private String name;
-    private String ageRange;
-    private GroupTeacherSummaryDto teacher;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String firstName;
+    private String lastName;
 }
