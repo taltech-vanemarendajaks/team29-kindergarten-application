@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
+    private static final Long DEFAULT_TENANT_ID = 1L;
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -58,6 +60,9 @@ public class AuthService {
         user.setFullName(request.fullName());
         user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));
+        // TODO: Replace the default tenant assignment once parent registration is moved
+        // to a proper multi-tenant onboarding flow.
+        user.setTenantId(DEFAULT_TENANT_ID);
 
         Role defaultRole = roleRepository.findByName(RoleName.PARENT)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
