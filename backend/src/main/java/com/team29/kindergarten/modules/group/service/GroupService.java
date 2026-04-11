@@ -38,6 +38,7 @@ public class GroupService {
     }
 
     public GroupResponseDto create(GroupRequestDto request, Long tenantId) {
+        normalizeRequest(request);
         Group group = groupMapper.toEntity(request);
         group.setTenantId(tenantId);
         applyTeacher(group, request.getTeacherId(), tenantId);
@@ -45,6 +46,7 @@ public class GroupService {
     }
 
     public GroupResponseDto update(Long id, GroupRequestDto request, Long tenantId) {
+        normalizeRequest(request);
         Group group = getGroup(id, tenantId);
         groupMapper.updateEntityFromDto(request, group);
         applyTeacher(group, request.getTeacherId(), tenantId);
@@ -70,5 +72,18 @@ public class GroupService {
 
         Teacher teacher = teacherService.getTeacher(teacherId, tenantId);
         group.setTeacher(teacher);
+    }
+
+    private void normalizeRequest(GroupRequestDto request) {
+        request.setName(normalizeWhitespace(request.getName()));
+        request.setAgeRange(normalizeWhitespace(request.getAgeRange()));
+    }
+
+    private String normalizeWhitespace(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        return value.trim().replaceAll("\\s+", " ");
     }
 }

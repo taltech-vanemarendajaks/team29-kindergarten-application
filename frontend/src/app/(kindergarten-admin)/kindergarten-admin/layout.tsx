@@ -8,7 +8,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     return (
         <RoleGuard allowed={["KINDERGARTEN_ADMIN", "SUPER_ADMIN"]}>
             <MainLayout
-                title="Admin Dashboard"
+                title="Kindergarten Admin"
                 navItems={adminNavItems}
                 footerText="Kindergarten Admin Portal"
             >

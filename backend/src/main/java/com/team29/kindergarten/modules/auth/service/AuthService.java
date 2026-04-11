@@ -21,6 +21,8 @@ import com.team29.kindergarten.modules.parent.repository.ParentRepository;
 
 @Service
 public class AuthService {
+    private static final Long DEFAULT_TENANT_ID = 1L;
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -55,7 +57,7 @@ public class AuthService {
         );
     }
 
- public void register(RegisterRequest request) {
+public void register(RegisterRequest request) {
     if (userRepository.existsByEmail(request.email())) {
         throw new IllegalArgumentException("Email already exists");
     }
@@ -64,24 +66,22 @@ public class AuthService {
     user.setFullName(request.fullName());
     user.setEmail(request.email());
     user.setPassword(passwordEncoder.encode(request.password()));
+    user.setTenantId(DEFAULT_TENANT_ID);
 
-    // Role role = roleRepository.findByName(request.role())
     Role role = roleRepository.findByName(RoleName.PARENT)
             .orElseThrow(() -> new RuntimeException("Role not found"));
     user.setRoles(Set.of(role));
 
     userRepository.save(user);
 
-    // if (request.role() == RoleName.PARENT) {
-    if (true) {
-        Parent parent = Parent.builder()
-                .userId(user.getId())
-                .tenantId(user.getTenantId())
-                .email(user.getEmail())
-                .build();
-        parentRepository.save(parent);
-    }
+    Parent parent = Parent.builder()
+            .userId(user.getId())
+            .tenantId(user.getTenantId())
+            .email(user.getEmail())
+            .build();
+    parentRepository.save(parent);
 }
+
 public AuthResponse me(User user) {
     return new AuthResponse(
             null,
