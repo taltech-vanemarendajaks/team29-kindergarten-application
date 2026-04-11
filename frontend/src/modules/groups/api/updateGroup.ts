@@ -10,11 +10,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function updateGroup(
     groupId: number,
-    tenantId: number,
     token: string,
     payload: UpdateGroupPayload,
 ): Promise<Group> {
-    const response = await fetch(`${API_URL}/api/v1/groups/${groupId}?tenantId=${tenantId}`, {
+    const response = await fetch(`${API_URL}/api/v1/groups/${groupId}`, {
         method: "PUT",
         headers: {
             Authorization: `Bearer ${token}`,

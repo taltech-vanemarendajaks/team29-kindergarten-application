@@ -4,11 +4,10 @@ import type { UpdateGroupPayload } from "./updateGroup";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function createGroup(
-    tenantId: number,
     token: string,
     payload: UpdateGroupPayload,
 ): Promise<Group> {
-    const response = await fetch(`${API_URL}/api/v1/groups?tenantId=${tenantId}`, {
+    const response = await fetch(`${API_URL}/api/v1/groups`, {
         method: "POST",
         headers: {
             Authorization: `Bearer ${token}`,

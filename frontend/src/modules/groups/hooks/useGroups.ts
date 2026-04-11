@@ -4,20 +4,20 @@ import { useEffect, useState } from "react";
 import { getGroups } from "../api/getGroups";
 import type { Group } from "../model/group";
 
-export function useGroups(tenantId: number | null, token: string | null, enabled = true) {
+export function useGroups(token: string | null, enabled = true) {
     const [groups, setGroups] = useState<Group[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const refetch = async () => {
-        if (!enabled || !tenantId || !token) {
+        if (!enabled || !token) {
             return;
         }
 
         try {
             setLoading(true);
             setError(null);
-            const data = await getGroups(tenantId, token);
+            const data = await getGroups(token);
             setGroups(data);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to load groups");
@@ -27,11 +27,10 @@ export function useGroups(tenantId: number | null, token: string | null, enabled
     };
 
     useEffect(() => {
-        if (!enabled || !tenantId || !token) {
+        if (!enabled || !token) {
             return;
         }
         const resolvedToken = token;
-        const resolvedTenantId = tenantId;
 
         let cancelled = false;
 
@@ -39,7 +38,7 @@ export function useGroups(tenantId: number | null, token: string | null, enabled
             try {
                 setLoading(true);
                 setError(null);
-                const data = await getGroups(resolvedTenantId, resolvedToken);
+                const data = await getGroups(resolvedToken);
 
                 if (!cancelled) {
                     setGroups(data);
@@ -60,7 +59,7 @@ export function useGroups(tenantId: number | null, token: string | null, enabled
         return () => {
             cancelled = true;
         };
-    }, [enabled, tenantId, token]);
+    }, [enabled, token]);
 
     return { groups, loading, error, setGroups, refetch };
 }

@@ -4,17 +4,16 @@ import { useEffect, useState } from "react";
 import { getTeachers } from "../api/getTeachers";
 import type { Teacher } from "../model/teacher";
 
-export function useTeachers(tenantId: number | null, token: string | null, enabled = true) {
+export function useTeachers(token: string | null, enabled = true) {
     const [teachers, setTeachers] = useState<Teacher[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!enabled || !tenantId || !token) {
+        if (!enabled || !token) {
             return;
         }
 
-        const resolvedTenantId = tenantId;
         const resolvedToken = token;
         let cancelled = false;
 
@@ -22,7 +21,7 @@ export function useTeachers(tenantId: number | null, token: string | null, enabl
             try {
                 setLoading(true);
                 setError(null);
-                const data = await getTeachers(resolvedTenantId, resolvedToken);
+                const data = await getTeachers(resolvedToken);
 
                 if (!cancelled) {
                     setTeachers(data);
@@ -43,7 +42,7 @@ export function useTeachers(tenantId: number | null, token: string | null, enabl
         return () => {
             cancelled = true;
         };
-    }, [enabled, tenantId, token]);
+    }, [enabled, token]);
 
     return { teachers, loading, error, setTeachers };
 }

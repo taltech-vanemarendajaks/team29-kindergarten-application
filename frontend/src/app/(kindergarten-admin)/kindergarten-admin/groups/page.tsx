@@ -12,15 +12,13 @@ import { createGroup, deleteGroup, GroupFormDialog, GroupsTable, updateGroup, us
 import { useTeachers } from "@/src/modules/teachers";
 
 export default function KindergartenAdminGroupsPage() {
-    const { token, tenantId, hydrated } = useAuth();
-    // TODO: Remove this fallback once tenant context is resolved from auth/JWT instead of request params.
-    const resolvedTenantId = tenantId ?? 1;
-    const { groups, loading, error, refetch } = useGroups(resolvedTenantId, token, hydrated);
+    const { token, hydrated } = useAuth();
+    const { groups, loading, error, refetch } = useGroups(token, hydrated);
     const {
         teachers,
         loading: teachersLoading,
         error: teachersError,
-    } = useTeachers(resolvedTenantId, token, hydrated);
+    } = useTeachers(token, hydrated);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [groupToEdit, setGroupToEdit] = useState<Group | null>(null);
     const [groupToDelete, setGroupToDelete] = useState<Group | null>(null);
@@ -38,7 +36,7 @@ export default function KindergartenAdminGroupsPage() {
 
         try {
             setSubmitMode("create");
-            await createGroup(resolvedTenantId, token, payload);
+            await createGroup(token, payload);
             await refetch();
             setCreateDialogOpen(false);
             setNotification({
@@ -64,7 +62,7 @@ export default function KindergartenAdminGroupsPage() {
         }
 
         try {
-            await deleteGroup(groupId, resolvedTenantId, token);
+            await deleteGroup(groupId, token);
             await refetch();
             setGroupToDelete(null);
             setNotification({
@@ -89,7 +87,7 @@ export default function KindergartenAdminGroupsPage() {
 
         try {
             setSubmitMode("edit");
-            await updateGroup(groupToEdit.id, resolvedTenantId, token, payload);
+            await updateGroup(groupToEdit.id, token, payload);
             await refetch();
             setGroupToEdit(null);
             setNotification({
