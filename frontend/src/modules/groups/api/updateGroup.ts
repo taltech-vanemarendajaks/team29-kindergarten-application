@@ -1,4 +1,5 @@
 import type { Group } from "../model/group";
+import { parseApiError } from "@/src/shared/utils/parseApiError";
 
 export type UpdateGroupPayload = {
     name: string;
@@ -23,7 +24,7 @@ export async function updateGroup(
     });
 
     if (!response.ok) {
-        throw new Error("Failed to update group");
+        throw new Error(await parseApiError(response, "Failed to update group"));
     }
 
     return response.json();

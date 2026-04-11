@@ -1,28 +1,23 @@
 "use client";
 
 import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
-import { useState } from "react";
+import Typography from "@mui/material/Typography";
 import type { AlertColor } from "@mui/material";
+import { useState } from "react";
 import { Button, ConfirmDialog, ErrorState, Pagination, Spinner, Toast } from "@/src/components/ui";
 import { useAuth } from "@/src/context/AuthContext";
-import type { Group, UpdateGroupPayload } from "@/src/modules/groups";
-import { createGroup, deleteGroup, GroupFormDialog, GroupsTable, updateGroup, useGroups } from "@/src/modules/groups";
-import { useTeacherOptions } from "@/src/modules/teachers";
+import { createTeacherUser, deleteTeacherUser, updateTeacherUser } from "@/src/modules/users";
+import type { Teacher } from "@/src/modules/teachers";
+import { TeacherFormDialog, type TeacherFormValues, TeachersTable, useTeachers } from "@/src/modules/teachers";
 
-export default function KindergartenAdminGroupsPage() {
+export default function KindergartenAdminTeachersPage() {
     const { token, hydrated } = useAuth();
     const [page, setPage] = useState(1);
-    const { groups, groupPage, loading, error, refetch } = useGroups(token, page - 1, 10, hydrated);
-    const {
-        teachers,
-        loading: teachersLoading,
-        error: teachersError,
-    } = useTeacherOptions(token, hydrated);
+    const { teachers, teacherPage, loading, error, refetch } = useTeachers(token, page - 1, 10, hydrated);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
-    const [groupToEdit, setGroupToEdit] = useState<Group | null>(null);
-    const [groupToDelete, setGroupToDelete] = useState<Group | null>(null);
+    const [teacherToEdit, setTeacherToEdit] = useState<Teacher | null>(null);
+    const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
     const [submitMode, setSubmitMode] = useState<"create" | "edit" | null>(null);
     const [notification, setNotification] = useState<{
         open: boolean;
@@ -30,19 +25,23 @@ export default function KindergartenAdminGroupsPage() {
         severity: AlertColor;
     } | null>(null);
 
-    const handleCreate = async (payload: UpdateGroupPayload) => {
-        if (!token) {
+    const handleCreate = async (values: TeacherFormValues) => {
+        if (!token || !values.password) {
             return;
         }
 
         try {
             setSubmitMode("create");
-            await createGroup(token, payload);
+            await createTeacherUser(token, {
+                fullName: values.fullName,
+                email: values.email,
+                password: values.password,
+            });
             refetch();
             setCreateDialogOpen(false);
             setNotification({
                 open: true,
-                message: "Group created successfully",
+                message: "Teacher created successfully",
                 severity: "success",
             });
         } catch (err) {
@@ -50,7 +49,7 @@ export default function KindergartenAdminGroupsPage() {
             const details = err instanceof Error ? err.message : null;
             setNotification({
                 open: true,
-                message: details ? `Failed to create group: ${details}` : "Failed to create group",
+                message: details ? `Failed to create teacher: ${details}` : "Failed to create teacher",
                 severity: "error",
             });
         } finally {
@@ -58,44 +57,23 @@ export default function KindergartenAdminGroupsPage() {
         }
     };
 
-    const handleDelete = async (groupId: number) => {
-        if (!token) {
-            return;
-        }
-
-        try {
-            await deleteGroup(groupId, token);
-            refetch();
-            setGroupToDelete(null);
-            setNotification({
-                open: true,
-                message: "Group deleted successfully",
-                severity: "success",
-            });
-        } catch (err) {
-            console.error(err);
-            const details = err instanceof Error ? err.message : null;
-            setNotification({
-                open: true,
-                message: details ? `Failed to delete group: ${details}` : "Failed to delete group",
-                severity: "error",
-            });
-        }
-    };
-
-    const handleSave = async (payload: UpdateGroupPayload) => {
-        if (!token || !groupToEdit) {
+    const handleEdit = async (values: TeacherFormValues) => {
+        if (!token || !teacherToEdit) {
             return;
         }
 
         try {
             setSubmitMode("edit");
-            await updateGroup(groupToEdit.id, token, payload);
+            await updateTeacherUser(teacherToEdit.id, token, {
+                fullName: values.fullName,
+                email: values.email,
+                password: values.password,
+            });
             refetch();
-            setGroupToEdit(null);
+            setTeacherToEdit(null);
             setNotification({
                 open: true,
-                message: "Group updated successfully",
+                message: "Teacher updated successfully",
                 severity: "success",
             });
         } catch (err) {
@@ -103,7 +81,7 @@ export default function KindergartenAdminGroupsPage() {
             const details = err instanceof Error ? err.message : null;
             setNotification({
                 open: true,
-                message: details ? `Failed to update group: ${details}` : "Failed to update group",
+                message: details ? `Failed to update teacher: ${details}` : "Failed to update teacher",
                 severity: "error",
             });
         } finally {
@@ -111,51 +89,73 @@ export default function KindergartenAdminGroupsPage() {
         }
     };
 
+    const handleDelete = async (teacherId: number) => {
+        if (!token) {
+            return;
+        }
+
+        try {
+            await deleteTeacherUser(teacherId, token);
+            refetch();
+            setTeacherToDelete(null);
+            setNotification({
+                open: true,
+                message: "Teacher deleted successfully",
+                severity: "success",
+            });
+        } catch (err) {
+            console.error(err);
+            const details = err instanceof Error ? err.message : null;
+            setNotification({
+                open: true,
+                message: details ? `Failed to delete teacher: ${details}` : "Failed to delete teacher",
+                severity: "error",
+            });
+        }
+    };
+
     return (
-        <Paper sx={{p: 3, borderRadius: 1}}>
+        <Paper sx={{ p: 3, borderRadius: 1 }}>
             <Stack spacing={2}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                     <Typography variant="h4" fontWeight={700}>
-                        Groups
+                        Teachers
                     </Typography>
                     <Button color="primary" onClick={() => setCreateDialogOpen(true)}>
-                        Add group
+                        Add teacher
                     </Button>
                 </Stack>
 
-                {loading && groups.length === 0 ? (
-                    <Paper sx={{p: 3, borderRadius: 2}}>
+                {loading && teachers.length === 0 ? (
+                    <Paper sx={{ p: 3, borderRadius: 2 }}>
                         <Stack direction="row" spacing={2} alignItems="center">
-                            <Spinner centered={false} size={24}/>
-                            <Typography>Loading groups...</Typography>
+                            <Spinner centered={false} size={24} />
+                            <Typography>Loading teachers...</Typography>
                         </Stack>
                     </Paper>
                 ) : error ? (
                     <ErrorState
-                        title="Failed to load groups"
+                        title="Failed to load teachers"
                         description={error}
-                        actionLabel="Try again"
-                        onAction={() => {
-                            void refetch();
-                        }}
+                        actionLabel={undefined}
                     />
                 ) : (
                     <>
-                        <GroupsTable
-                            groups={groups}
-                            onEditAction={(group) => setGroupToEdit(group)}
-                            onDeleteAction={(group) => setGroupToDelete(group)}
+                        <TeachersTable
+                            teachers={teachers}
+                            onEditAction={(teacher) => setTeacherToEdit(teacher)}
+                            onDeleteAction={(teacher) => setTeacherToDelete(teacher)}
                         />
-                        {groupPage && groupPage.totalElements > 0 ? (
+                        {teacherPage && teacherPage.totalElements > 0 ? (
                             <Typography variant="body2" color="text.secondary" align="center">
-                                {groupPage.number * groupPage.size + 1}-
-                                {Math.min((groupPage.number + 1) * groupPage.size, groupPage.totalElements)} of{" "}
-                                {groupPage.totalElements}
+                                {teacherPage.number * teacherPage.size + 1}-
+                                {Math.min((teacherPage.number + 1) * teacherPage.size, teacherPage.totalElements)} of{" "}
+                                {teacherPage.totalElements}
                             </Typography>
                         ) : null}
-                        {(groupPage?.totalPages ?? 0) > 1 ? (
+                        {(teacherPage?.totalPages ?? 0) > 1 ? (
                             <Pagination
-                                count={groupPage?.totalPages ?? 0}
+                                count={teacherPage?.totalPages ?? 0}
                                 page={page}
                                 onChange={(_, value) => setPage(value)}
                             />
@@ -163,47 +163,43 @@ export default function KindergartenAdminGroupsPage() {
                     </>
                 )}
 
-                <GroupFormDialog
-                    key={createDialogOpen ? "create-group-open" : "create-group-closed"}
+                <TeacherFormDialog
+                    key={createDialogOpen ? "create-teacher-open" : "create-teacher-closed"}
                     open={createDialogOpen}
-                    title="Add group"
+                    title="Add teacher"
                     submitLabel="Create"
-                    teachers={teachers}
-                    teachersLoading={teachersLoading}
-                    teachersError={teachersError}
                     loading={submitMode === "create"}
+                    requirePassword
                     onCloseAction={() => setCreateDialogOpen(false)}
                     onSubmitAction={handleCreate}
                 />
 
-                <GroupFormDialog
-                    key={groupToEdit ? `edit-group-${groupToEdit.id}` : "edit-group-closed"}
-                    open={!!groupToEdit}
-                    title="Edit group"
+                <TeacherFormDialog
+                    key={teacherToEdit ? `edit-teacher-${teacherToEdit.id}` : "edit-teacher-closed"}
+                    open={!!teacherToEdit}
+                    title="Edit teacher"
                     submitLabel="Save"
-                    group={groupToEdit}
-                    teachers={teachers}
-                    teachersLoading={teachersLoading}
-                    teachersError={teachersError}
+                    teacher={teacherToEdit}
                     loading={submitMode === "edit"}
-                    onCloseAction={() => setGroupToEdit(null)}
-                    onSubmitAction={handleSave}
+                    requirePassword={false}
+                    onCloseAction={() => setTeacherToEdit(null)}
+                    onSubmitAction={handleEdit}
                 />
 
                 <ConfirmDialog
-                    open={!!groupToDelete}
-                    title="Delete group"
+                    open={!!teacherToDelete}
+                    title="Delete teacher"
                     message={
-                        groupToDelete
-                            ? `Are you sure you want to delete "${groupToDelete.name}"?`
+                        teacherToDelete
+                            ? `Are you sure you want to delete "${teacherToDelete.fullName}"?`
                             : ""
                     }
                     confirmLabel="Delete"
                     cancelLabel="Cancel"
-                    onCancel={() => setGroupToDelete(null)}
+                    onCancel={() => setTeacherToDelete(null)}
                     onConfirm={() => {
-                        if (groupToDelete) {
-                            void handleDelete(groupToDelete.id);
+                        if (teacherToDelete) {
+                            void handleDelete(teacherToDelete.id);
                         }
                     }}
                 />

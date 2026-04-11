@@ -1,7 +1,6 @@
 package com.team29.kindergarten.security;
 
-
-import com.team29.kindergarten.modules.auth.entity.User;
+import com.team29.kindergarten.modules.user.entity.User;
 import java.util.function.Function;
 
 import io.jsonwebtoken.Claims;

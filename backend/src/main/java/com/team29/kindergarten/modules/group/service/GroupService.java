@@ -9,11 +9,12 @@ import com.team29.kindergarten.modules.group.repository.GroupRepository;
 import com.team29.kindergarten.modules.teacher.model.Teacher;
 import com.team29.kindergarten.modules.teacher.service.TeacherService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,11 +26,9 @@ public class GroupService {
     private final TeacherService teacherService;
 
     @Transactional(readOnly = true)
-    public List<GroupResponseDto> findAll(Long tenantId) {
-        return groupRepository.findAllByTenantIdOrderByNameAsc(tenantId)
-                .stream()
-                .map(groupMapper::toResponseDto)
-                .toList();
+    public Page<GroupResponseDto> findAll(Long tenantId, Pageable pageable) {
+        return groupRepository.findAllByTenantId(tenantId, pageable)
+                .map(groupMapper::toResponseDto);
     }
 
     @Transactional(readOnly = true)

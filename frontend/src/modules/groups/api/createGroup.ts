@@ -1,5 +1,6 @@
 import type { Group } from "../model/group";
 import type { UpdateGroupPayload } from "./updateGroup";
+import { parseApiError } from "@/src/shared/utils/parseApiError";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -17,7 +18,7 @@ export async function createGroup(
     });
 
     if (!response.ok) {
-        throw new Error("Failed to create group");
+        throw new Error(await parseApiError(response, "Failed to create group"));
     }
 
     return response.json();
