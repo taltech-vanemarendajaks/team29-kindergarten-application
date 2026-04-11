@@ -8,7 +8,6 @@ export function useTeachers(token: string | null, page: number, size = 10, enabl
         userPage: teacherPage,
         loading,
         error,
-        setUsers: setTeachers,
         refetch,
     } = useUsersByRole(
         token,
@@ -18,15 +17,15 @@ export function useTeachers(token: string | null, page: number, size = 10, enabl
         enabled,
     );
 
-    return { teachers, teacherPage, loading, error, setTeachers, refetch };
+    return { teachers, teacherPage, loading, error, refetch };
 }
 
 export function useTeacherOptions(token: string | null, enabled = true) {
-    const { users: teachers, loading, error, setUsers: setTeachers, refetch } = useUserOptionsByRole(
+    const { users: teachers, loading, error, refetch } = useUserOptionsByRole(
         token,
         "TEACHER",
         enabled,
     );
 
-    return { teachers, loading, error, setTeachers, refetch };
+    return { teachers, loading, error, refetch };
 }

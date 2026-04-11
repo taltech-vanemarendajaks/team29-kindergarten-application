@@ -6,8 +6,9 @@ import com.team29.kindergarten.modules.group.dto.GroupResponseDto;
 import com.team29.kindergarten.modules.group.mapper.GroupMapper;
 import com.team29.kindergarten.modules.group.model.Group;
 import com.team29.kindergarten.modules.group.repository.GroupRepository;
-import com.team29.kindergarten.modules.teacher.model.Teacher;
-import com.team29.kindergarten.modules.teacher.service.TeacherService;
+import com.team29.kindergarten.modules.auth.entity.enums.RoleName;
+import com.team29.kindergarten.modules.user.entity.User;
+import com.team29.kindergarten.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +24,7 @@ public class GroupService {
 
     private final GroupRepository groupRepository;
     private final GroupMapper groupMapper;
-    private final TeacherService teacherService;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public Page<GroupResponseDto> findAll(Long tenantId, Pageable pageable) {
@@ -65,12 +66,13 @@ public class GroupService {
 
     private void applyTeacher(Group group, Long teacherId, Long tenantId) {
         if (teacherId == null) {
-            group.setTeacher(null);
+            group.setTeacherUser(null);
             return;
         }
 
-        Teacher teacher = teacherService.getTeacher(teacherId, tenantId);
-        group.setTeacher(teacher);
+        User teacherUser = userRepository.findByIdAndTenantIdAndRoles_Name(teacherId, tenantId, RoleName.TEACHER)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher user not found: " + teacherId));
+        group.setTeacherUser(teacherUser);
     }
 
     private void normalizeRequest(GroupRequestDto request) {

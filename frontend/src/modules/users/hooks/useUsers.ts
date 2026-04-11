@@ -59,7 +59,6 @@ export function useUsersByRole(
         userPage,
         loading,
         error,
-        setUsers,
         refetch: () => setReloadKey((currentValue) => currentValue + 1),
     };
 }
@@ -109,7 +108,6 @@ export function useUserOptionsByRole(token: string | null, role: string, enabled
         users,
         loading,
         error,
-        setUsers,
         refetch: () => setReloadKey((currentValue) => currentValue + 1),
     };
 }
