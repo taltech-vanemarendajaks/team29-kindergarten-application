@@ -1,7 +1,6 @@
+import { API_URL } from "@/src/shared/constants/api";
 import type { PageResponse } from "@/src/shared/model/page";
 import type { User } from "../model/user";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function getUsersByRole(
     token: string,

@@ -1,8 +1,7 @@
 import type { Group } from "../model/group";
 import type { UpdateGroupPayload } from "./updateGroup";
 import { parseApiError } from "@/src/shared/utils/parseApiError";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { API_URL } from "@/src/shared/constants/api";
 
 export async function createGroup(
     token: string,
