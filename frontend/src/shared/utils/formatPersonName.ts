@@ -23,6 +23,15 @@ export function formatNamePart(value: string): string {
         .join("-");
 }
 
+export function formatFullName(value: string): string {
+    return value
+        .trim()
+        .replace(/\s+/g, " ")
+        .split(" ")
+        .map((part) => formatNamePart(part))
+        .join(" ");
+}
+
 export function formatPersonName({ firstName, lastName }: PersonNameInput): string {
     return `${formatNamePart(firstName)} ${formatNamePart(lastName)}`;
 }

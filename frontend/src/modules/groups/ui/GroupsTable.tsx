@@ -2,7 +2,7 @@
 
 import { EmptyState, Table, TableRowActions } from "@/src/components/ui";
 import type { TableColumn } from "@/src/components/ui";
-import { formatPersonName } from "@/src/shared/utils/formatPersonName";
+import { formatFullName } from "@/src/shared/utils/formatPersonName";
 import type { Group } from "../model/group";
 
 type GroupsTableProps = {
@@ -33,7 +33,7 @@ export default function GroupsTable({ groups, onEditAction, onDeleteAction }: Gr
             label: "Teacher",
             render: (group) =>
                 group.teacher
-                    ? formatPersonName(group.teacher)
+                    ? formatFullName(group.teacher.fullName)
                     : "-",
         },
         {

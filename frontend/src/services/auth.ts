@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { API_URL } from "@/src/shared/constants/api";
 
 export async function register(data: { fullName: string; email: string; password: string }) {
     const response = await fetch(`${API_URL}/auth/register`, {

@@ -5,20 +5,21 @@ import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import { useState } from "react";
 import type { AlertColor } from "@mui/material";
-import { Button, ConfirmDialog, ErrorState, Spinner, Toast } from "@/src/components/ui";
+import { Button, ConfirmDialog, ErrorState, Pagination, Spinner, Toast } from "@/src/components/ui";
 import { useAuth } from "@/src/context/AuthContext";
 import type { Group, UpdateGroupPayload } from "@/src/modules/groups";
 import { createGroup, deleteGroup, GroupFormDialog, GroupsTable, updateGroup, useGroups } from "@/src/modules/groups";
-import { useTeachers } from "@/src/modules/teachers";
+import { useTeacherOptions } from "@/src/modules/teachers";
 
 export default function KindergartenAdminGroupsPage() {
     const { token, hydrated } = useAuth();
-    const { groups, loading, error, refetch } = useGroups(token, hydrated);
+    const [page, setPage] = useState(1);
+    const { groups, groupPage, loading, error, refetch } = useGroups(token, page - 1, 10, hydrated);
     const {
         teachers,
         loading: teachersLoading,
         error: teachersError,
-    } = useTeachers(token, hydrated);
+    } = useTeacherOptions(token, hydrated);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [groupToEdit, setGroupToEdit] = useState<Group | null>(null);
     const [groupToDelete, setGroupToDelete] = useState<Group | null>(null);
@@ -37,7 +38,7 @@ export default function KindergartenAdminGroupsPage() {
         try {
             setSubmitMode("create");
             await createGroup(token, payload);
-            await refetch();
+            refetch();
             setCreateDialogOpen(false);
             setNotification({
                 open: true,
@@ -46,9 +47,10 @@ export default function KindergartenAdminGroupsPage() {
             });
         } catch (err) {
             console.error(err);
+            const details = err instanceof Error ? err.message : null;
             setNotification({
                 open: true,
-                message: "Failed to create group",
+                message: details ? `Failed to create group: ${details}` : "Failed to create group",
                 severity: "error",
             });
         } finally {
@@ -63,7 +65,7 @@ export default function KindergartenAdminGroupsPage() {
 
         try {
             await deleteGroup(groupId, token);
-            await refetch();
+            refetch();
             setGroupToDelete(null);
             setNotification({
                 open: true,
@@ -72,9 +74,10 @@ export default function KindergartenAdminGroupsPage() {
             });
         } catch (err) {
             console.error(err);
+            const details = err instanceof Error ? err.message : null;
             setNotification({
                 open: true,
-                message: "Failed to delete group",
+                message: details ? `Failed to delete group: ${details}` : "Failed to delete group",
                 severity: "error",
             });
         }
@@ -88,7 +91,7 @@ export default function KindergartenAdminGroupsPage() {
         try {
             setSubmitMode("edit");
             await updateGroup(groupToEdit.id, token, payload);
-            await refetch();
+            refetch();
             setGroupToEdit(null);
             setNotification({
                 open: true,
@@ -97,9 +100,10 @@ export default function KindergartenAdminGroupsPage() {
             });
         } catch (err) {
             console.error(err);
+            const details = err instanceof Error ? err.message : null;
             setNotification({
                 open: true,
-                message: "Failed to update group",
+                message: details ? `Failed to update group: ${details}` : "Failed to update group",
                 severity: "error",
             });
         } finally {
@@ -119,7 +123,7 @@ export default function KindergartenAdminGroupsPage() {
                     </Button>
                 </Stack>
 
-                {loading ? (
+                {loading && groups.length === 0 ? (
                     <Paper sx={{p: 3, borderRadius: 2}}>
                         <Stack direction="row" spacing={2} alignItems="center">
                             <Spinner centered={false} size={24}/>
@@ -136,11 +140,27 @@ export default function KindergartenAdminGroupsPage() {
                         }}
                     />
                 ) : (
-                    <GroupsTable
-                        groups={groups}
-                        onEditAction={(group) => setGroupToEdit(group)}
-                        onDeleteAction={(group) => setGroupToDelete(group)}
-                    />
+                    <>
+                        <GroupsTable
+                            groups={groups}
+                            onEditAction={(group) => setGroupToEdit(group)}
+                            onDeleteAction={(group) => setGroupToDelete(group)}
+                        />
+                        {groupPage && groupPage.totalElements > 0 ? (
+                            <Typography variant="body2" color="text.secondary" align="center">
+                                {groupPage.number * groupPage.size + 1}-
+                                {Math.min((groupPage.number + 1) * groupPage.size, groupPage.totalElements)} of{" "}
+                                {groupPage.totalElements}
+                            </Typography>
+                        ) : null}
+                        {(groupPage?.totalPages ?? 0) > 1 ? (
+                            <Pagination
+                                count={groupPage?.totalPages ?? 0}
+                                page={page}
+                                onChange={(_, value) => setPage(value)}
+                            />
+                        ) : null}
+                    </>
                 )}
 
                 <GroupFormDialog

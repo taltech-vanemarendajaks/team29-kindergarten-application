@@ -4,7 +4,7 @@ import com.team29.kindergarten.modules.group.dto.GroupRequestDto;
 import com.team29.kindergarten.modules.group.dto.GroupResponseDto;
 import com.team29.kindergarten.modules.group.dto.GroupTeacherSummaryDto;
 import com.team29.kindergarten.modules.group.model.Group;
-import com.team29.kindergarten.modules.teacher.model.Teacher;
+import com.team29.kindergarten.modules.user.entity.User;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -14,14 +14,14 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 @Mapper(componentModel = "spring")
 public interface GroupMapper {
 
-    @Mapping(target = "teacher", source = "teacher")
+    @Mapping(target = "teacher", source = "teacherUser")
     GroupResponseDto toResponseDto(Group group);
 
-    GroupTeacherSummaryDto toTeacherSummaryDto(Teacher teacher);
+    GroupTeacherSummaryDto toTeacherSummaryDto(User user);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "tenantId", ignore = true)
-    @Mapping(target = "teacher", ignore = true)
+    @Mapping(target = "teacherUser", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
@@ -30,7 +30,7 @@ public interface GroupMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "tenantId", ignore = true)
-    @Mapping(target = "teacher", ignore = true)
+    @Mapping(target = "teacherUser", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)

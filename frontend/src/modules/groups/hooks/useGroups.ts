@@ -1,30 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { PageResponse } from "@/src/shared/model/page";
 import { getGroups } from "../api/getGroups";
 import type { Group } from "../model/group";
 
-export function useGroups(token: string | null, enabled = true) {
+export function useGroups(token: string | null, page: number, size = 10, enabled = true) {
+    const [groupPage, setGroupPage] = useState<PageResponse<Group> | null>(null);
     const [groups, setGroups] = useState<Group[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    const refetch = async () => {
-        if (!enabled || !token) {
-            return;
-        }
-
-        try {
-            setLoading(true);
-            setError(null);
-            const data = await getGroups(token);
-            setGroups(data);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to load groups");
-        } finally {
-            setLoading(false);
-        }
-    };
+    const [reloadKey, setReloadKey] = useState(0);
 
     useEffect(() => {
         if (!enabled || !token) {
@@ -38,10 +24,11 @@ export function useGroups(token: string | null, enabled = true) {
             try {
                 setLoading(true);
                 setError(null);
-                const data = await getGroups(resolvedToken);
+                const data = await getGroups(resolvedToken, page, size);
 
                 if (!cancelled) {
-                    setGroups(data);
+                    setGroupPage(data);
+                    setGroups(data.content);
                 }
             } catch (err) {
                 if (!cancelled) {
@@ -59,7 +46,14 @@ export function useGroups(token: string | null, enabled = true) {
         return () => {
             cancelled = true;
         };
-    }, [enabled, token]);
+    }, [enabled, page, reloadKey, size, token]);
 
-    return { groups, loading, error, setGroups, refetch };
+    return {
+        groups,
+        groupPage,
+        loading,
+        error,
+        setGroups,
+        refetch: () => setReloadKey((currentValue) => currentValue + 1),
+    };
 }

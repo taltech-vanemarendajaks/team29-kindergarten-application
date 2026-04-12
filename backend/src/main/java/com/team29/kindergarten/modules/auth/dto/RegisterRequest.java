@@ -1,10 +1,7 @@
 package com.team29.kindergarten.modules.auth.dto;
 
-import com.team29.kindergarten.modules.auth.entity.enums.RoleName;
-
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record RegisterRequest(
@@ -18,8 +15,6 @@ public record RegisterRequest(
         String email,
 
         @NotBlank(message = "Password is required")
-        @Size(min = 6, max = 100, message = "Password must be at least 6 characters")
-        String password,
-
-        RoleName role
+        @Size(min = 6, max = 50, message = "Password must be between 6 and 50 characters")
+        String password
 ) {}

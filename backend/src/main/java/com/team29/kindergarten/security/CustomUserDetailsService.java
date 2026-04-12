@@ -1,7 +1,7 @@
 package com.team29.kindergarten.security;
 
-import com.team29.kindergarten.modules.auth.entity.User;
-import com.team29.kindergarten.modules.auth.repository.UserRepository;
+import com.team29.kindergarten.modules.user.entity.User;
+import com.team29.kindergarten.modules.user.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

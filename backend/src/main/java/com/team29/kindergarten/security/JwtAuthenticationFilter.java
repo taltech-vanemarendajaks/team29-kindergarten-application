@@ -1,7 +1,7 @@
 package com.team29.kindergarten.security;
 
-import com.team29.kindergarten.modules.auth.entity.User;
-import com.team29.kindergarten.modules.auth.repository.UserRepository;
+import com.team29.kindergarten.modules.user.entity.User;
+import com.team29.kindergarten.modules.user.repository.UserRepository;
 import com.team29.kindergarten.tenant.TenantContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

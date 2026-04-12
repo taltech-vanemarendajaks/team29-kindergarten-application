@@ -1,5 +1,6 @@
 package com.team29.kindergarten.modules.group.controller;
 
+import com.team29.kindergarten.common.dto.PageResponseDto;
 import com.team29.kindergarten.common.exception.ApiErrorResponse;
 import com.team29.kindergarten.modules.group.dto.GroupRequestDto;
 import com.team29.kindergarten.modules.group.dto.GroupResponseDto;
@@ -12,6 +13,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,8 +28,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.team29.kindergarten.tenant.TenantContext;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/groups")
@@ -40,9 +42,11 @@ public class GroupController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Groups returned successfully")
     })
-  public ResponseEntity<List<GroupResponseDto>> findAll() {
+  public ResponseEntity<PageResponseDto<GroupResponseDto>> findAll(
+        @ParameterObject @PageableDefault(size = 20, sort = "name") Pageable pageable
+) {
     Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.ok(groupService.findAll(tenantId));
+    return ResponseEntity.ok(PageResponseDto.from(groupService.findAll(tenantId, pageable)));
 }
 
     @GetMapping("/{id}")
