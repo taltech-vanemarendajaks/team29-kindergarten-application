@@ -1,3 +1,0 @@
-Added a shared `AppProvider` in the root layout to centralize global state providers.
-Introduced `ChildrenContext` for global children data/state and updated parent dashboard/children pages to use it instead of duplicated local fetching.
-Stabilized the parent child-profile page by removing a re-fetch loop that caused UI jumping during profile loading.
