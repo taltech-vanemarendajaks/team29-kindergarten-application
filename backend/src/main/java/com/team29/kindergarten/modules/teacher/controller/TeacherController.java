@@ -26,9 +26,16 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import com.team29.kindergarten.tenant.TenantContext;
 
+/**
+ * @deprecated Legacy endpoints backed by the teacher table.
+ * As decided, teacher and parent accounts should be managed through the users table instead of
+ * separate teacher/parent tables. Do not use these endpoints for new flows; use the user
+ * controller instead. Remove this controller once the remaining teacher-table dependencies are gone.
+ */
 @RestController
 @RequestMapping("/api/v1/teachers")
 @RequiredArgsConstructor
+@Deprecated(since = "2026-04-11", forRemoval = false)
 @Tag(name = "Teachers", description = "Teacher management endpoints")
 public class TeacherController {
 

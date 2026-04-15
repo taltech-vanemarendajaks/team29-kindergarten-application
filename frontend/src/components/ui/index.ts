@@ -79,6 +79,9 @@ export type { ConfirmDialogProps } from "./confirm-dialog";
 export { default as Table } from "./table";
 export type { TableProps, TableColumn } from "./table";
 
+export { default as TableRowActions } from "./table-row-actions";
+export type { TableRowActionsProps } from "./table-row-actions";
+
 export { default as Pagination } from "./pagination";
 export type { PaginationProps } from "./pagination";
 

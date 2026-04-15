@@ -4,33 +4,34 @@ import com.team29.kindergarten.modules.auth.dto.AuthResponse;
 import com.team29.kindergarten.modules.auth.dto.LoginRequest;
 import com.team29.kindergarten.modules.auth.dto.RegisterRequest;
 import com.team29.kindergarten.modules.auth.entity.Role;
-import com.team29.kindergarten.modules.auth.entity.User;
-import com.team29.kindergarten.modules.auth.entity.enums.RoleName;
-import com.team29.kindergarten.modules.auth.repository.RoleRepository;
-import com.team29.kindergarten.modules.auth.repository.UserRepository;
+import com.team29.kindergarten.modules.user.dto.CreateUserRequestDto;
+import com.team29.kindergarten.modules.user.entity.User;
+import com.team29.kindergarten.modules.user.repository.UserRepository;
+import com.team29.kindergarten.modules.user.service.UserService;
 import com.team29.kindergarten.security.JwtService;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
+    private static final Long DEFAULT_TENANT_ID = 1L;
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final RoleRepository roleRepository;
+    private final UserService userService;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
-                       RoleRepository roleRepository) {
+                       UserService userService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
-        this.roleRepository = roleRepository;
+        this.userService = userService;
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -50,20 +51,13 @@ public class AuthService {
     }
 
     public void register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email already exists");
-        }
-
-        User user = new User();
-        user.setFullName(request.fullName());
-        user.setEmail(request.email());
-        user.setPassword(passwordEncoder.encode(request.password()));
-
-        Role defaultRole = roleRepository.findByName(RoleName.PARENT)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
-        user.setRoles(Set.of(defaultRole));
-
-        userRepository.save(user);
+        // TODO: Replace the default tenant assignment once parent registration is moved
+        // to a proper multi-tenant onboarding flow.
+        userService.createParentUser(DEFAULT_TENANT_ID, CreateUserRequestDto.builder()
+                .fullName(request.fullName())
+                .email(request.email())
+                .password(request.password())
+                .build());
     }
 
     public AuthResponse me(User user) {

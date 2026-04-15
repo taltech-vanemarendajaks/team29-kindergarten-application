@@ -1,7 +1,7 @@
 package com.team29.kindergarten.modules.parent.controller;
 
 import com.team29.kindergarten.common.exception.ApiErrorResponse;
-import com.team29.kindergarten.modules.auth.entity.User;
+import com.team29.kindergarten.modules.user.entity.User;
 import com.team29.kindergarten.modules.parent.dto.ParentRequestDto;
 import com.team29.kindergarten.modules.parent.dto.ParentResponseDto;
 import com.team29.kindergarten.modules.parent.service.ParentService;

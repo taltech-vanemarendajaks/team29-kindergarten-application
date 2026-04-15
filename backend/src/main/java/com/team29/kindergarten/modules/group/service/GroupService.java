@@ -6,14 +6,16 @@ import com.team29.kindergarten.modules.group.dto.GroupResponseDto;
 import com.team29.kindergarten.modules.group.mapper.GroupMapper;
 import com.team29.kindergarten.modules.group.model.Group;
 import com.team29.kindergarten.modules.group.repository.GroupRepository;
-import com.team29.kindergarten.modules.teacher.model.Teacher;
-import com.team29.kindergarten.modules.teacher.service.TeacherService;
+import com.team29.kindergarten.modules.auth.entity.enums.RoleName;
+import com.team29.kindergarten.modules.user.entity.User;
+import com.team29.kindergarten.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,14 +24,12 @@ public class GroupService {
 
     private final GroupRepository groupRepository;
     private final GroupMapper groupMapper;
-    private final TeacherService teacherService;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
-    public List<GroupResponseDto> findAll(Long tenantId) {
-        return groupRepository.findAllByTenantIdOrderByNameAsc(tenantId)
-                .stream()
-                .map(groupMapper::toResponseDto)
-                .toList();
+    public Page<GroupResponseDto> findAll(Long tenantId, Pageable pageable) {
+        return groupRepository.findAllByTenantId(tenantId, pageable)
+                .map(groupMapper::toResponseDto);
     }
 
     @Transactional(readOnly = true)
@@ -38,6 +38,7 @@ public class GroupService {
     }
 
     public GroupResponseDto create(GroupRequestDto request, Long tenantId) {
+        normalizeRequest(request);
         Group group = groupMapper.toEntity(request);
         group.setTenantId(tenantId);
         applyTeacher(group, request.getTeacherId(), tenantId);
@@ -45,6 +46,7 @@ public class GroupService {
     }
 
     public GroupResponseDto update(Long id, GroupRequestDto request, Long tenantId) {
+        normalizeRequest(request);
         Group group = getGroup(id, tenantId);
         groupMapper.updateEntityFromDto(request, group);
         applyTeacher(group, request.getTeacherId(), tenantId);
@@ -64,11 +66,25 @@ public class GroupService {
 
     private void applyTeacher(Group group, Long teacherId, Long tenantId) {
         if (teacherId == null) {
-            group.setTeacher(null);
+            group.setTeacherUser(null);
             return;
         }
 
-        Teacher teacher = teacherService.getTeacher(teacherId, tenantId);
-        group.setTeacher(teacher);
+        User teacherUser = userRepository.findByIdAndTenantIdAndRoles_Name(teacherId, tenantId, RoleName.TEACHER)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher user not found: " + teacherId));
+        group.setTeacherUser(teacherUser);
+    }
+
+    private void normalizeRequest(GroupRequestDto request) {
+        request.setName(normalizeWhitespace(request.getName()));
+        request.setAgeRange(normalizeWhitespace(request.getAgeRange()));
+    }
+
+    private String normalizeWhitespace(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        return value.trim().replaceAll("\\s+", " ");
     }
 }

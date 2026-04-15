@@ -18,7 +18,7 @@ public class GroupResponseDto {
     private Long tenantId;
     private String name;
     private String ageRange;
-    private Long teacherId;
+    private GroupTeacherSummaryDto teacher;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
