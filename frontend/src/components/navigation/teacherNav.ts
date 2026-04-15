@@ -4,5 +4,5 @@ export const teacherNavItems: NavItem[] = [
     { label: "Dashboard", href: "/teacher/dashboard" },
     { label: "Groups", href: "/teacher/groups" },
     { label: "Attendance", href: "/teacher/attendance" },
-    { label: "Messages", href: "/teacher/messages" },
+    { label: "Journal", href: "/teacher/journal" },
 ];

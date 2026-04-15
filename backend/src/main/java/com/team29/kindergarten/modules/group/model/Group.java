@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
  * If there is a need to query deleted groups, use a native query; this bypasses Hibernate's entity processing
  */
 @Entity
-@Table(name = "\"group\"")
+@Table(name = "kindergarten_group")
 @SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
