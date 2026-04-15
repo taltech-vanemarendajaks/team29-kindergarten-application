@@ -19,6 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Set;
 
+import com.team29.kindergarten.modules.parent.model.Parent;
+import com.team29.kindergarten.modules.parent.repository.ParentRepository;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -28,6 +31,7 @@ public class UserService {
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ParentRepository parentRepository;
 
     public Page<UserResponseDto> findUsersByRole(Long tenantId, RoleName roleName, Pageable pageable) {
         return userRepository.findDistinctByTenantIdAndRoles_NameOrderByFullNameAsc(tenantId, roleName, pageable)
@@ -48,8 +52,15 @@ public class UserService {
 
     @Transactional
     public void createParentUser(Long tenantId, CreateUserRequestDto request) {
-        createUserWithRole(tenantId, request, RoleName.PARENT);
-    }
+        UserResponseDto userResponse = createUserWithRole(tenantId, request, RoleName.PARENT);
+
+    Parent parent = Parent.builder()
+            .userId(userResponse.getId())
+            .tenantId(tenantId)
+            .email(userResponse.getEmail())
+            .build();
+    parentRepository.save(parent);
+}
 
     @Transactional
     public UserResponseDto updateTeacherUser(Long id, Long tenantId, UpdateUserRequestDto request) {
