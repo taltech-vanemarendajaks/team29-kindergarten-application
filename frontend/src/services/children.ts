@@ -14,6 +14,7 @@ export interface ChildDto {
     lastName: string;
     birthDate: string | null;
     groupId: number | null;
+    groupName: string | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -28,15 +29,6 @@ interface PageResponse<T> {
 
 interface ApiErrorResponse {
     message?: string;
-}
-
-export interface ParentProfileDto {
-    id: number;
-    tenantId: number;
-    email: string | null;
-    phone: string | null;
-    createdAt: string;
-    updatedAt: string;
 }
 
 export class ApiRequestError extends Error {
@@ -76,27 +68,11 @@ async function throwApiError(response: Response, fallbackMessage: string): Promi
     throw new ApiRequestError(message, response.status);
 }
 
-export async function getMyParentProfile(token: string) {
-    const response = await fetch(`${API_URL}/api/v1/parents/me`, {
-        method: "GET",
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
-
-    if (!response.ok) {
-        await throwApiError(response, "Failed to load parent profile");
-    }
-
-    return (await response.json()) as ParentProfileDto;
-}
-
 export async function createChild(
     payload: CreateChildPayload,
-    token: string,
-    parentId: number
+    token: string
 ) {
-    const response = await fetch(withQuery(`${API_URL}/api/v1/children`, { parentId }), {
+    const response = await fetch(`${API_URL}/api/v1/children`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

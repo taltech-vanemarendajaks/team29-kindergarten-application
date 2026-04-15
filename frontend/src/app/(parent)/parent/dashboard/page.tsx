@@ -9,7 +9,7 @@ import { Box, Button, CircularProgress, Paper, Stack, TextField, Typography } fr
 import Dialog from "@/src/components/ui/dialog";
 import Snackbar from "@/src/components/ui/snackbar";
 import { useAuth } from "@/src/context/AuthContext";
-import { ApiRequestError, ChildDto, createChild, getChildren, getMyParentProfile } from "@/src/services/children";
+import { ApiRequestError, ChildDto, createChild, getChildren } from "@/src/services/children";
 import { childSchema, type ChildFormData } from "@/src/validation/childSchema";
 
 export default function ParentDashboardPage() {
@@ -18,9 +18,6 @@ export default function ParentDashboardPage() {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState("");
     const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
-    const [parentId, setParentId] = useState<number | null>(null);
-    const [isParentLoading, setIsParentLoading] = useState(false);
-    const [parentLoadError, setParentLoadError] = useState<string | null>(null);
     const [children, setChildren] = useState<ChildDto[]>([]);
     const [isChildrenLoading, setIsChildrenLoading] = useState(false);
     const [childrenLoadError, setChildrenLoadError] = useState<string | null>(null);
@@ -54,34 +51,11 @@ export default function ParentDashboardPage() {
 
     useEffect(() => {
         if (!token) {
-            setParentId(null);
-            setParentLoadError(null);
-            setIsParentLoading(false);
             setChildren([]);
             setChildrenLoadError(null);
             setIsChildrenLoading(false);
             return;
         }
-
-        const loadParentProfile = async () => {
-            try {
-                setIsParentLoading(true);
-                setParentLoadError(null);
-                const profile = await getMyParentProfile(token);
-                setParentId(profile.id);
-            } catch (error) {
-                setParentId(null);
-                if (error instanceof ApiRequestError && error.status === 404) {
-                    setParentLoadError("Parent profile not found. Ask administrator to create parent record.");
-                    return;
-                }
-                setParentLoadError("Failed to load parent profile. Try again later.");
-            } finally {
-                setIsParentLoading(false);
-            }
-        };
-
-        void loadParentProfile();
     }, [token]);
 
     const loadChildren = async (authToken: string) => {
@@ -111,28 +85,13 @@ export default function ParentDashboardPage() {
             return;
         }
 
-        if (isParentLoading) {
-            showFeedback("Parent profile is still loading. Please wait a moment.", "error");
-            return;
-        }
-
-        if (!parentId) {
-            showFeedback(parentLoadError ?? "Parent profile is not available.", "error");
-            return;
-        }
-
         try {
-            await createChild(data, token, parentId);
+            await createChild(data, token);
             await loadChildren(token);
             closeDialog();
             showFeedback("Child added successfully", "success");
         } catch (error) {
             if (error instanceof ApiRequestError) {
-                if (error.status === 404) {
-                    showFeedback("Parent profile was not found on backend.", "error");
-                    return;
-                }
-
                 if (error.status === 401 || error.status === 403) {
                     showFeedback("Session expired or access denied. Sign in again.", "error");
                     return;
@@ -158,8 +117,6 @@ export default function ParentDashboardPage() {
                 <Typography>
                     Welcome! Here you can manage your child’s activities.
                 </Typography>
-
-                {parentLoadError ? <Typography color="error.main">{parentLoadError}</Typography> : null}
 
                 <Stack direction="row" spacing={1}>
                     <Button onClick={openDialog} sx={{ alignSelf: "flex-start" }} variant="contained">
@@ -203,7 +160,9 @@ export default function ParentDashboardPage() {
                             >
                                 <Typography>
                                     {child.firstName} {child.lastName} - {child.birthDate ?? "Not set"}
-                                    {child.groupId ? ` (Group #${child.groupId})` : ""}
+                                    {child.groupId
+                                        ? ` (${child.groupName && child.groupName.trim().length > 0 ? child.groupName : `Group #${child.groupId}`})`
+                                        : ""}
                                 </Typography>
                                 <Button
                                     component={Link}
@@ -233,7 +192,7 @@ export default function ParentDashboardPage() {
                     {
                         label: "Create",
                         onClick: handleSubmit(onSubmit),
-                        disabled: isSubmitting || !isValid || isParentLoading,
+                        disabled: isSubmitting || !isValid,
                     },
                 ]}
             >

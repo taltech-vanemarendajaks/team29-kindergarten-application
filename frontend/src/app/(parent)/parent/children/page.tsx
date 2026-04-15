@@ -122,6 +122,18 @@ export default function ParentChildrenPage() {
         return `${selectedChild.firstName} ${selectedChild.lastName}`;
     }, [selectedChild]);
 
+    const groupLabel = useMemo(() => {
+        if (!selectedChild?.groupId) {
+            return "Group not assigned";
+        }
+
+        if (selectedChild.groupName && selectedChild.groupName.trim().length > 0) {
+            return selectedChild.groupName;
+        }
+
+        return `Group #${selectedChild.groupId}`;
+    }, [selectedChild]);
+
     return (
         <Paper sx={{ p: 3, borderRadius: 2 }}>
             <Stack spacing={2}>
@@ -178,7 +190,7 @@ export default function ParentChildrenPage() {
                                     </Typography>
                                     <Typography color="text.secondary">
                                         {getAgeLabel(selectedChild.birthDate)} -{" "}
-                                        {selectedChild.groupId ? `Group #${selectedChild.groupId}` : "Group not assigned"}
+                                        {groupLabel}
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary">
                                         Birth date: {selectedChild.birthDate ?? "Not set"}
@@ -222,7 +234,7 @@ export default function ParentChildrenPage() {
                                     <Typography>
                                         Group:{" "}
                                         <strong>
-                                            {selectedChild.groupId ? `#${selectedChild.groupId}` : "Not assigned"}
+                                            {selectedChild.groupId ? groupLabel : "Not assigned"}
                                         </strong>
                                     </Typography>
                                 </Stack>
