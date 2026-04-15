@@ -59,4 +59,16 @@ public class DailyJournalService {
                 .map(DailyJournalEntryResponse::from)
                 .toList();
     }
+
+    public DailyJournalEntryResponse getEntryById(User teacher, Long id) {
+        DailyJournalEntry entry = journalRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Entry not found"));
+
+        if (!entry.getTeacher().getId().equals(teacher.getId())) {
+            throw new RuntimeException("Access denied");
+        }
+
+        return DailyJournalEntryResponse.from(entry);
+    }
+
 }

@@ -21,3 +21,20 @@ export async function createDailyJournalEntry(
 
     return response.json();
 }
+
+export async function getDailyJournalEntry(
+    token: string,
+    id: number
+): Promise<DailyJournalEntry> {
+    const response = await fetch(`${API_URL}/api/teacher/journal/${id}`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(await parseApiError(response, "Failed to load journal entry"));
+    }
+
+    return response.json();
+}

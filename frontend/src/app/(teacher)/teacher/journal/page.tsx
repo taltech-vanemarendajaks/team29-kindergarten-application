@@ -5,9 +5,12 @@ import { Paper, TextField, Button, Stack, Typography, Box } from "@mui/material"
 
 import { useAuth } from "@/src/context/AuthContext";
 import {createDailyJournalEntry} from "@/src/modules/teachers/api/createDailyJournalEntry";
+import {DailyJournalEntry} from "@/src/modules/teachers/model/dailyJournalEntry";
+import { useRouter } from "next/navigation";
 
 export default function DailyJournalPage() {
     const { token } = useAuth();
+    const router = useRouter();
 
     const [summary, setSummary] = useState("");
     const [milestones, setMilestones] = useState("");
@@ -24,7 +27,7 @@ export default function DailyJournalPage() {
             return;
         }
 
-        await createDailyJournalEntry(token, {
+        const entry: DailyJournalEntry = await createDailyJournalEntry(token, {
             summary,
             milestones,
             photoUrls: photos,
@@ -34,7 +37,8 @@ export default function DailyJournalPage() {
         setMilestones("");
         setPhotos([]);
 
-        alert("Journal entry published!");
+        // redirect to view page
+        router.push(`/teacher/journal/${entry.id}`);
     };
 
     return (

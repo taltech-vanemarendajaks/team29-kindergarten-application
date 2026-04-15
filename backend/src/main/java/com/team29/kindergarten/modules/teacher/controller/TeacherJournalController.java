@@ -33,4 +33,13 @@ public class TeacherJournalController {
     ) {
         return journalService.getEntriesForTeacher(teacher);
     }
+
+    @GetMapping("/{id}")
+    public DailyJournalEntryResponse getEntry(
+            @AuthenticationPrincipal User teacher,
+            @PathVariable Long id
+    ) {
+        return journalService.getEntryById(teacher, id);
+    }
+
 }
