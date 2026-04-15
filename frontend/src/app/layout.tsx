@@ -1,4 +1,4 @@
-import { AuthProvider } from "@/src/context/AuthContext";
+import AppProvider from "@/src/providers/AppProvider";
 import ThemeRegistry from "@/src/providers/ThemeRegistry";
 import {ReactNode} from "react";
 
@@ -7,9 +7,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <html lang="en">
         <body>
         <ThemeRegistry>
-            <AuthProvider>
-                {children}
-            </AuthProvider>
+            <AppProvider>{children}</AppProvider>
         </ThemeRegistry>
         </body>
         </html>

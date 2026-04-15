@@ -23,9 +23,10 @@ import {
 import Dialog from "@/src/components/ui/dialog";
 import Snackbar from "@/src/components/ui/snackbar";
 import { useAuth } from "@/src/context/AuthContext";
+import { useChildrenState } from "@/src/context/ChildrenContext";
 import { getGroups } from "@/src/modules/groups/api/getGroups";
 import type { Group } from "@/src/modules/groups/model/group";
-import { ApiRequestError, ChildDto, getChildById, getChildren, updateChild } from "@/src/services/children";
+import { ApiRequestError, ChildDto, getChildById, updateChild } from "@/src/services/children";
 
 type ProfileTab = "profile" | "attendance" | "development";
 
@@ -52,15 +53,19 @@ function getAgeLabel(birthDate: string | null): string {
 
 export default function ParentChildrenPage() {
     const { token } = useAuth();
+    const {
+        children,
+        isLoading: isLoadingChildren,
+        error: childrenLoadError,
+        upsertChild,
+    } = useChildrenState();
     const searchParams = useSearchParams();
     const initialChildIdParam = searchParams.get("childId");
     const [tab, setTab] = useState<ProfileTab>("profile");
-    const [children, setChildren] = useState<ChildDto[]>([]);
     const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
     const [selectedChild, setSelectedChild] = useState<ChildDto | null>(null);
     const [groups, setGroups] = useState<Group[]>([]);
     const [groupsLoadError, setGroupsLoadError] = useState<string | null>(null);
-    const [isLoadingChildren, setIsLoadingChildren] = useState(true);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
     const [isLoadingGroups, setIsLoadingGroups] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -72,7 +77,7 @@ export default function ParentChildrenPage() {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState("");
     const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
-    const [error, setError] = useState<string | null>(null);
+    const [profileError, setProfileError] = useState<string | null>(null);
 
     const showFeedback = (message: string, severity: "success" | "error") => {
         setSnackbarMessage(message);
@@ -92,21 +97,6 @@ export default function ParentChildrenPage() {
         return `Group #${child.groupId}`;
     };
 
-    const loadChildren = async (authToken: string) => {
-        setError(null);
-        setIsLoadingChildren(true);
-
-        try {
-            const page = await getChildren(authToken);
-            setChildren(page.content);
-            setSelectedChildId((currentId) => currentId ?? page.content[0]?.id ?? null);
-        } catch {
-            setError("Failed to load children from API.");
-        } finally {
-            setIsLoadingChildren(false);
-        }
-    };
-
     const loadGroups = async (authToken: string) => {
         setIsLoadingGroups(true);
         setGroupsLoadError(null);
@@ -124,14 +114,21 @@ export default function ParentChildrenPage() {
 
     useEffect(() => {
         if (!token) {
-            setIsLoadingChildren(false);
             setGroups([]);
             return;
         }
 
-        void loadChildren(token);
         void loadGroups(token);
     }, [token]);
+
+    useEffect(() => {
+        if (children.length === 0) {
+            setSelectedChildId(null);
+            return;
+        }
+
+        setSelectedChildId((currentId) => currentId ?? children[0]?.id ?? null);
+    }, [children]);
 
     useEffect(() => {
         if (!initialChildIdParam || children.length === 0) {
@@ -155,22 +152,30 @@ export default function ParentChildrenPage() {
             return;
         }
 
+        const cachedChild = children.find((item) => item.id === selectedChildId) ?? null;
+        if (cachedChild) {
+            // Keep previous content visible while full profile is refreshed to avoid layout jumps.
+            setSelectedChild(cachedChild);
+        }
+
         const loadChildProfile = async () => {
             try {
                 setIsLoadingProfile(true);
+                setProfileError(null);
                 const child = await getChildById(token, selectedChildId);
                 setSelectedChild(child);
+                upsertChild(child);
             } catch {
                 const fallback = children.find((item) => item.id === selectedChildId) ?? null;
                 setSelectedChild(fallback);
-                setError("Failed to load full child profile. Showing list data.");
+                setProfileError("Failed to load full child profile. Showing list data.");
             } finally {
                 setIsLoadingProfile(false);
             }
         };
 
         void loadChildProfile();
-    }, [token, selectedChildId, children]);
+    }, [token, selectedChildId]);
 
     const fullName = useMemo(() => {
         if (!selectedChild) {
@@ -276,9 +281,7 @@ export default function ParentChildrenPage() {
             });
 
             setSelectedChild(updatedChild);
-            setChildren((currentChildren) =>
-                currentChildren.map((child) => (child.id === updatedChild.id ? updatedChild : child))
-            );
+            upsertChild(updatedChild);
             setIsEditDialogOpen(false);
             showFeedback("Child profile updated successfully.", "success");
         } catch (updateError) {
@@ -312,7 +315,8 @@ export default function ParentChildrenPage() {
                     </Stack>
                 ) : null}
 
-                {error ? <Typography color="error.main">{error}</Typography> : null}
+                {childrenLoadError ? <Typography color="error.main">{childrenLoadError}</Typography> : null}
+                {profileError ? <Typography color="error.main">{profileError}</Typography> : null}
 
                 {!isLoadingChildren && children.length === 0 && token ? (
                     <Typography color="text.secondary">
