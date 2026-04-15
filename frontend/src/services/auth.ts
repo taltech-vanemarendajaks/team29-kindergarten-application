@@ -1,13 +1,13 @@
-// import { API_URL } from "@/src/shared/constants/api";
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"
-).replace(/\/$/, "");
+import { API_URL } from "@/src/shared/constants/api";
+
+const AUTH_API_URL = (API_URL ?? "http://localhost:8080").replace(/\/$/, "");
+
 export async function register(data: {
   fullName: string;
   email: string;
   password: string;
 }) {
-  const response = await fetch(`${API_URL}/auth/register`, {
+  const response = await fetch(`${AUTH_API_URL}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -21,7 +21,7 @@ export async function register(data: {
 }
 
 export async function login(email: string, password: string) {
-  const response = await fetch(`${API_URL}/auth/login`, {
+  const response = await fetch(`${AUTH_API_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
