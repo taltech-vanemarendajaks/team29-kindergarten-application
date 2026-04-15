@@ -12,6 +12,27 @@ import { useAuth } from "@/src/context/AuthContext";
 import { ApiRequestError, ChildDto, createChild, getChildren } from "@/src/services/children";
 import { childSchema, type ChildFormData } from "@/src/validation/childSchema";
 
+function getAgeLabel(birthDate: string | null): string {
+    if (!birthDate) {
+        return "Unknown";
+    }
+
+    const birth = new Date(birthDate);
+    if (Number.isNaN(birth.getTime())) {
+        return "Unknown";
+    }
+
+    const now = new Date();
+    let years = now.getFullYear() - birth.getFullYear();
+    const monthDiff = now.getMonth() - birth.getMonth();
+    const dayDiff = now.getDate() - birth.getDate();
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+        years -= 1;
+    }
+
+    return `${Math.max(years, 0)} y.o.`;
+}
+
 export default function ParentDashboardPage() {
     const { token } = useAuth();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -159,7 +180,8 @@ export default function ParentDashboardPage() {
                                 }}
                             >
                                 <Typography>
-                                    {child.firstName} {child.lastName} - {child.birthDate ?? "Not set"}
+                                    {child.firstName} {child.lastName} - {child.birthDate ?? "Not set"} (
+                                    {getAgeLabel(child.birthDate)})
                                     {child.groupId
                                         ? ` (${child.groupName && child.groupName.trim().length > 0 ? child.groupName : `Group #${child.groupId}`})`
                                         : ""}

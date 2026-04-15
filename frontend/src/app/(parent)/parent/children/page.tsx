@@ -9,14 +9,23 @@ import {
     Button,
     Chip,
     CircularProgress,
+    FormControl,
+    InputLabel,
+    MenuItem,
     Paper,
+    Select,
     Stack,
     Tab,
     Tabs,
+    TextField,
     Typography,
 } from "@mui/material";
+import Dialog from "@/src/components/ui/dialog";
+import Snackbar from "@/src/components/ui/snackbar";
 import { useAuth } from "@/src/context/AuthContext";
-import { ChildDto, getChildById, getChildren } from "@/src/services/children";
+import { getGroups } from "@/src/modules/groups/api/getGroups";
+import type { Group } from "@/src/modules/groups/model/group";
+import { ApiRequestError, ChildDto, getChildById, getChildren, updateChild } from "@/src/services/children";
 
 type ProfileTab = "profile" | "attendance" | "development";
 
@@ -49,31 +58,79 @@ export default function ParentChildrenPage() {
     const [children, setChildren] = useState<ChildDto[]>([]);
     const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
     const [selectedChild, setSelectedChild] = useState<ChildDto | null>(null);
+    const [groups, setGroups] = useState<Group[]>([]);
+    const [groupsLoadError, setGroupsLoadError] = useState<string | null>(null);
     const [isLoadingChildren, setIsLoadingChildren] = useState(true);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+    const [isLoadingGroups, setIsLoadingGroups] = useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isSavingEdit, setIsSavingEdit] = useState(false);
+    const [editFirstName, setEditFirstName] = useState("");
+    const [editLastName, setEditLastName] = useState("");
+    const [editBirthDate, setEditBirthDate] = useState("");
+    const [editGroupId, setEditGroupId] = useState("");
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
     const [error, setError] = useState<string | null>(null);
+
+    const showFeedback = (message: string, severity: "success" | "error") => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity);
+        setSnackbarOpen(true);
+    };
+
+    const resolveGroupLabel = (child: ChildDto): string => {
+        if (!child.groupId) {
+            return "Group not assigned";
+        }
+
+        if (child.groupName && child.groupName.trim().length > 0) {
+            return child.groupName;
+        }
+
+        return `Group #${child.groupId}`;
+    };
+
+    const loadChildren = async (authToken: string) => {
+        setError(null);
+        setIsLoadingChildren(true);
+
+        try {
+            const page = await getChildren(authToken);
+            setChildren(page.content);
+            setSelectedChildId((currentId) => currentId ?? page.content[0]?.id ?? null);
+        } catch {
+            setError("Failed to load children from API.");
+        } finally {
+            setIsLoadingChildren(false);
+        }
+    };
+
+    const loadGroups = async (authToken: string) => {
+        setIsLoadingGroups(true);
+        setGroupsLoadError(null);
+
+        try {
+            const page = await getGroups(authToken, 0, 100);
+            setGroups(page.content);
+        } catch {
+            setGroups([]);
+            setGroupsLoadError("Full groups list is unavailable for your account. Showing known groups only.");
+        } finally {
+            setIsLoadingGroups(false);
+        }
+    };
 
     useEffect(() => {
         if (!token) {
             setIsLoadingChildren(false);
+            setGroups([]);
             return;
         }
 
-        const loadChildren = async () => {
-            try {
-                setError(null);
-                setIsLoadingChildren(true);
-                const page = await getChildren(token);
-                setChildren(page.content);
-                setSelectedChildId(page.content[0]?.id ?? null);
-            } catch {
-                setError("Failed to load children from API.");
-            } finally {
-                setIsLoadingChildren(false);
-            }
-        };
-
-        void loadChildren();
+        void loadChildren(token);
+        void loadGroups(token);
     }, [token]);
 
     useEffect(() => {
@@ -123,16 +180,117 @@ export default function ParentChildrenPage() {
     }, [selectedChild]);
 
     const groupLabel = useMemo(() => {
-        if (!selectedChild?.groupId) {
+        if (!selectedChild) {
             return "Group not assigned";
         }
 
-        if (selectedChild.groupName && selectedChild.groupName.trim().length > 0) {
-            return selectedChild.groupName;
+        return resolveGroupLabel(selectedChild);
+    }, [selectedChild]);
+
+    const groupOptions = useMemo(() => {
+        const merged = new Map<number, string>();
+
+        groups.forEach((group) => {
+            merged.set(group.id, group.name);
+        });
+
+        children.forEach((child) => {
+            if (!child.groupId) {
+                return;
+            }
+
+            const knownName =
+                child.groupName && child.groupName.trim().length > 0 ? child.groupName : `Group #${child.groupId}`;
+            if (!merged.has(child.groupId)) {
+                merged.set(child.groupId, knownName);
+            }
+        });
+
+        if (selectedChild?.groupId && !merged.has(selectedChild.groupId)) {
+            merged.set(selectedChild.groupId, resolveGroupLabel(selectedChild));
         }
 
-        return `Group #${selectedChild.groupId}`;
-    }, [selectedChild]);
+        return Array.from(merged.entries())
+            .map(([id, name]) => ({ id, name }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+    }, [groups, children, selectedChild]);
+
+    const openEditDialog = () => {
+        if (!selectedChild) {
+            return;
+        }
+
+        setEditFirstName(selectedChild.firstName);
+        setEditLastName(selectedChild.lastName);
+        setEditBirthDate(selectedChild.birthDate ?? "");
+        setEditGroupId(selectedChild.groupId ? String(selectedChild.groupId) : "");
+        setIsEditDialogOpen(true);
+    };
+
+    const closeEditDialog = () => {
+        if (isSavingEdit) {
+            return;
+        }
+        setIsEditDialogOpen(false);
+    };
+
+    const handleSaveEdit = async () => {
+        if (!token || !selectedChild) {
+            showFeedback("Please sign in to edit child profile.", "error");
+            return;
+        }
+
+        const normalizedFirstName = editFirstName.trim();
+        const normalizedLastName = editLastName.trim();
+        const normalizedBirthDate = editBirthDate.trim();
+
+        if (normalizedFirstName.length < 2 || normalizedLastName.length < 2) {
+            showFeedback("First and last names must contain at least 2 characters.", "error");
+            return;
+        }
+
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(normalizedBirthDate)) {
+            showFeedback("Birth date must be in YYYY-MM-DD format.", "error");
+            return;
+        }
+
+        if (new Date(normalizedBirthDate).getTime() >= Date.now()) {
+            showFeedback("Birth date must be in the past.", "error");
+            return;
+        }
+
+        const parsedGroupId = editGroupId === "" ? undefined : Number(editGroupId);
+        if (parsedGroupId !== undefined && (!Number.isInteger(parsedGroupId) || parsedGroupId <= 0)) {
+            showFeedback("Please select a valid group.", "error");
+            return;
+        }
+
+        try {
+            setIsSavingEdit(true);
+
+            const updatedChild = await updateChild(token, selectedChild.id, {
+                firstName: normalizedFirstName,
+                lastName: normalizedLastName,
+                birthDate: normalizedBirthDate,
+                groupId: parsedGroupId,
+            });
+
+            setSelectedChild(updatedChild);
+            setChildren((currentChildren) =>
+                currentChildren.map((child) => (child.id === updatedChild.id ? updatedChild : child))
+            );
+            setIsEditDialogOpen(false);
+            showFeedback("Child profile updated successfully.", "success");
+        } catch (updateError) {
+            if (updateError instanceof ApiRequestError) {
+                showFeedback(updateError.message, "error");
+                return;
+            }
+            showFeedback("Failed to update child profile. Please try again.", "error");
+        } finally {
+            setIsSavingEdit(false);
+        }
+    };
 
     return (
         <Paper sx={{ p: 3, borderRadius: 2 }}>
@@ -219,6 +377,9 @@ export default function ParentChildrenPage() {
 
                             {tab === "profile" ? (
                                 <Stack spacing={1}>
+                                    <Button variant="outlined" onClick={openEditDialog} sx={{ alignSelf: "flex-start" }}>
+                                        Edit Profile
+                                    </Button>
                                     <Typography>
                                         First name: <strong>{selectedChild.firstName}</strong>
                                     </Typography>
@@ -259,6 +420,81 @@ export default function ParentChildrenPage() {
                     Back to Dashboard
                 </Button>
             </Stack>
+
+            <Dialog
+                open={isEditDialogOpen}
+                onClose={closeEditDialog}
+                title="Edit Child Profile"
+                actions={[
+                    {
+                        label: "Cancel",
+                        onClick: closeEditDialog,
+                        variant: "outlined",
+                        color: "inherit",
+                        disabled: isSavingEdit,
+                    },
+                    {
+                        label: isSavingEdit ? "Saving..." : "Save",
+                        onClick: () => {
+                            void handleSaveEdit();
+                        },
+                        disabled: isSavingEdit,
+                    },
+                ]}
+            >
+                <Stack spacing={2} sx={{ pt: 1 }}>
+                    <TextField
+                        label="First Name"
+                        value={editFirstName}
+                        onChange={(event) => setEditFirstName(event.target.value)}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Last Name"
+                        value={editLastName}
+                        onChange={(event) => setEditLastName(event.target.value)}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Birth Date"
+                        type="date"
+                        value={editBirthDate}
+                        onChange={(event) => setEditBirthDate(event.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                        fullWidth
+                    />
+                    <FormControl fullWidth>
+                        <InputLabel id="edit-child-group-label">Group</InputLabel>
+                        <Select
+                            labelId="edit-child-group-label"
+                            label="Group"
+                            value={editGroupId}
+                            onChange={(event) => setEditGroupId(event.target.value)}
+                            disabled={isLoadingGroups}
+                        >
+                            <MenuItem value="">Not assigned</MenuItem>
+                            {groupOptions.map((group) => (
+                                <MenuItem key={group.id} value={String(group.id)}>
+                                    {group.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    {groupsLoadError ? (
+                        <Typography variant="body2" color="warning.main">
+                            {groupsLoadError}
+                        </Typography>
+                    ) : null}
+                </Stack>
+            </Dialog>
+
+            <Snackbar
+                open={snackbarOpen}
+                onClose={() => setSnackbarOpen(false)}
+                message={snackbarMessage}
+                severity={snackbarSeverity}
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            />
         </Paper>
     );
 }

@@ -7,6 +7,13 @@ export interface CreateChildPayload {
     groupId?: number;
 }
 
+export interface UpdateChildPayload {
+    firstName: string;
+    lastName: string;
+    birthDate: string;
+    groupId?: number;
+}
+
 export interface ChildDto {
     id: number;
     tenantId: number;
@@ -113,6 +120,27 @@ export async function getChildById(token: string, id: number) {
 
     if (!response.ok) {
         await throwApiError(response, "Failed to fetch child profile");
+    }
+
+    return (await response.json()) as ChildDto;
+}
+
+export async function updateChild(
+    token: string,
+    id: number,
+    payload: UpdateChildPayload
+) {
+    const response = await fetch(`${API_URL}/api/v1/children/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        await throwApiError(response, "Failed to update child profile");
     }
 
     return (await response.json()) as ChildDto;
