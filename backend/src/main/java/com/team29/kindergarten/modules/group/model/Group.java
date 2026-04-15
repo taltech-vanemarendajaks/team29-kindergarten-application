@@ -1,6 +1,6 @@
 package com.team29.kindergarten.modules.group.model;
 
-import com.team29.kindergarten.modules.teacher.model.Teacher;
+import com.team29.kindergarten.modules.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
@@ -52,8 +52,8 @@ public class Group {
     private String ageRange;
 
     @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
-    @JoinColumn(name = "teacher_id", foreignKey = @ForeignKey(name = "fk_group_teacher"))
-    private Teacher teacher;
+    @JoinColumn(name = "teacher_user_id", foreignKey = @ForeignKey(name = "fk_group_teacher_user"))
+    private User teacherUser;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

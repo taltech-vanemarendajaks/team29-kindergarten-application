@@ -1,7 +1,6 @@
 export type GroupTeacherSummary = {
     id: number;
-    firstName: string;
-    lastName: string;
+    fullName: string;
 };
 
 export type Group = {

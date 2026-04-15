@@ -1,12 +1,12 @@
 import type { Group } from "../model/group";
+import { parseApiError } from "@/src/shared/utils/parseApiError";
+import { API_URL } from "@/src/shared/constants/api";
 
 export type UpdateGroupPayload = {
     name: string;
     ageRange: string | null;
     teacherId: number | null;
 };
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function updateGroup(
     groupId: number,
@@ -23,7 +23,7 @@ export async function updateGroup(
     });
 
     if (!response.ok) {
-        throw new Error("Failed to update group");
+        throw new Error(await parseApiError(response, "Failed to update group"));
     }
 
     return response.json();

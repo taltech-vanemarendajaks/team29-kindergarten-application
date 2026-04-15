@@ -1,48 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getTeachers } from "../api/getTeachers";
-import type { Teacher } from "../model/teacher";
+import { useUserOptionsByRole, useUsersByRole } from "@/src/modules/users";
 
-export function useTeachers(token: string | null, enabled = true) {
-    const [teachers, setTeachers] = useState<Teacher[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+export function useTeachers(token: string | null, page: number, size = 10, enabled = true) {
+    const {
+        users: teachers,
+        userPage: teacherPage,
+        loading,
+        error,
+        refetch,
+    } = useUsersByRole(
+        token,
+        "TEACHER",
+        page,
+        size,
+        enabled,
+    );
 
-    useEffect(() => {
-        if (!enabled || !token) {
-            return;
-        }
+    return { teachers, teacherPage, loading, error, refetch };
+}
 
-        const resolvedToken = token;
-        let cancelled = false;
+export function useTeacherOptions(token: string | null, enabled = true) {
+    const { users: teachers, loading, error, refetch } = useUserOptionsByRole(
+        token,
+        "TEACHER",
+        enabled,
+    );
 
-        async function loadTeachers() {
-            try {
-                setLoading(true);
-                setError(null);
-                const data = await getTeachers(resolvedToken);
-
-                if (!cancelled) {
-                    setTeachers(data);
-                }
-            } catch (err) {
-                if (!cancelled) {
-                    setError(err instanceof Error ? err.message : "Failed to load teachers");
-                }
-            } finally {
-                if (!cancelled) {
-                    setLoading(false);
-                }
-            }
-        }
-
-        void loadTeachers();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [enabled, token]);
-
-    return { teachers, loading, error, setTeachers };
+    return { teachers, loading, error, refetch };
 }

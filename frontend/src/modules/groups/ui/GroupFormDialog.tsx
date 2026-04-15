@@ -4,8 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Stack from "@mui/material/Stack";
 import { Dialog, Input, Select } from "@/src/components/ui";
 import { Controller, useForm } from "react-hook-form";
-import { formatPersonName } from "@/src/shared/utils/formatPersonName";
-import type { Teacher } from "@/src/modules/teachers";
+import { formatFullName } from "@/src/shared/utils/formatPersonName";
+import type { User } from "@/src/modules/users";
 import type { Group } from "../model/group";
 import type { UpdateGroupPayload } from "../api/updateGroup";
 import { groupFormSchema, type GroupFormValues } from "../model/groupFormSchema";
@@ -15,7 +15,7 @@ export type GroupFormDialogProps = {
     title: string;
     submitLabel: string;
     group?: Group | null;
-    teachers: Teacher[];
+    teachers: User[];
     teachersLoading?: boolean;
     teachersError?: string | null;
     loading?: boolean;
@@ -53,7 +53,7 @@ export default function GroupFormDialog({
             { value: "", label: "-- no teacher assigned --" },
             ...teachers.map((teacher) => ({
                 value: String(teacher.id),
-                label: formatPersonName(teacher),
+                label: formatFullName(teacher.fullName),
             })),
     ];
 
