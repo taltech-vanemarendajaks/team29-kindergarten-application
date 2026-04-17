@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 
 import java.time.LocalDateTime;
 
@@ -49,6 +50,20 @@ public class ChildService {
                 .map(childMapper::toResponseDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
     }
+
+    @Transactional(readOnly = true)
+    public List<ChildResponseDto> findAllByTeacher(Long teacherUserId, Long tenantId) {
+    log.info("Fetching class records for teacherUserId={}, tenantId={}", teacherUserId, tenantId);
+
+    Group group = groupRepository.findByTeacherUserIdAndTenantId(teacherUserId, tenantId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                    "No group found for teacher userId=" + teacherUserId));
+
+    return childRepository.findAllByGroupIdAndTenantId(group.getId(), tenantId)
+            .stream()
+            .map(childMapper::toResponseDto)
+            .toList();
+}
 
     public ChildResponseDto create(ChildRequestDto request, Long tenantId, Long parentId) {
         log.info("Creating child for tenantId={} and linking parentId={}", tenantId, parentId);

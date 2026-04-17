@@ -20,6 +20,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.team29.kindergarten.tenant.TenantContext;
+import com.team29.kindergarten.modules.user.entity.User;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/children")
@@ -54,6 +57,24 @@ public class ChildController {
   public ResponseEntity<ChildResponseDto> findById(@PathVariable Long id) {
     Long tenantId = TenantContext.getTenantId();
     return ResponseEntity.ok(childService.findById(id, tenantId));
+}
+
+    @GetMapping("/class-records")
+    @Operation(summary = "Get children in the teacher's assigned group")
+    @ApiResponses({
+                @ApiResponse(responseCode = "200", description = "Class records returned successfully"),
+                @ApiResponse(
+                        responseCode = "404",
+                        description = "No group found for this teacher",
+                        content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+                )
+        })
+
+public ResponseEntity<List<ChildResponseDto>> findClassRecords(
+        @AuthenticationPrincipal User currentUser
+) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.ok(childService.findAllByTeacher(currentUser.getId(), tenantId));
 }
 
     @PostMapping
