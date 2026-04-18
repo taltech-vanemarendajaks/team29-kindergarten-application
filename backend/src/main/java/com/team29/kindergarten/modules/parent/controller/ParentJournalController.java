@@ -1,7 +1,7 @@
 package com.team29.kindergarten.modules.parent.controller;
 
 import com.team29.kindergarten.modules.parent.service.ParentJournalService;
-import com.team29.kindergarten.modules.teacher.model.DailyJournalEntry;
+import com.team29.kindergarten.modules.teacher.dto.DailyJournalEntryResponse;
 import com.team29.kindergarten.modules.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,7 +19,7 @@ public class ParentJournalController {
     private final ParentJournalService parentJournalService;
 
     @GetMapping
-    public List<DailyJournalEntry> getParentJournal(@AuthenticationPrincipal User parent) {
+    public List<DailyJournalEntryResponse> getParentJournal(@AuthenticationPrincipal User parent) {
         return parentJournalService.getParentFeed(parent.getId());
     }
 }

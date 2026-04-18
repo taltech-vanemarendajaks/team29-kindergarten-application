@@ -15,6 +15,8 @@
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",
     "@tanstack/react-query": "^5.90.21",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.38.0",
     "jwt-decode": "^4.0.0",
     "next": "16.1.6",
     "react": "19.2.3",

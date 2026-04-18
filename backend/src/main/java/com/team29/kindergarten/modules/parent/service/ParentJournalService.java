@@ -1,5 +1,6 @@
 package com.team29.kindergarten.modules.parent.service;
 
+import com.team29.kindergarten.modules.teacher.dto.DailyJournalEntryResponse;
 import com.team29.kindergarten.modules.teacher.model.DailyJournalEntry;
 import com.team29.kindergarten.modules.teacher.repository.DailyJournalEntryRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +13,10 @@ import java.util.List;
 public class ParentJournalService {
     private final DailyJournalEntryRepository entryRepository;
 
-    public List<DailyJournalEntry> getParentFeed(Long parentId) {
-        return entryRepository.findEntriesForParent(parentId);
+    public List<DailyJournalEntryResponse> getParentFeed(Long parentId) {
+        return entryRepository.findEntriesForParent(parentId)
+                .stream()
+                .map(DailyJournalEntryResponse::from)
+                .toList();
     }
 }
