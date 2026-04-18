@@ -5,7 +5,7 @@ import com.team29.kindergarten.modules.group.repository.GroupRepository;
 import com.team29.kindergarten.modules.teacher.dto.DailyJournalEntryRequest;
 import com.team29.kindergarten.modules.teacher.dto.DailyJournalEntryResponse;
 import com.team29.kindergarten.modules.teacher.model.DailyJournalEntry;
-import com.team29.kindergarten.modules.teacher.repository.DailyJournalRepository;
+import com.team29.kindergarten.modules.teacher.repository.DailyJournalEntryRepository;
 import com.team29.kindergarten.modules.user.entity.User;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +16,11 @@ import java.util.List;
 public class DailyJournalService {
 
     private final GroupRepository groupRepository;
-    private final DailyJournalRepository journalRepository;
+    private final DailyJournalEntryRepository journalRepository;
 
     public DailyJournalService(
             GroupRepository groupRepository,
-            DailyJournalRepository journalRepository
+            DailyJournalEntryRepository journalRepository
     ) {
         this.groupRepository = groupRepository;
         this.journalRepository = journalRepository;
