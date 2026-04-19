@@ -1,7 +1,7 @@
 import { AuthProvider } from "@/src/context/AuthContext";
 import ThemeRegistry from "@/src/providers/ThemeRegistry";
 import { ReactNode } from "react";
-import { Toaster } from "react-hot-toast";
+import { ToasterClient } from "@/src/components/ToasterClient";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
     return (
@@ -10,7 +10,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ThemeRegistry>
             <AuthProvider>
                 {children}
-                <Toaster position="top-right" />
+                <ToasterClient />
             </AuthProvider>
         </ThemeRegistry>
         </body>

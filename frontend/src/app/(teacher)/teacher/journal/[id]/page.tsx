@@ -84,7 +84,6 @@ export default function JournalEntryPage() {
                     </ImageListItem>
                 ))}
             </ImageList>
-
         </Paper>
     );
 }
