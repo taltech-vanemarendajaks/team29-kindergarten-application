@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface DailyJournalEntryRepository extends JpaRepository<DailyJournalEntry, Long> {
-    List<DailyJournalEntry> findByKindergartenGroup(Long groupId);
+    List<DailyJournalEntry> findByKindergartenGroupId(Long groupId);
 
     @Query("""
     SELECT e

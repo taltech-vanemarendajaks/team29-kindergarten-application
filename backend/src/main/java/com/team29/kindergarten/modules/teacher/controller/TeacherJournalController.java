@@ -4,6 +4,7 @@ import com.team29.kindergarten.modules.teacher.dto.DailyJournalEntryRequest;
 import com.team29.kindergarten.modules.teacher.dto.DailyJournalEntryResponse;
 import com.team29.kindergarten.modules.teacher.service.DailyJournalService;
 import com.team29.kindergarten.modules.user.entity.User;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,26 +21,18 @@ public class TeacherJournalController {
     }
 
     @PostMapping
-    public DailyJournalEntryResponse createEntry(
-            @AuthenticationPrincipal User teacher,
-            @RequestBody DailyJournalEntryRequest request
-    ) {
+    public DailyJournalEntryResponse createEntry(@AuthenticationPrincipal User teacher, @RequestBody DailyJournalEntryRequest request) {
         return journalService.createEntry(teacher, request);
     }
 
+    @PreAuthorize("hasRole('TEACHER')")
     @GetMapping
-    public List<DailyJournalEntryResponse> getEntries(
-            @AuthenticationPrincipal User teacher
-    ) {
+    public List<DailyJournalEntryResponse> getEntries(@AuthenticationPrincipal User teacher) {
         return journalService.getEntriesForTeacher(teacher);
     }
 
     @GetMapping("/{id}")
-    public DailyJournalEntryResponse getEntry(
-            @AuthenticationPrincipal User teacher,
-            @PathVariable Long id
-    ) {
+    public DailyJournalEntryResponse getEntry(@AuthenticationPrincipal User teacher, @PathVariable Long id) {
         return journalService.getEntryById(teacher, id);
     }
-
 }

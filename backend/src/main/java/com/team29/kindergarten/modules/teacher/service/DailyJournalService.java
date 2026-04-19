@@ -51,10 +51,10 @@ public class DailyJournalService {
     }
 
     public List<DailyJournalEntryResponse> getEntriesForTeacher(User teacherUser) {
-        Group group = groupRepository.findByIdAndTenantId(teacherUser.getId(), teacherUser.getTenantId())
-                .orElseThrow(() -> new RuntimeException("Group not found"));
+        Group group = groupRepository.findByTeacherUserId(teacherUser.getId())
+                .orElseThrow(() -> new RuntimeException("Group not found for teacher"));
 
-        return journalRepository.findByKindergartenGroup(group.getTeacherUser().getId())
+        return journalRepository.findByKindergartenGroupId(group.getId())
                 .stream()
                 .map(DailyJournalEntryResponse::from)
                 .toList();

@@ -6,10 +6,14 @@ import { Paper, Typography, Stack, Box } from "@mui/material";
 import { useAuth } from "@/src/context/AuthContext";
 import {getDailyJournalEntry} from "@/src/modules/teachers/api/createDailyJournalEntry";
 
-
 export default function JournalEntryPage() {
+
     const { id } = useParams();
     const { token } = useAuth();
+
+    console.log("PARAMS:", useParams());
+    console.log("ID RAW:", id);
+    console.log("ID NUMBER:", Number(id));
 
     const [entry, setEntry] = useState<any>(null);
 

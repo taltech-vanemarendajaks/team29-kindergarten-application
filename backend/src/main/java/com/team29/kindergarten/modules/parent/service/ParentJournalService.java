@@ -1,7 +1,6 @@
 package com.team29.kindergarten.modules.parent.service;
 
 import com.team29.kindergarten.modules.teacher.dto.DailyJournalEntryResponse;
-import com.team29.kindergarten.modules.teacher.model.DailyJournalEntry;
 import com.team29.kindergarten.modules.teacher.repository.DailyJournalEntryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

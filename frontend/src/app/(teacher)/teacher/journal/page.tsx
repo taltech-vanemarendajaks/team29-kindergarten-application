@@ -7,6 +7,8 @@ import { useAuth } from "@/src/context/AuthContext";
 import {createDailyJournalEntry} from "@/src/modules/teachers/api/createDailyJournalEntry";
 import {DailyJournalEntry} from "@/src/modules/teachers/model/dailyJournalEntry";
 import { useRouter } from "next/navigation";
+import {uploadPhoto} from "@/src/modules/uploads/api/uploadPhoto";
+import toast from "react-hot-toast";
 
 export default function DailyJournalPage() {
     const { token } = useAuth();
@@ -16,9 +18,24 @@ export default function DailyJournalPage() {
     const [milestones, setMilestones] = useState("");
     const [photos, setPhotos] = useState<string[]>([]);
 
-    // TODO: Implement photo upload
-    const handleFakeUpload = () => {
-        setPhotos((prev) => [...prev, "https://placekitten.com/300/300"]);
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // checking photos size (max 5mb)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("File is too large (max 5MB)");
+            return;
+        }
+
+        try {
+            const url = await uploadPhoto(file);
+            setPhotos(prev => [...prev, url]);
+            toast.success("Photo uploaded successfully");
+        } catch (err) {
+            console.error(err);
+            toast.error("Upload failed");
+        }
     };
 
     const handleSubmit = async () => {
@@ -71,17 +88,36 @@ export default function DailyJournalPage() {
 
                     <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
                         {photos.map((url, idx) => (
-                            <img
-                                key={idx}
-                                src={url}
-                                alt="uploaded"
-                                style={{ width: 80, height: 80, borderRadius: 8 }}
-                            />
+                            <Box key={idx} sx={{ position: "relative" }}>
+                                <img
+                                    src={url}
+                                    alt="uploaded"
+                                    style={{ width: 80, height: 80, borderRadius: 8 }}
+                                />
+                                <Button
+                                    size="small"
+                                    color="error"
+                                    sx={{
+                                        position: "absolute",
+                                        top: -10,
+                                        right: -10,
+                                        minWidth: 0,
+                                        width: 24,
+                                        height: 24,
+                                        borderRadius: "50%",
+                                    }}
+                                    onClick={() =>
+                                        setPhotos((prev) => prev.filter((_, i) => i !== idx))
+                                    }
+                                >
+                                </Button>
+                            </Box>
                         ))}
                     </Stack>
 
-                    <Button variant="outlined" onClick={handleFakeUpload}>
+                    <Button variant="outlined" component="label">
                         Upload Photo
+                        <input type="file" hidden accept="image/*" onChange={handleUpload} />
                     </Button>
                 </Box>
 

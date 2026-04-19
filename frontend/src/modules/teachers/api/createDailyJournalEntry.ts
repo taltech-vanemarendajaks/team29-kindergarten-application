@@ -38,3 +38,17 @@ export async function getDailyJournalEntry(
 
     return response.json();
 }
+
+export async function getTeacherJournalEntries(token: string) {
+    const res = await fetch(`${API_URL}/api/teacher/journal`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!res.ok) {
+        throw new Error("Failed to load journal entries");
+    }
+
+    return res.json();
+}
