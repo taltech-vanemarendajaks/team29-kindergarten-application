@@ -9,6 +9,7 @@ import {DailyJournalEntry} from "@/src/modules/teachers/model/dailyJournalEntry"
 import { useRouter } from "next/navigation";
 import {uploadPhoto} from "@/src/modules/uploads/api/uploadPhoto";
 import toast from "react-hot-toast";
+import {API_URL} from "@/src/services/api";
 
 export default function DailyJournalPage() {
     const { token } = useAuth();
@@ -21,6 +22,7 @@ export default function DailyJournalPage() {
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        if (!token) return;
 
         // checking photos size (max 5mb)
         if (file.size > 5 * 1024 * 1024) {
@@ -29,8 +31,9 @@ export default function DailyJournalPage() {
         }
 
         try {
-            const url = await uploadPhoto(file);
-            setPhotos(prev => [...prev, url]);
+            const url = await uploadPhoto(file, token);
+            const fullUrl = `${API_URL}${url}`;
+            setPhotos(prev => [...prev, fullUrl]);
             toast.success("Photo uploaded successfully");
         } catch (err) {
             console.error(err);

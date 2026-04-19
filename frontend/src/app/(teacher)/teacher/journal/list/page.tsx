@@ -22,7 +22,6 @@ export default function TeacherJournalListPage() {
                 setLoading(false);
             })
             .catch((err) => {
-                console.error("ERROR LOADING LIST:", err);
                 setLoading(false);
             });
     }, [token]);

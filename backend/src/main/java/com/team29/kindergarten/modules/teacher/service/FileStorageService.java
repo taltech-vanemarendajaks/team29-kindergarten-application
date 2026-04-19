@@ -1,5 +1,6 @@
 package com.team29.kindergarten.modules.teacher.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,9 +13,10 @@ import java.util.UUID;
 @Service
 public class FileStorageService {
 
-    private final Path root = Paths.get("uploads");
+    private final Path root;
 
-    public FileStorageService() throws IOException {
+    public FileStorageService(@Value("${storage.upload-path}") String uploadPath) throws IOException {
+        this.root = Paths.get(uploadPath);
         Files.createDirectories(root);
     }
 
