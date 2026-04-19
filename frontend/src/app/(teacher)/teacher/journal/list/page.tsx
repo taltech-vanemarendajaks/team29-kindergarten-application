@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Paper, Typography, Stack, Card, CardContent, CardMedia, Box } from "@mui/material";
+import {Paper, Typography, Stack, Card, CardContent, CardMedia, Box, Button} from "@mui/material";
 import { useAuth } from "@/src/context/AuthContext";
 import {getTeacherJournalEntries} from "@/src/modules/teachers/api/createDailyJournalEntry";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 
 export default function TeacherJournalListPage() {
@@ -63,14 +64,23 @@ export default function TeacherJournalListPage() {
                                 {entry.summary}
                             </Typography>
 
-                            <Box sx={{ mt: 2 }}>
-                                <Link
-                                    href={`/teacher/journal/${entry.id}`}
-                                    style={{ color: "#1976d2", fontWeight: 500 }}
-                                >
-                                    View Entry →
-                                </Link>
-                            </Box>
+                            <Button
+                                component={Link}
+                                href={`/teacher/journal/${entry.id}`}
+                                variant="text"
+                                endIcon={<ArrowForwardIcon />}
+                                sx={{
+                                    mt: 2,
+                                    textTransform: "none",
+                                    fontWeight: 500,
+                                    color: "primary.main",
+                                    "&:hover": {
+                                        backgroundColor: "rgba(25, 118, 210, 0.08)",
+                                    },
+                                }}
+                            >
+                                View Entry
+                            </Button>
                         </CardContent>
                     </Card>
                 ))}

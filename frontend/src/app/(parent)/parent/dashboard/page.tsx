@@ -12,13 +12,15 @@ import {
     CardMedia,
     Skeleton,
     ImageList,
-    ImageListItem,
+    ImageListItem, Box, Button,
 } from "@mui/material";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { getParentJournalEntries } from "@/src/modules/parent/api/getJournalEntry";
 import {DailyJournalEntry} from "@/src/modules/teachers/model/dailyJournalEntry";
+import Link from "next/link";
 
 export default function ParentJournalFeed() {
     const { token } = useAuth();
@@ -176,6 +178,25 @@ export default function ParentJournalFeed() {
                                             >
                                                 {entry.milestones}
                                             </Typography>
+
+                                            <Button
+                                                component={Link}
+                                                href={`/parent/dashboard/${entry.id}`}
+                                                variant="text"
+                                                endIcon={<ArrowForwardIcon />}
+                                                sx={{
+                                                    mt: 2,
+                                                    textTransform: "none",
+                                                    fontWeight: 500,
+                                                    color: "primary.main",
+                                                    "&:hover": {
+                                                        backgroundColor: "rgba(25, 118, 210, 0.08)",
+                                                    },
+                                                }}
+                                            >
+                                                View Entry
+                                            </Button>
+
                                         </CardContent>
                                     </Card>
                                 </motion.div>

@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Paper, Typography, Stack, Box } from "@mui/material";
+import {Paper, Typography, Stack, Box, Button} from "@mui/material";
 import { useAuth } from "@/src/context/AuthContext";
 import {getDailyJournalEntry} from "@/src/modules/teachers/api/createDailyJournalEntry";
+import Link from "next/link";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 export default function JournalEntryPage() {
 
@@ -27,6 +29,24 @@ export default function JournalEntryPage() {
 
     return (
         <Paper sx={{ p: 3, maxWidth: 700, mx: "auto" }}>
+            <Button
+                component={Link}
+                href="/teacher/journal/list"
+                variant="text"
+                startIcon={<ArrowBackIcon />}
+                sx={{
+                    mb: 2,
+                    textTransform: "none",
+                    fontWeight: 500,
+                    color: "primary.main",
+                    "&:hover": {
+                        backgroundColor: "rgba(25, 118, 210, 0.08)",
+                    },
+                }}
+            >
+                Back to feed
+            </Button>
+
             <Typography variant="h4" sx={{ mb: 2 }}>
                 Daily Journal Entry
             </Typography>
