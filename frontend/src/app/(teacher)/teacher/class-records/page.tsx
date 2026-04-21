@@ -57,7 +57,7 @@ export default function ClassRecordsPage() {
                     <strong>Date of Birth</strong>
                   </TableCell>
                   <TableCell>
-                    <strong>Group ID</strong>
+                    <strong>Group Name</strong>
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -67,7 +67,7 @@ export default function ClassRecordsPage() {
                     <TableCell>{child.firstName}</TableCell>
                     <TableCell>{child.lastName}</TableCell>
                     <TableCell>{child.birthDate}</TableCell>
-                    <TableCell>{child.groupId}</TableCell>
+                    <TableCell>{child.groupName}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -5,6 +5,7 @@ export interface Child {
   lastName: string;
   birthDate: string;
   groupId: number;
+  groupName: string;
   createdAt: string;
   updatedAt: string;
 }
