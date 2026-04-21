@@ -9,8 +9,14 @@ import { Box, Button, CircularProgress, Paper, Stack, TextField, Typography } fr
 import Dialog from "@/src/components/ui/dialog";
 import Snackbar from "@/src/components/ui/snackbar";
 import { useAuth } from "@/src/context/AuthContext";
-import { ApiRequestError, ChildDto, createChild, getChildren } from "@/src/services/children";
-import { childSchema, type ChildFormData } from "@/src/validation/childSchema";
+import {
+    type Child,
+    childFormSchema,
+    type ChildFormValues,
+    createChild,
+    getChildren,
+} from "@/src/modules/parents";
+import { ApiRequestError } from "@/src/shared/utils/apiRequestError";
 
 function getAgeLabel(birthDate: string | null): string {
     if (!birthDate) {
@@ -39,7 +45,7 @@ export default function ParentDashboardPage() {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState("");
     const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
-    const [children, setChildren] = useState<ChildDto[]>([]);
+    const [children, setChildren] = useState<Child[]>([]);
     const [isChildrenLoading, setIsChildrenLoading] = useState(false);
     const [childrenLoadError, setChildrenLoadError] = useState<string | null>(null);
 
@@ -48,8 +54,8 @@ export default function ParentDashboardPage() {
         handleSubmit,
         reset,
         formState: { errors, isSubmitting, isValid },
-    } = useForm<z.input<typeof childSchema>, unknown, ChildFormData>({
-        resolver: zodResolver(childSchema),
+    } = useForm<z.input<typeof childFormSchema>, unknown, ChildFormValues>({
+        resolver: zodResolver(childFormSchema),
         defaultValues: {
             firstName: "",
             lastName: "",
@@ -100,14 +106,14 @@ export default function ParentDashboardPage() {
         void loadChildren(token);
     }, [token]);
 
-    const onSubmit = async (data: ChildFormData) => {
+    const onSubmit = async (data: ChildFormValues) => {
         if (!token) {
             showFeedback("You need to sign in before adding a child.", "error");
             return;
         }
 
         try {
-            await createChild(data, token);
+            await createChild(token, data);
             await loadChildren(token);
             closeDialog();
             showFeedback("Child added successfully", "success");
@@ -242,17 +248,6 @@ export default function ParentDashboardPage() {
                         error={!!errors.birthDate}
                         helperText={errors.birthDate?.message}
                         InputLabelProps={{ shrink: true }}
-                        fullWidth
-                    />
-
-                    <TextField
-                        label="Group ID (optional)"
-                        type="number"
-                        {...register("groupId", {
-                            setValueAs: (value) => (value === "" ? undefined : Number(value)),
-                        })}
-                        error={!!errors.groupId}
-                        helperText={errors.groupId?.message}
                         fullWidth
                     />
                 </Stack>
