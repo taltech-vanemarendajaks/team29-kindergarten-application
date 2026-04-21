@@ -3,6 +3,7 @@ package com.team29.kindergarten.modules.attendance.controller;
 import com.team29.kindergarten.common.exception.ApiErrorResponse;
 import com.team29.kindergarten.modules.attendance.dto.AttendanceRequestDto;
 import com.team29.kindergarten.modules.attendance.dto.AttendanceResponseDto;
+import com.team29.kindergarten.modules.attendance.dto.AttendanceSummaryDto;
 import com.team29.kindergarten.modules.attendance.service.AttendanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+
 import com.team29.kindergarten.tenant.TenantContext;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -49,6 +51,15 @@ public class AttendanceController {
     Long tenantId = TenantContext.getTenantId();
     return ResponseEntity.ok(attendanceService.findAll(tenantId, pageable));
 }
+    @GetMapping("/summary")
+    @Operation(summary = "Get attendance summary for a tenant")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Attendance summary returned successfully")
+    })
+    public ResponseEntity<AttendanceSummaryDto> getSummary() {
+        Long tenantId = TenantContext.getTenantId();
+        return ResponseEntity.ok(attendanceService.getAttendanceSummary(tenantId));
+    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get attendance record by ID")
