@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
     Avatar,
@@ -62,12 +62,18 @@ export default function ParentChildrenPage() {
     } = useChildrenState();
     const searchParams = useSearchParams();
     const initialChildIdParam = searchParams.get("childId");
+    // The URL `?childId=` value must seed the selection only on the first render
+    // that has children available. Re-applying it every time `children` changes
+    // would overwrite the user's manual selection each time the profile is refetched
+    // and `upsertChild` replaces the item in the children list.
+    const initialChildIdAppliedRef = useRef(false);
     const [tab, setTab] = useState<ProfileTab>("profile");
     const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
     const [selectedChild, setSelectedChild] = useState<Child | null>(null);
     const [groups, setGroups] = useState<Group[]>([]);
     const [groupsLoadError, setGroupsLoadError] = useState<string | null>(null);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+    const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
     const [isLoadingGroups, setIsLoadingGroups] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isSavingEdit, setIsSavingEdit] = useState(false);
@@ -125,27 +131,39 @@ export default function ParentChildrenPage() {
     useEffect(() => {
         if (children.length === 0) {
             setSelectedChildId(null);
+            initialChildIdAppliedRef.current = false;
             return;
         }
 
-        setSelectedChildId((currentId) => currentId ?? children[0]?.id ?? null);
-    }, [children]);
+        setSelectedChildId((currentId) => {
+            if (currentId !== null && children.some((child) => child.id === currentId)) {
+                return currentId;
+            }
+
+            if (!initialChildIdAppliedRef.current && initialChildIdParam) {
+                const parsedChildId = Number(initialChildIdParam);
+                if (Number.isInteger(parsedChildId) && children.some((child) => child.id === parsedChildId)) {
+                    initialChildIdAppliedRef.current = true;
+                    return parsedChildId;
+                }
+            }
+
+            initialChildIdAppliedRef.current = true;
+            return children[0]?.id ?? null;
+        });
+    }, [children, initialChildIdParam]);
 
     useEffect(() => {
-        if (!initialChildIdParam || children.length === 0) {
+        if (!isLoadingProfile) {
+            setShowLoadingIndicator(false);
             return;
         }
 
-        const parsedChildId = Number(initialChildIdParam);
-        if (!Number.isInteger(parsedChildId)) {
-            return;
-        }
-
-        const exists = children.some((child) => child.id === parsedChildId);
-        if (exists) {
-            setSelectedChildId(parsedChildId);
-        }
-    }, [initialChildIdParam, children]);
+        // Avoid a flash of the spinner for quick profile loads; only show the
+        // "Loading profile details..." indicator if the request actually takes a while.
+        const timeoutId = window.setTimeout(() => setShowLoadingIndicator(true), 400);
+        return () => window.clearTimeout(timeoutId);
+    }, [isLoadingProfile]);
 
     useEffect(() => {
         if (!token || !selectedChildId) {
@@ -373,14 +391,14 @@ export default function ParentChildrenPage() {
                                 <Tab value="development" label="Development" />
                             </Tabs>
 
-                            {isLoadingProfile ? (
-                                <Stack direction="row" spacing={1} alignItems="center">
+                            {showLoadingIndicator ? (
+                                <Stack direction="row" spacing={1} alignItems="center" sx={{ py: 2 }}>
                                     <CircularProgress size={16} />
                                     <Typography color="text.secondary">Loading profile details...</Typography>
                                 </Stack>
                             ) : null}
 
-                            {tab === "profile" ? (
+                            {!showLoadingIndicator && tab === "profile" ? (
                                 <Stack spacing={1}>
                                     <Button variant="outlined" onClick={openEditDialog} sx={{ alignSelf: "flex-start" }}>
                                         Edit Profile
