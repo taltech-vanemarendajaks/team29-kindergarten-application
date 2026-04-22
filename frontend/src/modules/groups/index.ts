@@ -6,6 +6,7 @@ export type { Group, GroupTeacherSummary } from "./model/group";
 export { groupFormSchema } from "./model/groupFormSchema";
 export type { GroupFormValues } from "./model/groupFormSchema";
 export { getGroups } from "./api/getGroups";
+export { getGroupById } from "./api/getGroupById";
 export { useGroups } from "./hooks/useGroups";
 export { default as GroupFormDialog } from "./ui/GroupFormDialog";
 export type { GroupFormDialogProps } from "./ui/GroupFormDialog";

@@ -1,6 +1,7 @@
 package com.team29.kindergarten.modules.child.service;
 
 import com.team29.kindergarten.common.exception.ResourceNotFoundException;
+import com.team29.kindergarten.modules.child.dto.ChildContactSummaryDto;
 import com.team29.kindergarten.modules.child.dto.ChildRequestDto;
 import com.team29.kindergarten.modules.child.dto.ChildResponseDto;
 import com.team29.kindergarten.modules.child.mapper.ChildMapper;
@@ -9,18 +10,25 @@ import com.team29.kindergarten.modules.child.model.ChildParent;
 import com.team29.kindergarten.modules.child.model.ChildParentId;
 import com.team29.kindergarten.modules.child.repository.ChildParentRepository;
 import com.team29.kindergarten.modules.child.repository.ChildRepository;
+import com.team29.kindergarten.modules.auth.entity.enums.RoleName;
 import com.team29.kindergarten.modules.group.model.Group;
 import com.team29.kindergarten.modules.group.repository.GroupRepository;
-import com.team29.kindergarten.modules.parent.service.ParentService;
+import com.team29.kindergarten.modules.user.entity.User;
+import com.team29.kindergarten.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -31,24 +39,30 @@ public class ChildService {
     private final ChildRepository childRepository;
     private final ChildMapper childMapper;
     private final GroupRepository groupRepository;
-    private final ParentService parentService;
     private final ChildParentRepository childParentRepository;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public Page<ChildResponseDto> findAll(Long tenantId, Pageable pageable) {
         log.info("Fetching all children for tenantId={}, page={}", tenantId, pageable.getPageNumber());
-        return childRepository
-                .findAllByTenantId(tenantId, pageable)
-                .map(childMapper::toResponseDto);
+        return enrichChildren(childRepository.findAllByTenantId(tenantId, pageable), tenantId);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ChildResponseDto> findUnassigned(Long tenantId, Pageable pageable) {
+        log.info("Fetching unassigned children for tenantId={}, page={}", tenantId, pageable.getPageNumber());
+        return enrichChildren(childRepository.findAllByTenantIdAndGroupIsNull(tenantId, pageable), tenantId);
     }
 
     @Transactional(readOnly = true)
     public ChildResponseDto findById(Long id, Long tenantId) {
         log.info("Fetching child id={} for tenantId={}", id, tenantId);
-        return childRepository
+        ChildResponseDto response = childRepository
                 .findByIdAndTenantId(id, tenantId)
                 .map(childMapper::toResponseDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
+        attachContacts(List.of(response), tenantId);
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -89,7 +103,9 @@ public class ChildService {
 
         childRepository.save(child);
         log.info("Updated child id={} for tenantId={}", id, tenantId);
-        return childMapper.toResponseDto(child);
+        ChildResponseDto response = childMapper.toResponseDto(child);
+        attachContacts(List.of(response), tenantId);
+        return response;
     }
 
     public void delete(Long id, Long tenantId) {
@@ -130,7 +146,8 @@ public class ChildService {
     private void linkParent(Long childId, Long parentId, Long tenantId) {
         // TODO: For the parent self-service flow, parentId should be resolved
         // from authentication instead of being passed in by the client.
-        parentService.getParent(parentId, tenantId);
+        userRepository.findByIdAndTenantIdAndRoles_Name(parentId, tenantId, RoleName.PARENT)
+                .orElseThrow(() -> new ResourceNotFoundException("Parent user not found: " + parentId));
 
         childParentRepository
                 .findByIdChildIdAndIdParentIdAndTenantId(childId, parentId, tenantId)
@@ -147,5 +164,57 @@ public class ChildService {
                 .build();
 
         childParentRepository.save(childParent);
+    }
+
+    private Page<ChildResponseDto> enrichChildren(Page<Child> childPage, Long tenantId) {
+        Page<ChildResponseDto> responsePage = childPage.map(childMapper::toResponseDto);
+        attachContacts(responsePage.getContent(), tenantId);
+        return responsePage;
+    }
+
+    private void attachContacts(List<ChildResponseDto> children, Long tenantId) {
+        if (children.isEmpty()) {
+            return;
+        }
+
+        List<Long> childIds = children.stream()
+                .map(ChildResponseDto::getId)
+                .toList();
+
+        List<ChildParent> childParents = childParentRepository.findAllByIdChildIdInAndTenantId(childIds, tenantId);
+        if (childParents.isEmpty()) {
+            children.forEach(child -> child.setContacts(Collections.emptyList()));
+            return;
+        }
+
+        Set<Long> parentIds = childParents.stream()
+                .map(link -> link.getId().getParentId())
+                .collect(Collectors.toSet());
+
+        Map<Long, User> parentsById = userRepository.findAllByIdInAndTenantIdAndRoles_Name(parentIds, tenantId, RoleName.PARENT).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
+
+        Map<Long, List<ChildContactSummaryDto>> contactsByChildId = childParents.stream()
+                .collect(Collectors.groupingBy(
+                        link -> link.getId().getChildId(),
+                        Collectors.mapping(
+                                link -> toContactSummary(parentsById.get(link.getId().getParentId())),
+                                Collectors.filtering(contact -> contact != null, Collectors.toList())
+                        )
+                ));
+
+        children.forEach(child -> child.setContacts(contactsByChildId.getOrDefault(child.getId(), Collections.emptyList())));
+    }
+
+    private ChildContactSummaryDto toContactSummary(User parentUser) {
+        if (parentUser == null) {
+            return null;
+        }
+
+        return ChildContactSummaryDto.builder()
+                .id(parentUser.getId())
+                .fullName(parentUser.getFullName())
+                .email(parentUser.getEmail())
+                .build();
     }
 }

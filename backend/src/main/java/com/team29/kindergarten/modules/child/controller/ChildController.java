@@ -1,5 +1,6 @@
 package com.team29.kindergarten.modules.child.controller;
 
+import com.team29.kindergarten.common.dto.PageResponseDto;
 import com.team29.kindergarten.common.exception.ApiErrorResponse;
 import com.team29.kindergarten.modules.child.dto.ChildRequestDto;
 import com.team29.kindergarten.modules.child.dto.ChildResponseDto;
@@ -13,7 +14,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -37,11 +37,23 @@ public class ChildController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Children returned successfully")
     })
-  public ResponseEntity<Page<ChildResponseDto>> findAll(
+  public ResponseEntity<PageResponseDto<ChildResponseDto>> findAll(
         @ParameterObject @PageableDefault(size = 20, sort = "lastName") Pageable pageable
 ) {
     Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.ok(childService.findAll(tenantId, pageable));
+    return ResponseEntity.ok(PageResponseDto.from(childService.findAll(tenantId, pageable)));
+}
+
+    @GetMapping("/unassigned")
+    @Operation(summary = "List unassigned children for a tenant")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Unassigned children returned successfully")
+    })
+  public ResponseEntity<PageResponseDto<ChildResponseDto>> findUnassigned(
+        @ParameterObject @PageableDefault(size = 10, sort = "lastName") Pageable pageable
+) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.ok(PageResponseDto.from(childService.findUnassigned(tenantId, pageable)));
 }
 
     @GetMapping("/{id}")
