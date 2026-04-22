@@ -17,3 +17,4 @@ backend/.gradle-home/
 openapi/
 CLAUDE.md
 .claude/
+.cursor/
