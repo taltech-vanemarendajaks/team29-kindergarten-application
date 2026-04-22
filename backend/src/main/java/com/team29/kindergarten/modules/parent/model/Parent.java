@@ -41,6 +41,9 @@ public class Parent {
     @Column(name = "tenant_id", updatable = false)
     private Long tenantId;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     @Column(name = "email")
     private String email;
 
