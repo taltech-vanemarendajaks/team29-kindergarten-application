@@ -99,7 +99,7 @@ export default function AttendanceTab({ childId }: AttendanceTabProps) {
             {loadError ? <Typography color="error.main">{loadError}</Typography> : null}
 
             <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems="stretch">
-                <Stack flex={1.6} spacing={2}>
+                <Stack sx={{ flex: 1, minWidth: 0 }} spacing={2}>
                     <MonthCalendar
                         monthStart={month}
                         records={records}
@@ -109,7 +109,13 @@ export default function AttendanceTab({ childId }: AttendanceTabProps) {
                     <RecentRecords records={records} />
                 </Stack>
 
-                <Stack flex={1} spacing={2}>
+                <Stack
+                    spacing={2}
+                    sx={{
+                        width: { xs: "100%", md: 260 },
+                        flexShrink: 0,
+                    }}
+                >
                     <AttendanceStats summary={summary} />
                     <Button variant="contained" disabled sx={{ borderRadius: 3 }}>
                         Log Absence (coming soon)

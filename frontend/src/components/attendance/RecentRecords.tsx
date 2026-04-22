@@ -60,9 +60,9 @@ const statusMeta: Record<
     AttendanceStatus,
     { label: string; badge: string; tone: StatusTone; icon: ReactNode }
 > = {
-    PRESENT: { label: "Present", badge: "Attended", tone: "success", icon: CheckIcon },
-    ABSENT: { label: "Absent", badge: "Excused", tone: "error", icon: CrossIcon },
-    SICK: { label: "Sick Leave", badge: "Sick Day", tone: "warning", icon: HospitalIcon },
+    PRESENT: { label: "Present", badge: "Present", tone: "success", icon: CheckIcon },
+    ABSENT: { label: "Absent", badge: "Absent", tone: "error", icon: CrossIcon },
+    SICK: { label: "Sick Leave", badge: "Sick", tone: "warning", icon: HospitalIcon },
 };
 
 function formatRecordDate(isoDate: string): string {
