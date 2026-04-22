@@ -2,14 +2,15 @@
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/src/context/AuthContext";
-import { ApiRequestError, ChildDto, getChildren } from "@/src/services/children";
+import { type Child, getChildren } from "@/src/modules/parents";
+import { ApiRequestError } from "@/src/shared/utils/apiRequestError";
 
 interface ChildrenContextType {
-  children: ChildDto[];
+  children: Child[];
   isLoading: boolean;
   error: string | null;
   refreshChildren: () => Promise<void>;
-  upsertChild: (child: ChildDto) => void;
+  upsertChild: (child: Child) => void;
   clearChildren: () => void;
 }
 
@@ -17,7 +18,7 @@ const ChildrenContext = createContext<ChildrenContextType | null>(null);
 
 export function ChildrenProvider({ children }: { children: ReactNode }) {
   const { token, hydrated } = useAuth();
-  const [childrenList, setChildrenList] = useState<ChildDto[]>([]);
+  const [childrenList, setChildrenList] = useState<Child[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,7 +50,7 @@ export function ChildrenProvider({ children }: { children: ReactNode }) {
     }
   }, [clearChildren, token]);
 
-  const upsertChild = useCallback((child: ChildDto) => {
+  const upsertChild = useCallback((child: Child) => {
     setChildrenList((current) => {
       const existingIndex = current.findIndex((item) => item.id === child.id);
       if (existingIndex === -1) {

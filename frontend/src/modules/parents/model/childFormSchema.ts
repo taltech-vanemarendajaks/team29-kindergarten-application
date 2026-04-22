@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const childSchema = z.object({
+export const childFormSchema = z.object({
     firstName: z
         .string()
         .min(2, "First name must be at least 2 characters")
@@ -29,4 +29,4 @@ export const childSchema = z.object({
     ),
 });
 
-export type ChildFormData = z.infer<typeof childSchema>;
+export type ChildFormValues = z.infer<typeof childFormSchema>;

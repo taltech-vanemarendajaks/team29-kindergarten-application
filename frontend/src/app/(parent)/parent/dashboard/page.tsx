@@ -10,8 +10,8 @@ import Dialog from "@/src/components/ui/dialog";
 import Snackbar from "@/src/components/ui/snackbar";
 import { useAuth } from "@/src/context/AuthContext";
 import { useChildrenState } from "@/src/context/ChildrenContext";
-import { ApiRequestError, createChild } from "@/src/services/children";
-import { childSchema, type ChildFormData } from "@/src/validation/childSchema";
+import { childFormSchema, type ChildFormValues, createChild } from "@/src/modules/parents";
+import { ApiRequestError } from "@/src/shared/utils/apiRequestError";
 
 function getAgeLabel(birthDate: string | null): string {
     if (!birthDate) {
@@ -52,8 +52,8 @@ export default function ParentDashboardPage() {
         handleSubmit,
         reset,
         formState: { errors, isSubmitting, isValid },
-    } = useForm<z.input<typeof childSchema>, unknown, ChildFormData>({
-        resolver: zodResolver(childSchema),
+    } = useForm<z.input<typeof childFormSchema>, unknown, ChildFormValues>({
+        resolver: zodResolver(childFormSchema),
         defaultValues: {
             firstName: "",
             lastName: "",
@@ -74,14 +74,14 @@ export default function ParentDashboardPage() {
         setSnackbarOpen(true);
     };
 
-    const onSubmit = async (data: ChildFormData) => {
+    const onSubmit = async (data: ChildFormValues) => {
         if (!token) {
             showFeedback("You need to sign in before adding a child.", "error");
             return;
         }
 
         try {
-            await createChild(data, token);
+            await createChild(token, data);
             await refreshChildren();
             closeDialog();
             showFeedback("Child added successfully", "success");

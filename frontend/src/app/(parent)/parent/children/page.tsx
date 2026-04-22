@@ -26,7 +26,8 @@ import { useAuth } from "@/src/context/AuthContext";
 import { useChildrenState } from "@/src/context/ChildrenContext";
 import { getGroups } from "@/src/modules/groups/api/getGroups";
 import type { Group } from "@/src/modules/groups/model/group";
-import { ApiRequestError, ChildDto, getChildById, updateChild } from "@/src/services/children";
+import { type Child, getChildById, updateChild } from "@/src/modules/parents";
+import { ApiRequestError } from "@/src/shared/utils/apiRequestError";
 
 type ProfileTab = "profile" | "attendance" | "development";
 
@@ -63,7 +64,7 @@ export default function ParentChildrenPage() {
     const initialChildIdParam = searchParams.get("childId");
     const [tab, setTab] = useState<ProfileTab>("profile");
     const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
-    const [selectedChild, setSelectedChild] = useState<ChildDto | null>(null);
+    const [selectedChild, setSelectedChild] = useState<Child | null>(null);
     const [groups, setGroups] = useState<Group[]>([]);
     const [groupsLoadError, setGroupsLoadError] = useState<string | null>(null);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
@@ -85,7 +86,7 @@ export default function ParentChildrenPage() {
         setSnackbarOpen(true);
     };
 
-    const resolveGroupLabel = (child: ChildDto): string => {
+    const resolveGroupLabel = (child: Child): string => {
         if (!child.groupId) {
             return "Group not assigned";
         }
