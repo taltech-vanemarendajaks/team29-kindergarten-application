@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -67,9 +68,24 @@ public class AttendanceService {
     }
 
     public AttendanceResponseDto create(AttendanceRequestDto request, Long tenantId) {
-        Attendance attendance = attendanceMapper.toEntity(request);
-        attendance.setTenantId(tenantId);
-        attendance.setChild(resolveChild(request.getChildId(), tenantId));
+        Child child = resolveChild(request.getChildId(), tenantId);
+        Optional<Attendance> existingAttendance = attendanceRepository.findAnyByTenantIdAndChildIdAndDate(
+                tenantId,
+                request.getChildId(),
+                request.getDate()
+        );
+
+        Attendance attendance;
+        if (existingAttendance.isPresent()) {
+            attendance = existingAttendance.get();
+            attendanceMapper.updateEntityFromDto(request, attendance);
+            attendance.setDeletedAt(null);
+        } else {
+            attendance = attendanceMapper.toEntity(request);
+            attendance.setTenantId(tenantId);
+        }
+
+        attendance.setChild(child);
         return attendanceMapper.toResponseDto(attendanceRepository.save(attendance));
     }
 

@@ -19,10 +19,6 @@ function monthStart(date: Date): Date {
     return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
-function isSameMonth(a: Date, b: Date): boolean {
-    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
-}
-
 function toIsoDate(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -85,7 +81,6 @@ export default function AttendanceTab({ childId }: AttendanceTabProps) {
 
     const totalDaysInMonth = monthTo.getDate();
     const summary = useMemo(() => summarizeAttendance(records, totalDaysInMonth), [records, totalDaysInMonth]);
-    const isCurrentMonth = isSameMonth(month, new Date());
 
     const showFeedback = (message: string, severity: "success" | "error") => {
         setSnackbarMessage(message);
@@ -106,7 +101,12 @@ export default function AttendanceTab({ childId }: AttendanceTabProps) {
         );
     };
 
-    const logButtonLabel = isCurrentMonth ? "Log Absence" : "Log Absence (current month only)";
+    const handleAttendanceReset = (date: string) => {
+        setRecords((prev) => prev.filter((item) => item.date !== date));
+        showFeedback("Attendance record reset successfully.", "success");
+    };
+
+    const logButtonLabel = "Log Absence";
 
     return (
         <Stack spacing={2}>
@@ -118,7 +118,6 @@ export default function AttendanceTab({ childId }: AttendanceTabProps) {
                     monthStart={month}
                     onPrevMonth={() => setMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
                     onNextMonth={() => setMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
-                    disableNext={isCurrentMonth}
                 />
             </Stack>
 
@@ -146,7 +145,7 @@ export default function AttendanceTab({ childId }: AttendanceTabProps) {
                     <AttendanceStats summary={summary} />
                     <Button
                         variant="contained"
-                        disabled={!isCurrentMonth || !token}
+                        disabled={!token}
                         onClick={() => setIsLogDialogOpen(true)}
                         sx={{ borderRadius: 3 }}
                     >
@@ -163,6 +162,7 @@ export default function AttendanceTab({ childId }: AttendanceTabProps) {
                 records={records}
                 initialDate={selectedDate}
                 onSaved={handleAttendanceSaved}
+                onReset={handleAttendanceReset}
                 onError={(message) => showFeedback(message, "error")}
             />
 

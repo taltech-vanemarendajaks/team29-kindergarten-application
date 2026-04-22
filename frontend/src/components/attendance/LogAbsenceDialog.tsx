@@ -17,6 +17,7 @@ import {
     type AttendanceRecord,
     type AttendanceStatus,
     createAttendance,
+    deleteAttendance,
     updateAttendance,
 } from "@/src/modules/attendance";
 import { ApiRequestError } from "@/src/shared/utils/apiRequestError";
@@ -29,6 +30,7 @@ interface LogAbsenceDialogProps {
     records: AttendanceRecord[];
     initialDate?: string | null;
     onSaved: (record: AttendanceRecord, mode: "created" | "updated") => void;
+    onReset: (date: string) => void;
     onError: (message: string) => void;
 }
 
@@ -61,6 +63,7 @@ export default function LogAbsenceDialog({
     records,
     initialDate,
     onSaved,
+    onReset,
     onError,
 }: LogAbsenceDialogProps) {
     const { token } = useAuth();
@@ -157,6 +160,28 @@ export default function LogAbsenceDialog({
         }
     };
 
+    const handleReset = async () => {
+        if (!token || !existingRecord) {
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            setValidationError(null);
+            await deleteAttendance(token, existingRecord.id);
+            onReset(existingRecord.date);
+            onClose();
+        } catch (error) {
+            if (error instanceof ApiRequestError) {
+                onError(error.message);
+            } else {
+                onError("Failed to reset attendance record. Please try again.");
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const submitLabel = isSubmitting
         ? "Saving..."
         : existingRecord
@@ -176,6 +201,19 @@ export default function LogAbsenceDialog({
                     color: "inherit",
                     disabled: isSubmitting,
                 },
+                ...(existingRecord
+                    ? [
+                          {
+                              label: "Reset",
+                              onClick: () => {
+                                  void handleReset();
+                              },
+                              variant: "outlined" as const,
+                              color: "error" as const,
+                              disabled: isSubmitting,
+                          },
+                      ]
+                    : []),
                 {
                     label: submitLabel,
                     onClick: () => {
@@ -218,7 +256,8 @@ export default function LogAbsenceDialog({
 
                 {existingRecord ? (
                     <Typography variant="body2" color="warning.main">
-                        A record for this date already exists ({existingRecord.status}). Submitting will update it.
+                        A record for this date already exists ({existingRecord.status}). Submitting will update it, or use
+                        Reset to remove the record.
                     </Typography>
                 ) : null}
 
