@@ -1,7 +1,8 @@
 package com.team29.kindergarten.modules.announcement.dto;
 
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,8 +26,11 @@ public class AnnouncementRequestDto {
     @Size(max = 100, message = "message must not exceed 100 characters")
     private String message;
 
-    @Past(message = "Expiring date must not be in the past")
+    @Future(message = "Expiring date must be in the future")
     private LocalDate expires_At;
+    
+    @Positive(message = "User ID must be a positive number")
+    private Long userId;    
 
 
 }

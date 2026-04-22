@@ -13,7 +13,6 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 @Mapper(componentModel = "spring")
 public interface AnnouncementMapper {
 
-    //@Mapping(target = "userId", source = "user.id")
    AnnouncementResponseDto toResponseDto(Announcement announcement);
 
     @Mapping(target = "id",        ignore = true)

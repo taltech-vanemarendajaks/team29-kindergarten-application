@@ -12,12 +12,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.nio.file.attribute.UserPrincipal;
+
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import com.team29.kindergarten.tenant.TenantContext;
 
@@ -72,33 +76,11 @@ public class AnnouncementController {
         @RequestParam Long userId
 ) {
     Long tenantId = TenantContext.getTenantId();
-    AnnouncementResponseDto createdChild = announcementService.create(request, tenantId, userId);
-    return ResponseEntity.status(HttpStatus.CREATED).body(createdChild);
+    AnnouncementResponseDto createdAnnouncement = announcementService.create(request, tenantId, userId);
+    return ResponseEntity.status(HttpStatus.CREATED).body(createdAnnouncement);
 }
 
-    @PostMapping("/{id}/parents/{parentId}")
-    @Operation(summary = "Link an additional parent to a child")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Parent linked to child successfully"),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid child-parent link request",
-                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Child or parent not found",
-                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
-            )
-    })
-   public ResponseEntity<Void> addParentLink(
-        @PathVariable Long id,
-        @PathVariable Long parentId
-) {
-    Long tenantId = TenantContext.getTenantId();
 
-    return ResponseEntity.status(HttpStatus.CREATED).build();
-}
 
     @PutMapping("/{id}")
     @Operation(summary = "Update announcement")
@@ -138,4 +120,38 @@ public class AnnouncementController {
     announcementService.delete(id, tenantId);
     return ResponseEntity.noContent().build();
 }
+
+    @PostMapping("/{id}/read/")
+    @Operation(summary = "Mark announcement read by user")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Read status marked for announcement"),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid announcement read status update request",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Announcement not found",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    
+   public ResponseEntity<Void> addParentLink(
+         @AuthenticationPrincipal UserPrincipal user
+) {
+    Long tenantId = TenantContext.getTenantId();
+
+    Long userId = user.getName();
+
+
+
+
+
+    return ResponseEntity.status(HttpStatus.CREATED).build();
+}
+
+
+
+
 }

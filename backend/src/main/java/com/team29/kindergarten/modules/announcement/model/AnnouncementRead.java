@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 /**
  * Announcement-User link entity.
  *
- * Each row represents one parent linked to one child within a tenant.
+ * Each row represents one user has read the announcement.
  * Soft delete is handled in the service layer by setting deletedAt.
  * @SQLRestriction ensures deleted links are invisible to all queries automatically.
  */
@@ -34,7 +34,7 @@ import java.time.LocalDateTime;
 @Builder
 public class AnnouncementRead {
 
-    
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
