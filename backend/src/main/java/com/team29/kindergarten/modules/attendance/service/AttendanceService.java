@@ -14,7 +14,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +36,34 @@ public class AttendanceService {
     @Transactional(readOnly = true)
     public AttendanceResponseDto findById(Long id, Long tenantId) {
         return attendanceMapper.toResponseDto(getAttendance(id, tenantId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<AttendanceResponseDto> findForChildInRange(Long childId, LocalDate from, LocalDate to, Long tenantId) {
+        resolveChild(childId, tenantId);
+
+        LocalDate resolvedFrom = from;
+        LocalDate resolvedTo = to;
+        if (resolvedFrom == null || resolvedTo == null) {
+            YearMonth month = YearMonth.now();
+            resolvedFrom = month.atDay(1);
+            resolvedTo = month.atEndOfMonth();
+        }
+
+        if (resolvedFrom.isAfter(resolvedTo)) {
+            throw new IllegalArgumentException("'from' date must be before or equal to 'to' date");
+        }
+
+        long daySpan = resolvedTo.toEpochDay() - resolvedFrom.toEpochDay();
+        if (daySpan > 92) {
+            throw new IllegalArgumentException("Date range is too large. Maximum allowed range is 92 days");
+        }
+
+        return attendanceRepository
+                .findAllByTenantIdAndChildIdAndDateBetweenOrderByDateAsc(tenantId, childId, resolvedFrom, resolvedTo)
+                .stream()
+                .map(attendanceMapper::toResponseDto)
+                .toList();
     }
 
     public AttendanceResponseDto create(AttendanceRequestDto request, Long tenantId) {

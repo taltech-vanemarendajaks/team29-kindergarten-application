@@ -16,6 +16,7 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,6 +31,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.team29.kindergarten.tenant.TenantContext;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/attendances")
 @RequiredArgsConstructor
@@ -39,16 +43,33 @@ public class AttendanceController {
     private final AttendanceService attendanceService;
 
     @GetMapping
-    @Operation(summary = "List attendance records for a tenant")
+    @Operation(summary = "List attendance records for a tenant or child date range")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Attendance records returned successfully")
+            @ApiResponse(responseCode = "200", description = "Attendance records returned successfully"),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid attendance filter parameters",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Child not found for the current tenant",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
     })
-  public ResponseEntity<Page<AttendanceResponseDto>> findAll(
-        @ParameterObject @PageableDefault(size = 20, sort = "id") Pageable pageable
-) {
-    Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.ok(attendanceService.findAll(tenantId, pageable));
-}
+    public ResponseEntity<?> findAll(
+            @RequestParam(required = false) Long childId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @ParameterObject @PageableDefault(size = 20, sort = "id") Pageable pageable
+    ) {
+        Long tenantId = TenantContext.getTenantId();
+        if (childId != null) {
+            List<AttendanceResponseDto> childAttendance = attendanceService.findForChildInRange(childId, from, to, tenantId);
+            return ResponseEntity.ok(childAttendance);
+        }
+        return ResponseEntity.ok(attendanceService.findAll(tenantId, pageable));
+    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get attendance record by ID")
