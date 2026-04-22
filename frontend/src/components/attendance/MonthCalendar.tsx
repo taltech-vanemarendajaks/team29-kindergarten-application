@@ -1,4 +1,5 @@
 import { Box, Paper, Stack, Typography } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import type { AttendanceRecord, AttendanceStatus } from "@/src/modules/attendance";
 
 interface MonthCalendarProps {
@@ -10,10 +11,12 @@ interface MonthCalendarProps {
 
 const weekDays = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 
-const statusStyles: Record<AttendanceStatus, { bg: string; dot: string }> = {
-    PRESENT: { bg: "success.light", dot: "success.main" },
-    ABSENT: { bg: "error.light", dot: "error.main" },
-    SICK: { bg: "warning.light", dot: "warning.main" },
+type StatusTone = "success" | "error" | "warning";
+
+const statusTone: Record<AttendanceStatus, StatusTone> = {
+    PRESENT: "success",
+    ABSENT: "error",
+    SICK: "warning",
 };
 
 function toIsoDate(date: Date): string {
@@ -46,7 +49,12 @@ export default function MonthCalendar({ monthStart, records, selectedDate, onSel
                 }}
             >
                 {weekDays.map((weekDay) => (
-                    <Typography key={weekDay} variant="caption" color="text.secondary" sx={{ textAlign: "center" }}>
+                    <Typography
+                        key={weekDay}
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ textAlign: "center", letterSpacing: 0.5, fontWeight: 600 }}
+                    >
                         {weekDay}
                     </Typography>
                 ))}
@@ -60,7 +68,7 @@ export default function MonthCalendar({ monthStart, records, selectedDate, onSel
                     const date = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
                     const iso = toIsoDate(date);
                     const record = recordsByDate.get(iso);
-                    const statusStyle = record ? statusStyles[record.status] : undefined;
+                    const tone = record ? statusTone[record.status] : null;
                     const isSelected = selectedDate === iso;
                     const isToday = toIsoDate(new Date()) === iso;
 
@@ -69,35 +77,62 @@ export default function MonthCalendar({ monthStart, records, selectedDate, onSel
                             key={iso}
                             role="button"
                             tabIndex={0}
+                            elevation={0}
                             onClick={() => onSelectDate(iso)}
                             onKeyDown={(event) => {
                                 if (event.key === "Enter" || event.key === " ") {
                                     onSelectDate(iso);
                                 }
                             }}
-                            sx={{
-                                py: 1,
-                                borderRadius: 2.5,
-                                textAlign: "center",
-                                cursor: "pointer",
-                                borderWidth: isSelected || isToday ? 2 : 1,
-                                borderStyle: "solid",
-                                borderColor: isSelected ? "primary.main" : isToday ? "primary.light" : "divider",
-                                bgcolor: statusStyle?.bg ?? "background.paper",
-                                userSelect: "none",
+                            sx={(theme) => {
+                                const accent = tone ? theme.palette[tone].main : null;
+                                const accentDark = tone ? theme.palette[tone].dark : null;
+                                return {
+                                    py: 1,
+                                    borderRadius: 2.5,
+                                    textAlign: "center",
+                                    cursor: "pointer",
+                                    transition: "transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease",
+                                    borderWidth: isSelected ? 2 : 1,
+                                    borderStyle: "solid",
+                                    borderColor: isSelected
+                                        ? "primary.main"
+                                        : isToday
+                                        ? "primary.light"
+                                        : accent
+                                        ? alpha(accent, 0.25)
+                                        : alpha(theme.palette.text.primary, 0.08),
+                                    bgcolor: accent ? alpha(accent, 0.16) : "background.paper",
+                                    color: accentDark ?? "text.primary",
+                                    userSelect: "none",
+                                    "&:hover": {
+                                        bgcolor: accent
+                                            ? alpha(accent, 0.24)
+                                            : alpha(theme.palette.primary.main, 0.06),
+                                        transform: "translateY(-1px)",
+                                        boxShadow: accent
+                                            ? `0 4px 10px ${alpha(accent, 0.2)}`
+                                            : `0 4px 10px ${alpha(theme.palette.common.black, 0.06)}`,
+                                    },
+                                    "&:focus-visible": {
+                                        outline: "none",
+                                        boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.35)}`,
+                                    },
+                                };
                             }}
                         >
                             <Stack spacing={0.3} alignItems="center">
-                                <Typography variant="body2" fontWeight={600}>
+                                <Typography variant="body2" fontWeight={700}>
                                     {day}
                                 </Typography>
                                 <Box
-                                    sx={{
+                                    sx={(theme) => ({
                                         width: 5,
                                         height: 5,
                                         borderRadius: "50%",
-                                        bgcolor: statusStyle?.dot ?? "transparent",
-                                    }}
+                                        bgcolor: tone ? theme.palette[tone].dark : "transparent",
+                                        opacity: tone ? 0.75 : 0,
+                                    })}
                                 />
                             </Stack>
                         </Paper>
