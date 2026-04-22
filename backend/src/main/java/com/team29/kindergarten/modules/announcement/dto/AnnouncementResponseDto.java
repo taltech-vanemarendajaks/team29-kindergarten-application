@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 @Builder
 public class AnnouncementResponseDto {
     private Long id;
+    private Long tenantId;
     private String title;
     private String content;
     private LocalDate created_by;

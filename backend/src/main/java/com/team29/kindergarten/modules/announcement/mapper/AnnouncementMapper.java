@@ -13,13 +13,15 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 @Mapper(componentModel = "spring")
 public interface AnnouncementMapper {
 
-    @Mapping(target = "userId", source = "user.id")
+    //@Mapping(target = "userId", source = "user.id")
    AnnouncementResponseDto toResponseDto(Announcement announcement);
 
     @Mapping(target = "id",        ignore = true)
+    @Mapping(target = "tenantId",  ignore = true)    
     @Mapping(target = "title",  ignore = true)
     @Mapping(target = "content", ignore = true)    
-    @Mapping(target = "created_by", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "expiresAt", ignore = true)      
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
@@ -27,9 +29,11 @@ public interface AnnouncementMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id",        ignore = true)
+    @Mapping(target = "tenantId",  ignore = true)    
     @Mapping(target = "title",  ignore = true)
     @Mapping(target = "content", ignore = true)    
-    @Mapping(target = "created_by",  ignore = true)    
+    @Mapping(target = "createdBy",  ignore = true) 
+    @Mapping(target = "expiresAt", ignore = true)       
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
