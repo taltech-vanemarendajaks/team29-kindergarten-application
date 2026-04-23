@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -9,13 +9,8 @@ import { Box, Button, CircularProgress, Paper, Stack, TextField, Typography } fr
 import Dialog from "@/src/components/ui/dialog";
 import Snackbar from "@/src/components/ui/snackbar";
 import { useAuth } from "@/src/context/AuthContext";
-import {
-    type Child,
-    childFormSchema,
-    type ChildFormValues,
-    createChild,
-    getChildren,
-} from "@/src/modules/parents";
+import { useChildrenState } from "@/src/context/ChildrenContext";
+import { childFormSchema, type ChildFormValues, createChild } from "@/src/modules/parents";
 import { ApiRequestError } from "@/src/shared/utils/apiRequestError";
 
 function getAgeLabel(birthDate: string | null): string {
@@ -41,13 +36,16 @@ function getAgeLabel(birthDate: string | null): string {
 
 export default function ParentDashboardPage() {
     const { token } = useAuth();
+    const {
+        children,
+        isLoading: isChildrenLoading,
+        error: childrenLoadError,
+        refreshChildren,
+    } = useChildrenState();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState("");
     const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
-    const [children, setChildren] = useState<Child[]>([]);
-    const [isChildrenLoading, setIsChildrenLoading] = useState(false);
-    const [childrenLoadError, setChildrenLoadError] = useState<string | null>(null);
 
     const {
         register,
@@ -76,36 +74,6 @@ export default function ParentDashboardPage() {
         setSnackbarOpen(true);
     };
 
-    useEffect(() => {
-        if (!token) {
-            setChildren([]);
-            setChildrenLoadError(null);
-            setIsChildrenLoading(false);
-            return;
-        }
-    }, [token]);
-
-    const loadChildren = async (authToken: string) => {
-        try {
-            setIsChildrenLoading(true);
-            setChildrenLoadError(null);
-            const page = await getChildren(authToken);
-            setChildren(page.content);
-        } catch {
-            setChildrenLoadError("Failed to load children from API.");
-        } finally {
-            setIsChildrenLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        if (!token) {
-            return;
-        }
-
-        void loadChildren(token);
-    }, [token]);
-
     const onSubmit = async (data: ChildFormValues) => {
         if (!token) {
             showFeedback("You need to sign in before adding a child.", "error");
@@ -114,7 +82,7 @@ export default function ParentDashboardPage() {
 
         try {
             await createChild(token, data);
-            await loadChildren(token);
+            await refreshChildren();
             closeDialog();
             showFeedback("Child added successfully", "success");
         } catch (error) {
@@ -248,6 +216,17 @@ export default function ParentDashboardPage() {
                         error={!!errors.birthDate}
                         helperText={errors.birthDate?.message}
                         InputLabelProps={{ shrink: true }}
+                        fullWidth
+                    />
+
+                    <TextField
+                        label="Group ID (optional)"
+                        type="number"
+                        {...register("groupId", {
+                            setValueAs: (value) => (value === "" ? undefined : Number(value)),
+                        })}
+                        error={!!errors.groupId}
+                        helperText={errors.groupId?.message}
                         fullWidth
                     />
                 </Stack>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
     Avatar,
@@ -9,7 +9,11 @@ import {
     Button,
     Chip,
     CircularProgress,
+    FormControl,
+    InputLabel,
+    MenuItem,
     Paper,
+    Select,
     Stack,
     Tab,
     Tabs,
@@ -19,7 +23,10 @@ import {
 import Dialog from "@/src/components/ui/dialog";
 import Snackbar from "@/src/components/ui/snackbar";
 import { useAuth } from "@/src/context/AuthContext";
-import { type Child, getChildById, getChildren, updateChild } from "@/src/modules/parents";
+import { useChildrenState } from "@/src/context/ChildrenContext";
+import { getGroups } from "@/src/modules/groups/api/getGroups";
+import type { Group } from "@/src/modules/groups/model/group";
+import { type Child, getChildById, updateChild } from "@/src/modules/parents";
 import { ApiRequestError } from "@/src/shared/utils/apiRequestError";
 
 type ProfileTab = "profile" | "attendance" | "development";
@@ -47,23 +54,37 @@ function getAgeLabel(birthDate: string | null): string {
 
 export default function ParentChildrenPage() {
     const { token } = useAuth();
+    const {
+        children,
+        isLoading: isLoadingChildren,
+        error: childrenLoadError,
+        upsertChild,
+    } = useChildrenState();
     const searchParams = useSearchParams();
     const initialChildIdParam = searchParams.get("childId");
+    // The URL `?childId=` value must seed the selection only on the first render
+    // that has children available. Re-applying it every time `children` changes
+    // would overwrite the user's manual selection each time the profile is refetched
+    // and `upsertChild` replaces the item in the children list.
+    const initialChildIdAppliedRef = useRef(false);
     const [tab, setTab] = useState<ProfileTab>("profile");
-    const [children, setChildren] = useState<Child[]>([]);
     const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
     const [selectedChild, setSelectedChild] = useState<Child | null>(null);
-    const [isLoadingChildren, setIsLoadingChildren] = useState(true);
+    const [groups, setGroups] = useState<Group[]>([]);
+    const [groupsLoadError, setGroupsLoadError] = useState<string | null>(null);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+    const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
+    const [isLoadingGroups, setIsLoadingGroups] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isSavingEdit, setIsSavingEdit] = useState(false);
     const [editFirstName, setEditFirstName] = useState("");
     const [editLastName, setEditLastName] = useState("");
     const [editBirthDate, setEditBirthDate] = useState("");
+    const [editGroupId, setEditGroupId] = useState("");
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState("");
     const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
-    const [error, setError] = useState<string | null>(null);
+    const [profileError, setProfileError] = useState<string | null>(null);
 
     const showFeedback = (message: string, severity: "success" | "error") => {
         setSnackbarMessage(message);
@@ -83,45 +104,66 @@ export default function ParentChildrenPage() {
         return `Group #${child.groupId}`;
     };
 
-    const loadChildren = async (authToken: string) => {
-        setError(null);
-        setIsLoadingChildren(true);
+    const loadGroups = async (authToken: string) => {
+        setIsLoadingGroups(true);
+        setGroupsLoadError(null);
 
         try {
-            const page = await getChildren(authToken);
-            setChildren(page.content);
-            setSelectedChildId((currentId) => currentId ?? page.content[0]?.id ?? null);
+            const page = await getGroups(authToken, 0, 100);
+            setGroups(page.content);
         } catch {
-            setError("Failed to load children from API.");
+            setGroups([]);
+            setGroupsLoadError("Full groups list is unavailable for your account. Showing known groups only.");
         } finally {
-            setIsLoadingChildren(false);
+            setIsLoadingGroups(false);
         }
     };
 
     useEffect(() => {
         if (!token) {
-            setIsLoadingChildren(false);
+            setGroups([]);
             return;
         }
 
-        void loadChildren(token);
+        void loadGroups(token);
     }, [token]);
 
     useEffect(() => {
-        if (!initialChildIdParam || children.length === 0) {
+        if (children.length === 0) {
+            setSelectedChildId(null);
+            initialChildIdAppliedRef.current = false;
             return;
         }
 
-        const parsedChildId = Number(initialChildIdParam);
-        if (!Number.isInteger(parsedChildId)) {
+        setSelectedChildId((currentId) => {
+            if (currentId !== null && children.some((child) => child.id === currentId)) {
+                return currentId;
+            }
+
+            if (!initialChildIdAppliedRef.current && initialChildIdParam) {
+                const parsedChildId = Number(initialChildIdParam);
+                if (Number.isInteger(parsedChildId) && children.some((child) => child.id === parsedChildId)) {
+                    initialChildIdAppliedRef.current = true;
+                    return parsedChildId;
+                }
+            }
+
+            initialChildIdAppliedRef.current = true;
+            return children[0]?.id ?? null;
+        });
+    }, [children, initialChildIdParam]);
+
+    useEffect(() => {
+        if (!isLoadingProfile) {
+            setShowLoadingIndicator(false);
             return;
         }
 
-        const exists = children.some((child) => child.id === parsedChildId);
-        if (exists) {
-            setSelectedChildId(parsedChildId);
-        }
-    }, [initialChildIdParam, children]);
+        // Avoid a flash of the spinner for quick profile loads; only show the
+        // "Loading profile details..." indicator if the request actually takes a while.
+        const timeoutId = window.setTimeout(() => setShowLoadingIndicator(true), 400);
+        return () => window.clearTimeout(timeoutId);
+    }, [isLoadingProfile]);
 
     useEffect(() => {
         if (!token || !selectedChildId) {
@@ -129,22 +171,30 @@ export default function ParentChildrenPage() {
             return;
         }
 
+        const cachedChild = children.find((item) => item.id === selectedChildId) ?? null;
+        if (cachedChild) {
+            // Keep previous content visible while full profile is refreshed to avoid layout jumps.
+            setSelectedChild(cachedChild);
+        }
+
         const loadChildProfile = async () => {
             try {
                 setIsLoadingProfile(true);
+                setProfileError(null);
                 const child = await getChildById(token, selectedChildId);
                 setSelectedChild(child);
+                upsertChild(child);
             } catch {
                 const fallback = children.find((item) => item.id === selectedChildId) ?? null;
                 setSelectedChild(fallback);
-                setError("Failed to load full child profile. Showing list data.");
+                setProfileError("Failed to load full child profile. Showing list data.");
             } finally {
                 setIsLoadingProfile(false);
             }
         };
 
         void loadChildProfile();
-    }, [token, selectedChildId, children]);
+    }, [token, selectedChildId]);
 
     const fullName = useMemo(() => {
         if (!selectedChild) {
@@ -161,6 +211,34 @@ export default function ParentChildrenPage() {
         return resolveGroupLabel(selectedChild);
     }, [selectedChild]);
 
+    const groupOptions = useMemo(() => {
+        const merged = new Map<number, string>();
+
+        groups.forEach((group) => {
+            merged.set(group.id, group.name);
+        });
+
+        children.forEach((child) => {
+            if (!child.groupId) {
+                return;
+            }
+
+            const knownName =
+                child.groupName && child.groupName.trim().length > 0 ? child.groupName : `Group #${child.groupId}`;
+            if (!merged.has(child.groupId)) {
+                merged.set(child.groupId, knownName);
+            }
+        });
+
+        if (selectedChild?.groupId && !merged.has(selectedChild.groupId)) {
+            merged.set(selectedChild.groupId, resolveGroupLabel(selectedChild));
+        }
+
+        return Array.from(merged.entries())
+            .map(([id, name]) => ({ id, name }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+    }, [groups, children, selectedChild]);
+
     const openEditDialog = () => {
         if (!selectedChild) {
             return;
@@ -169,6 +247,7 @@ export default function ParentChildrenPage() {
         setEditFirstName(selectedChild.firstName);
         setEditLastName(selectedChild.lastName);
         setEditBirthDate(selectedChild.birthDate ?? "");
+        setEditGroupId(selectedChild.groupId ? String(selectedChild.groupId) : "");
         setIsEditDialogOpen(true);
     };
 
@@ -204,6 +283,12 @@ export default function ParentChildrenPage() {
             return;
         }
 
+        const parsedGroupId = editGroupId === "" ? undefined : Number(editGroupId);
+        if (parsedGroupId !== undefined && (!Number.isInteger(parsedGroupId) || parsedGroupId <= 0)) {
+            showFeedback("Please select a valid group.", "error");
+            return;
+        }
+
         try {
             setIsSavingEdit(true);
 
@@ -211,13 +296,11 @@ export default function ParentChildrenPage() {
                 firstName: normalizedFirstName,
                 lastName: normalizedLastName,
                 birthDate: normalizedBirthDate,
-                groupId: selectedChild.groupId ?? undefined,
+                groupId: parsedGroupId,
             });
 
             setSelectedChild(updatedChild);
-            setChildren((currentChildren) =>
-                currentChildren.map((child) => (child.id === updatedChild.id ? updatedChild : child))
-            );
+            upsertChild(updatedChild);
             setIsEditDialogOpen(false);
             showFeedback("Child profile updated successfully.", "success");
         } catch (updateError) {
@@ -251,7 +334,8 @@ export default function ParentChildrenPage() {
                     </Stack>
                 ) : null}
 
-                {error ? <Typography color="error.main">{error}</Typography> : null}
+                {childrenLoadError ? <Typography color="error.main">{childrenLoadError}</Typography> : null}
+                {profileError ? <Typography color="error.main">{profileError}</Typography> : null}
 
                 {!isLoadingChildren && children.length === 0 && token ? (
                     <Typography color="text.secondary">
@@ -307,14 +391,14 @@ export default function ParentChildrenPage() {
                                 <Tab value="development" label="Development" />
                             </Tabs>
 
-                            {isLoadingProfile ? (
-                                <Stack direction="row" spacing={1} alignItems="center">
+                            {showLoadingIndicator ? (
+                                <Stack direction="row" spacing={1} alignItems="center" sx={{ py: 2 }}>
                                     <CircularProgress size={16} />
                                     <Typography color="text.secondary">Loading profile details...</Typography>
                                 </Stack>
                             ) : null}
 
-                            {tab === "profile" ? (
+                            {!showLoadingIndicator && tab === "profile" ? (
                                 <Stack spacing={1}>
                                     <Button variant="outlined" onClick={openEditDialog} sx={{ alignSelf: "flex-start" }}>
                                         Edit Profile
@@ -402,6 +486,28 @@ export default function ParentChildrenPage() {
                         InputLabelProps={{ shrink: true }}
                         fullWidth
                     />
+                    <FormControl fullWidth>
+                        <InputLabel id="edit-child-group-label">Group</InputLabel>
+                        <Select
+                            labelId="edit-child-group-label"
+                            label="Group"
+                            value={editGroupId}
+                            onChange={(event) => setEditGroupId(event.target.value)}
+                            disabled={isLoadingGroups}
+                        >
+                            <MenuItem value="">Not assigned</MenuItem>
+                            {groupOptions.map((group) => (
+                                <MenuItem key={group.id} value={String(group.id)}>
+                                    {group.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    {groupsLoadError ? (
+                        <Typography variant="body2" color="warning.main">
+                            {groupsLoadError}
+                        </Typography>
+                    ) : null}
                 </Stack>
             </Dialog>
 
