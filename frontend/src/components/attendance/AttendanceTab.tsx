@@ -32,6 +32,7 @@ export default function AttendanceTab({ childId }: AttendanceTabProps) {
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [records, setRecords] = useState<AttendanceRecord[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -79,6 +80,18 @@ export default function AttendanceTab({ childId }: AttendanceTabProps) {
         };
     }, [childId, monthFrom, monthTo, token]);
 
+    useEffect(() => {
+        if (!isLoading) {
+            setShowLoadingIndicator(false);
+            return;
+        }
+
+        // Only flash the "Loading attendance..." line for requests that actually take a noticeable
+        // amount of time; fast responses should swap in the new data in place without flicker.
+        const timeoutId = window.setTimeout(() => setShowLoadingIndicator(true), 400);
+        return () => window.clearTimeout(timeoutId);
+    }, [isLoading]);
+
     const totalDaysInMonth = monthTo.getDate();
     const summary = useMemo(() => summarizeAttendance(records, totalDaysInMonth), [records, totalDaysInMonth]);
 
@@ -121,7 +134,7 @@ export default function AttendanceTab({ childId }: AttendanceTabProps) {
                 />
             </Stack>
 
-            {isLoading ? <Typography color="text.secondary">Loading attendance...</Typography> : null}
+            {showLoadingIndicator ? <Typography color="text.secondary">Loading attendance...</Typography> : null}
             {loadError ? <Typography color="error.main">{loadError}</Typography> : null}
 
             <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems="stretch">

@@ -32,14 +32,6 @@ import { ApiRequestError } from "@/src/shared/utils/apiRequestError";
 
 type ProfileTab = "profile" | "attendance" | "development";
 
-function resolveInitialTab(rawTab: string | null): ProfileTab {
-    if (rawTab === "attendance" || rawTab === "development" || rawTab === "profile") {
-        return rawTab;
-    }
-
-    return "profile";
-}
-
 function getAgeLabel(birthDate: string | null): string {
     if (!birthDate) {
         return "Unknown";
@@ -71,13 +63,12 @@ export default function ParentChildrenPage() {
     } = useChildrenState();
     const searchParams = useSearchParams();
     const initialChildIdParam = searchParams.get("childId");
-    const initialTabParam = searchParams.get("tab");
     // The URL `?childId=` value must seed the selection only on the first render
     // that has children available. Re-applying it every time `children` changes
     // would overwrite the user's manual selection each time the profile is refetched
     // and `upsertChild` replaces the item in the children list.
     const initialChildIdAppliedRef = useRef(false);
-    const [tab, setTab] = useState<ProfileTab>(() => resolveInitialTab(initialTabParam));
+    const [tab, setTab] = useState<ProfileTab>("profile");
     const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
     const [selectedChild, setSelectedChild] = useState<Child | null>(null);
     const [groups, setGroups] = useState<Group[]>([]);
