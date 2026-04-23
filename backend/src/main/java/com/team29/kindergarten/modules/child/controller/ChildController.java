@@ -78,9 +78,9 @@ public ResponseEntity<List<ChildResponseDto>> findClassRecords(
 }
 
     @PostMapping
-    @Operation(summary = "Create child and link the creating parent")
+    @Operation(summary = "Create child")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Child created and linked successfully"),
+            @ApiResponse(responseCode = "201", description = "Child created successfully"),
             @ApiResponse(
                     responseCode = "400",
                     description = "Invalid child request",
@@ -88,41 +88,16 @@ public ResponseEntity<List<ChildResponseDto>> findClassRecords(
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Related parent or group not found",
+                    description = "Related group not found",
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
   public ResponseEntity<ChildResponseDto> create(
-        @Valid @RequestBody ChildRequestDto request,
-        @RequestParam Long parentId
+        @Valid @RequestBody ChildRequestDto request
 ) {
     Long tenantId = TenantContext.getTenantId();
-    ChildResponseDto createdChild = childService.create(request, tenantId, parentId);
+    ChildResponseDto createdChild = childService.create(request, tenantId);
     return ResponseEntity.status(HttpStatus.CREATED).body(createdChild);
-}
-
-    @PostMapping("/{id}/parents/{parentId}")
-    @Operation(summary = "Link an additional parent to a child")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Parent linked to child successfully"),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid child-parent link request",
-                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Child or parent not found",
-                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
-            )
-    })
-   public ResponseEntity<Void> addParentLink(
-        @PathVariable Long id,
-        @PathVariable Long parentId
-) {
-    Long tenantId = TenantContext.getTenantId();
-    childService.addParentLink(id, parentId, tenantId);
-    return ResponseEntity.status(HttpStatus.CREATED).build();
 }
 
     @PutMapping("/{id}")

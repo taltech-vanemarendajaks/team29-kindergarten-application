@@ -65,18 +65,17 @@ public class ChildService {
             .toList();
 }
 
-    public ChildResponseDto create(ChildRequestDto request, Long tenantId, Long parentId) {
-        log.info("Creating child for tenantId={} and linking parentId={}", tenantId, parentId);
+    public ChildResponseDto create(ChildRequestDto request, Long tenantId) {
+    log.info("Creating child for tenantId={}", tenantId);
 
-        Child child = childMapper.toEntity(request);
-        child.setTenantId(tenantId);
-        resolveGroup(request.getGroupId(), tenantId, child);
+    Child child = childMapper.toEntity(request);
+    child.setTenantId(tenantId);
+    resolveGroup(request.getGroupId(), tenantId, child);
 
-        Child saved = childRepository.save(child);
-        linkParent(saved.getId(), parentId, tenantId);
-        log.info("Created child id={} for tenantId={} and linked parentId={}", saved.getId(), tenantId, parentId);
-        return childMapper.toResponseDto(saved);
-    }
+    Child saved = childRepository.save(child);
+    log.info("Created child id={} for tenantId={}", saved.getId(), tenantId);
+    return childMapper.toResponseDto(saved);
+}
 
     public ChildResponseDto update(Long id, ChildRequestDto request, Long tenantId) {
         log.info("Updating child id={} for tenantId={}", id, tenantId);

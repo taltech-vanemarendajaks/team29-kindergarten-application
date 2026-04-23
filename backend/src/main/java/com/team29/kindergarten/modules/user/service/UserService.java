@@ -29,6 +29,7 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
+    
     public Page<UserResponseDto> findUsersByRole(Long tenantId, RoleName roleName, Pageable pageable) {
         return userRepository.findDistinctByTenantIdAndRoles_NameOrderByFullNameAsc(tenantId, roleName, pageable)
                 .map(userMapper::toUserResponseDto);
@@ -44,11 +45,6 @@ public class UserService {
     @Transactional
     public UserResponseDto createTeacherUser(Long tenantId, CreateUserRequestDto request) {
         return createUserWithRole(tenantId, request, RoleName.TEACHER);
-    }
-
-    @Transactional
-    public void createParentUser(Long tenantId, CreateUserRequestDto request) {
-        createUserWithRole(tenantId, request, RoleName.PARENT);
     }
 
     @Transactional

@@ -1,6 +1,7 @@
 package com.team29.kindergarten.modules.parent.service;
 
 import com.team29.kindergarten.common.exception.ResourceNotFoundException;
+import com.team29.kindergarten.modules.user.entity.User;
 import com.team29.kindergarten.modules.parent.dto.ParentRequestDto;
 import com.team29.kindergarten.modules.parent.dto.ParentResponseDto;
 import com.team29.kindergarten.modules.parent.mapper.ParentMapper;
@@ -30,6 +31,22 @@ public class ParentService {
     @Transactional(readOnly = true)
     public ParentResponseDto findById(Long id, Long tenantId) {
         return parentMapper.toResponseDto(getParent(id, tenantId));
+    }
+
+    @Transactional(readOnly = true)
+    public ParentResponseDto findMyProfile(User user, Long tenantId) {
+        if (user == null || user.getEmail() == null || user.getEmail().isBlank()) {
+            throw new ResourceNotFoundException("Authenticated user email is missing");
+        }
+
+        return ParentResponseDto.builder()
+                .id(user.getId())
+                .tenantId(tenantId)
+                .email(user.getEmail())
+                .phone(null)
+                .createdAt(null)
+                .updatedAt(null)
+                .build();
     }
 
     public ParentResponseDto create(ParentRequestDto request, Long tenantId) {
