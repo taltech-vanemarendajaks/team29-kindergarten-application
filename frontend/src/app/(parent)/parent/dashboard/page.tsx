@@ -218,17 +218,6 @@ export default function ParentDashboardPage() {
                         InputLabelProps={{ shrink: true }}
                         fullWidth
                     />
-
-                    <TextField
-                        label="Group ID (optional)"
-                        type="number"
-                        {...register("groupId", {
-                            setValueAs: (value) => (value === "" ? undefined : Number(value)),
-                        })}
-                        error={!!errors.groupId}
-                        helperText={errors.groupId?.message}
-                        fullWidth
-                    />
                 </Stack>
             </Dialog>
 
