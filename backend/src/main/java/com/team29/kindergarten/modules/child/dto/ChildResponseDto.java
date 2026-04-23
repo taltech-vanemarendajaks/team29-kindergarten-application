@@ -21,6 +21,7 @@ public class ChildResponseDto {
     private String lastName;
     private LocalDate birthDate;
     private Long groupId;
+    private String groupName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
