@@ -1,6 +1,7 @@
 package com.team29.kindergarten.modules.child.controller;
 
 import com.team29.kindergarten.common.exception.ApiErrorResponse;
+import com.team29.kindergarten.modules.user.entity.User;
 import com.team29.kindergarten.modules.child.dto.ChildRequestDto;
 import com.team29.kindergarten.modules.child.dto.ChildResponseDto;
 import com.team29.kindergarten.modules.child.service.ChildService;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import com.team29.kindergarten.tenant.TenantContext;
 
@@ -35,10 +37,11 @@ public class ChildController {
             @ApiResponse(responseCode = "200", description = "Children returned successfully")
     })
   public ResponseEntity<Page<ChildResponseDto>> findAll(
+        @AuthenticationPrincipal User user,
         @ParameterObject @PageableDefault(size = 20, sort = "lastName") Pageable pageable
 ) {
     Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.ok(childService.findAll(tenantId, pageable));
+    return ResponseEntity.ok(childService.findAll(tenantId, pageable, user));
 }
 
     @GetMapping("/{id}")
@@ -51,9 +54,9 @@ public class ChildController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-  public ResponseEntity<ChildResponseDto> findById(@PathVariable Long id) {
+  public ResponseEntity<ChildResponseDto> findById(@PathVariable Long id, @AuthenticationPrincipal User user) {
     Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.ok(childService.findById(id, tenantId));
+    return ResponseEntity.ok(childService.findById(id, tenantId, user));
 }
 
     @PostMapping
@@ -72,10 +75,11 @@ public class ChildController {
             )
     })
   public ResponseEntity<ChildResponseDto> create(
+        @AuthenticationPrincipal User user,
         @Valid @RequestBody ChildRequestDto request
 ) {
     Long tenantId = TenantContext.getTenantId();
-    ChildResponseDto createdChild = childService.create(request, tenantId);
+    ChildResponseDto createdChild = childService.create(request, tenantId, user);
     return ResponseEntity.status(HttpStatus.CREATED).body(createdChild);
 }
 
@@ -96,10 +100,11 @@ public class ChildController {
     })
   public ResponseEntity<ChildResponseDto> update(
         @PathVariable Long id,
+        @AuthenticationPrincipal User user,
         @Valid @RequestBody ChildRequestDto request
 ) {
     Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.ok(childService.update(id, request, tenantId));
+    return ResponseEntity.ok(childService.update(id, request, tenantId, user));
 }
 
     @DeleteMapping("/{id}")
@@ -112,9 +117,9 @@ public class ChildController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-  public ResponseEntity<Void> delete(@PathVariable Long id) {
+  public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal User user) {
     Long tenantId = TenantContext.getTenantId();
-    childService.delete(id, tenantId);
+    childService.delete(id, tenantId, user);
     return ResponseEntity.noContent().build();
 }
 }
