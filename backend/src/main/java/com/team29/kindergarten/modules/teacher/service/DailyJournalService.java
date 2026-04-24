@@ -57,7 +57,7 @@ public class DailyJournalService {
         Group group = groupRepository.findByTeacherUserId(teacherUser.getId())
                 .orElseThrow(() -> new RuntimeException("Group not found for teacher"));
 
-        return journalRepository.findByKindergartenGroupId(group.getId())
+        return journalRepository.findByKindergartenGroupIdOrderByDateDesc(group.getId())
                 .stream()
                 .map(DailyJournalEntryResponse::from)
                 .toList();

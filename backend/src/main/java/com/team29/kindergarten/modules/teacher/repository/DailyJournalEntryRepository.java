@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface DailyJournalEntryRepository extends JpaRepository<DailyJournalEntry, Long> {
 
-    List<DailyJournalEntry> findByKindergartenGroupId(Long groupId);
+    List<DailyJournalEntry> findByKindergartenGroupIdOrderByDateDesc(Long groupId);
 
     @Query("""
     SELECT e
