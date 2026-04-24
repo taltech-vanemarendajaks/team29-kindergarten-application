@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface ChildRepository extends JpaRepository<Child, Long> {
@@ -14,4 +15,6 @@ public interface ChildRepository extends JpaRepository<Child, Long> {
     Page<Child> findAllByTenantId(Long tenantId, Pageable pageable);
 
     Optional<Child> findByIdAndTenantId(Long id, Long tenantId);
+
+    List<Child> findAllByGroupIdAndTenantId(Long groupId, Long tenantId);
 }
