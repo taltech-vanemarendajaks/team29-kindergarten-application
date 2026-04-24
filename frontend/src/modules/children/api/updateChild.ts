@@ -5,7 +5,7 @@ import type { Child } from "../model/child";
 export type UpdateChildPayload = {
     firstName: string;
     lastName: string;
-    birthDate: string;
+    birthDate: string | null;
     groupId: number | null;
 };
 

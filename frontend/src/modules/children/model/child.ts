@@ -1,13 +1,3 @@
-export interface Child {
-  id: number;
-  tenantId: number;
-  firstName: string;
-  lastName: string;
-  birthDate: string;
-  groupName: string;
-  createdAt: string;
-  updatedAt: string;
-}
 export type ChildGroupSummary = {
     id: number;
     name: string;
@@ -24,7 +14,7 @@ export type Child = {
     tenantId: number;
     firstName: string;
     lastName: string;
-    birthDate: string;
+    birthDate: string | null;
     group: ChildGroupSummary | null;
     contacts: ChildContactSummary[];
     createdAt: string;

@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface ChildParentRepository extends JpaRepository<ChildParent, ChildParentId> {
 
-    Optional<ChildParent> findByIdChildIdAndIdParentIdAndTenantId(Long childId, Long parentId, Long tenantId);
+    Optional<ChildParent> findByIdChildIdAndIdParentUserIdAndTenantId(Long childId, Long parentUserId, Long tenantId);
 
     List<ChildParent> findAllByIdChildIdInAndTenantId(Collection<Long> childIds, Long tenantId);
 }

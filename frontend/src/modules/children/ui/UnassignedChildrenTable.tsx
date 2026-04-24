@@ -23,7 +23,7 @@ export default function UnassignedChildrenTable({
         return (
             <EmptyState
                 title="No unassigned children"
-                description="Every child currently has a group assignment."
+                description="All children have a group."
             />
         );
     }

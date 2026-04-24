@@ -120,13 +120,13 @@ public class ChildService {
                 .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
     }
 
-    public void addParentLink(Long childId, Long parentId, Long tenantId) {
-        log.info("Linking parentId={} to childId={} for tenantId={}", parentId, childId, tenantId);
+    public void addParentLink(Long childId, Long parentUserId, Long tenantId) {
+        log.info("Linking parentUserId={} to childId={} for tenantId={}", parentUserId, childId, tenantId);
         // TODO: Decide whether this operation should stay admin/staff-controlled
         // or move behind a parent invitation / consent workflow.
         getChild(childId, tenantId);
-        linkParent(childId, parentId, tenantId);
-        log.info("Linked parentId={} to childId={} for tenantId={}", parentId, childId, tenantId);
+        linkParent(childId, parentUserId, tenantId);
+        log.info("Linked parentUserId={} to childId={} for tenantId={}", parentUserId, childId, tenantId);
     }
 
     private void resolveGroup(Long groupId, Long tenantId, Child child) {
@@ -143,14 +143,14 @@ public class ChildService {
         child.setGroup(group);
     }
 
-    private void linkParent(Long childId, Long parentId, Long tenantId) {
-        // TODO: For the parent self-service flow, parentId should be resolved
+    private void linkParent(Long childId, Long parentUserId, Long tenantId) {
+        // TODO: For the parent self-service flow, parentUserId should be resolved
         // from authentication instead of being passed in by the client.
-        userRepository.findByIdAndTenantIdAndRoles_Name(parentId, tenantId, RoleName.PARENT)
-                .orElseThrow(() -> new ResourceNotFoundException("Parent user not found: " + parentId));
+        userRepository.findByIdAndTenantIdAndRoles_Name(parentUserId, tenantId, RoleName.PARENT)
+                .orElseThrow(() -> new ResourceNotFoundException("Parent user not found: " + parentUserId));
 
         childParentRepository
-                .findByIdChildIdAndIdParentIdAndTenantId(childId, parentId, tenantId)
+                .findByIdChildIdAndIdParentUserIdAndTenantId(childId, parentUserId, tenantId)
                 .ifPresent(existingLink -> {
                     throw new IllegalArgumentException("Parent is already linked to child");
                 });
@@ -158,7 +158,7 @@ public class ChildService {
         ChildParent childParent = ChildParent.builder()
                 .id(ChildParentId.builder()
                         .childId(childId)
-                        .parentId(parentId)
+                        .parentUserId(parentUserId)
                         .build())
                 .tenantId(tenantId)
                 .build();
@@ -187,18 +187,18 @@ public class ChildService {
             return;
         }
 
-        Set<Long> parentIds = childParents.stream()
-                .map(link -> link.getId().getParentId())
+        Set<Long> parentUserIds = childParents.stream()
+                .map(link -> link.getId().getParentUserId())
                 .collect(Collectors.toSet());
 
-        Map<Long, User> parentsById = userRepository.findAllByIdInAndTenantIdAndRoles_Name(parentIds, tenantId, RoleName.PARENT).stream()
+        Map<Long, User> parentsById = userRepository.findAllByIdInAndTenantIdAndRoles_Name(parentUserIds, tenantId, RoleName.PARENT).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
 
         Map<Long, List<ChildContactSummaryDto>> contactsByChildId = childParents.stream()
                 .collect(Collectors.groupingBy(
                         link -> link.getId().getChildId(),
                         Collectors.mapping(
-                                link -> toContactSummary(parentsById.get(link.getId().getParentId())),
+                                link -> toContactSummary(parentsById.get(link.getId().getParentUserId())),
                                 Collectors.filtering(contact -> contact != null, Collectors.toList())
                         )
                 ));

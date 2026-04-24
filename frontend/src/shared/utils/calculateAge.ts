@@ -1,4 +1,8 @@
-export function calculateAge(birthDate: string): number | null {
+export function calculateAge(birthDate: string | null): number | null {
+    if (!birthDate) {
+        return null;
+    }
+
     const parsedDate = new Date(birthDate);
 
     if (Number.isNaN(parsedDate.getTime())) {

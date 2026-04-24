@@ -130,7 +130,7 @@ export default function KindergartenAdminChildrenPage() {
 
                 <Stack spacing={2}>
                     <Typography variant="h6" fontWeight={700}>
-                        Needs Group Assignment
+                        Children Without a Group
                     </Typography>
                     {unassignedLoading && unassignedChildren.length === 0 ? (
                         <Paper sx={{ p: 3, borderRadius: 2 }}>
