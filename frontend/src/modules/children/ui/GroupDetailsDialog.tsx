@@ -26,7 +26,7 @@ export default function GroupDetailsDialog({
         <Dialog
             open={open}
             onClose={onCloseAction}
-            title={group ? group.name : "Group details"}
+            title="Group Details"
             actions={[
                 {
                     label: "Close",
