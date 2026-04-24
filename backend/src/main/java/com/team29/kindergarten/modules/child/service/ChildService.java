@@ -45,13 +45,13 @@ public class ChildService {
     @Transactional(readOnly = true)
     public Page<ChildResponseDto> findAll(Long tenantId, Pageable pageable) {
         log.info("Fetching all children for tenantId={}, page={}", tenantId, pageable.getPageNumber());
-        return enrichChildren(childRepository.findAllByTenantId(tenantId, pageable), tenantId);
+        return mapChildrenWithParents(childRepository.findAllByTenantId(tenantId, pageable), tenantId);
     }
 
     @Transactional(readOnly = true)
     public Page<ChildResponseDto> findUnassigned(Long tenantId, Pageable pageable) {
         log.info("Fetching unassigned children for tenantId={}, page={}", tenantId, pageable.getPageNumber());
-        return enrichChildren(childRepository.findAllByTenantIdAndGroupIsNull(tenantId, pageable), tenantId);
+        return mapChildrenWithParents(childRepository.findAllByTenantIdAndGroupIsNull(tenantId, pageable), tenantId);
     }
 
     @Transactional(readOnly = true)
@@ -61,7 +61,7 @@ public class ChildService {
                 .findByIdAndTenantId(id, tenantId)
                 .map(childMapper::toResponseDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
-        attachContacts(List.of(response), tenantId);
+        attachParents(List.of(response), tenantId);
         return response;
     }
 
@@ -104,7 +104,7 @@ public class ChildService {
         childRepository.save(child);
         log.info("Updated child id={} for tenantId={}", id, tenantId);
         ChildResponseDto response = childMapper.toResponseDto(child);
-        attachContacts(List.of(response), tenantId);
+        attachParents(List.of(response), tenantId);
         return response;
     }
 
@@ -166,13 +166,13 @@ public class ChildService {
         childParentRepository.save(childParent);
     }
 
-    private Page<ChildResponseDto> enrichChildren(Page<Child> childPage, Long tenantId) {
+    private Page<ChildResponseDto> mapChildrenWithParents(Page<Child> childPage, Long tenantId) {
         Page<ChildResponseDto> responsePage = childPage.map(childMapper::toResponseDto);
-        attachContacts(responsePage.getContent(), tenantId);
+        attachParents(responsePage.getContent(), tenantId);
         return responsePage;
     }
 
-    private void attachContacts(List<ChildResponseDto> children, Long tenantId) {
+    private void attachParents(List<ChildResponseDto> children, Long tenantId) {
         if (children.isEmpty()) {
             return;
         }
