@@ -15,6 +15,6 @@ backend/.gradle-home/
 
 # Generated OpenAPI output
 openapi/
+.cursor/
 CLAUDE.md
 .claude/
-.cursor/
