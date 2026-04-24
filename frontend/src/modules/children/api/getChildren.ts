@@ -19,10 +19,8 @@ export async function getChildren(token: string, page: number, size = 10): Promi
 
 export async function getUnassignedChildren(
     token: string,
-    page: number,
-    size = 5,
-): Promise<PageResponse<Child>> {
-    const response = await fetch(`${API_URL}/api/v1/children/unassigned?page=${page}&size=${size}`, {
+): Promise<Child[]> {
+    const response = await fetch(`${API_URL}/api/v1/children/unassigned`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -33,5 +31,5 @@ export async function getUnassignedChildren(
         throw new Error("Failed to load unassigned children");
     }
 
-    return (await response.json()) as PageResponse<Child>;
+    return (await response.json()) as Child[];
 }

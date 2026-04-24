@@ -14,7 +14,7 @@ import {
     type Child,
     GroupDetailsDialog,
     UnassignedChildrenTable,
-    updateChild,
+    updateChildGroup,
     useChildren,
     useUnassignedChildren,
 } from "@/src/modules/children";
@@ -24,7 +24,6 @@ import { getGroupById, useGroups } from "@/src/modules/groups";
 export default function KindergartenAdminChildrenPage() {
     const { token, hydrated } = useAuth();
     const [childrenPageNumber, setChildrenPageNumber] = useState(1);
-    const [unassignedPageNumber, setUnassignedPageNumber] = useState(1);
     const [parentsChild, setParentsChild] = useState<Child | null>(null);
     const [childToAssign, setChildToAssign] = useState<Child | null>(null);
     const [groupDetails, setGroupDetails] = useState<Group | null>(null);
@@ -47,21 +46,15 @@ export default function KindergartenAdminChildrenPage() {
     } = useChildren(token, childrenPageNumber - 1, 10, hydrated);
     const {
         children: unassignedChildren,
-        childPage: unassignedChildPage,
         loading: unassignedLoading,
         error: unassignedError,
         refetch: refetchUnassignedChildren,
-    } = useUnassignedChildren(token, unassignedPageNumber - 1, 5, hydrated);
+    } = useUnassignedChildren(token, hydrated);
     const {
         groups,
         loading: groupsLoading,
         error: groupsError,
     } = useGroups(token, 0, 100, hydrated);
-
-    const refetchAll = () => {
-        refetchChildren();
-        refetchUnassignedChildren();
-    };
 
     const handleViewGroup = async (child: Child) => {
         if (!token || !child.group) {
@@ -90,13 +83,11 @@ export default function KindergartenAdminChildrenPage() {
 
         try {
             setAssigningGroup(true);
-            await updateChild(childToAssign.id, token, {
-                firstName: childToAssign.firstName,
-                lastName: childToAssign.lastName,
-                birthDate: childToAssign.birthDate,
+            await updateChildGroup(childToAssign.id, token, {
                 groupId,
             });
-            refetchAll();
+            refetchChildren();
+            refetchUnassignedChildren();
             setChildToAssign(null);
             setNotification({
                 open: true,
@@ -156,23 +147,6 @@ export default function KindergartenAdminChildrenPage() {
                                 onAssignGroupAction={setChildToAssign}
                                 onViewGroupAction={handleViewGroup}
                             />
-                            {unassignedChildPage && unassignedChildPage.totalElements > 0 ? (
-                                <Typography variant="body2" color="text.secondary" align="center">
-                                    {unassignedChildPage.number * unassignedChildPage.size + 1}-
-                                    {Math.min(
-                                        (unassignedChildPage.number + 1) * unassignedChildPage.size,
-                                        unassignedChildPage.totalElements,
-                                    )}{" "}
-                                    of {unassignedChildPage.totalElements}
-                                </Typography>
-                            ) : null}
-                            {(unassignedChildPage?.totalPages ?? 0) > 1 ? (
-                                <Pagination
-                                    count={unassignedChildPage?.totalPages ?? 0}
-                                    page={unassignedPageNumber}
-                                    onChange={(_, value) => setUnassignedPageNumber(value)}
-                                />
-                            ) : null}
                         </>
                     )}
                 </Stack>

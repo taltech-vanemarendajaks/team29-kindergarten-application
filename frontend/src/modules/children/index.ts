@@ -1,7 +1,9 @@
 export { useChildren, useUnassignedChildren } from "./hooks/useChildren";
 export { getChildren, getUnassignedChildren } from "./api/getChildren";
 export { updateChild } from "./api/updateChild";
+export { updateChildGroup } from "./api/updateChildGroup";
 export type { UpdateChildPayload } from "./api/updateChild";
+export type { UpdateChildGroupPayload } from "./api/updateChildGroup";
 export type { Child, ParentSummary, ChildGroupSummary } from "./model/child";
 export { default as ChildrenTable } from "./ui/ChildrenTable";
 export { default as UnassignedChildrenTable } from "./ui/UnassignedChildrenTable";

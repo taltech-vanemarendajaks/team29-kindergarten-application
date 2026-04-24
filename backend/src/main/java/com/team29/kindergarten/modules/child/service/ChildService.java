@@ -4,6 +4,7 @@ import com.team29.kindergarten.common.exception.ResourceNotFoundException;
 import com.team29.kindergarten.modules.child.dto.ChildRequestDto;
 import com.team29.kindergarten.modules.child.dto.ParentSummaryDto;
 import com.team29.kindergarten.modules.child.dto.ChildResponseDto;
+import com.team29.kindergarten.modules.child.dto.UpdateChildGroupRequestDto;
 import com.team29.kindergarten.modules.child.mapper.ChildMapper;
 import com.team29.kindergarten.modules.child.model.Child;
 import com.team29.kindergarten.modules.child.model.ChildParent;
@@ -49,9 +50,9 @@ public class ChildService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ChildResponseDto> findUnassigned(Long tenantId, Pageable pageable) {
-        log.info("Fetching unassigned children for tenantId={}, page={}", tenantId, pageable.getPageNumber());
-        return mapChildrenWithParents(childRepository.findAllByTenantIdAndGroupIsNull(tenantId, pageable), tenantId);
+    public List<ChildResponseDto> findUnassigned(Long tenantId) {
+        log.info("Fetching all unassigned children for tenantId={}", tenantId);
+        return mapChildrenWithParents(childRepository.findAllByTenantIdAndGroupIsNullOrderByCreatedAtAsc(tenantId), tenantId);
     }
 
     @Transactional(readOnly = true)
@@ -103,6 +104,21 @@ public class ChildService {
 
         childRepository.save(child);
         log.info("Updated child id={} for tenantId={}", id, tenantId);
+        ChildResponseDto response = childMapper.toResponseDto(child);
+        attachParents(List.of(response), tenantId);
+        return response;
+    }
+
+    public ChildResponseDto updateGroup(Long id, UpdateChildGroupRequestDto request, Long tenantId) {
+        log.info("Updating child group for childId={} tenantId={}", id, tenantId);
+
+        Child child = childRepository
+                .findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
+
+        resolveGroup(request.getGroupId(), tenantId, child);
+
+        childRepository.save(child);
         ChildResponseDto response = childMapper.toResponseDto(child);
         attachParents(List.of(response), tenantId);
         return response;
@@ -170,6 +186,14 @@ public class ChildService {
         Page<ChildResponseDto> responsePage = childPage.map(childMapper::toResponseDto);
         attachParents(responsePage.getContent(), tenantId);
         return responsePage;
+    }
+
+    private List<ChildResponseDto> mapChildrenWithParents(List<Child> children, Long tenantId) {
+        List<ChildResponseDto> response = children.stream()
+                .map(childMapper::toResponseDto)
+                .toList();
+        attachParents(response, tenantId);
+        return response;
     }
 
     private void attachParents(List<ChildResponseDto> children, Long tenantId) {

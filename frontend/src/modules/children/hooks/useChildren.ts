@@ -57,8 +57,7 @@ export function useChildren(token: string | null, page: number, size = 10, enabl
     };
 }
 
-export function useUnassignedChildren(token: string | null, page: number, size = 5, enabled = true) {
-    const [childPage, setChildPage] = useState<PageResponse<Child> | null>(null);
+export function useUnassignedChildren(token: string | null, enabled = true) {
     const [children, setChildren] = useState<Child[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -76,11 +75,10 @@ export function useUnassignedChildren(token: string | null, page: number, size =
             try {
                 setLoading(true);
                 setError(null);
-                const data = await getUnassignedChildren(resolvedToken, page, size);
+                const data = await getUnassignedChildren(resolvedToken);
 
                 if (!cancelled) {
-                    setChildPage(data);
-                    setChildren(data.content);
+                    setChildren(data);
                 }
             } catch (err) {
                 if (!cancelled) {
@@ -98,10 +96,9 @@ export function useUnassignedChildren(token: string | null, page: number, size =
         return () => {
             cancelled = true;
         };
-    }, [enabled, page, reloadKey, size, token]);
+    }, [enabled, reloadKey, token]);
 
     return {
-        childPage,
         children,
         loading,
         error,

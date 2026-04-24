@@ -100,9 +100,16 @@ export default function AssignChildGroupDialog({
                             {...field}
                             label="Group"
                             options={groupOptions}
-                            disabled={groupsLoading || groups.length === 0}
+                            disabled={groupsLoading}
                             error={!!groupsError}
-                            helperText={groupsError ?? (groupsLoading ? "Loading groups..." : undefined)}
+                            helperText={
+                                groupsError ??
+                                (groupsLoading
+                                    ? "Loading groups..."
+                                    : groups.length === 0
+                                      ? "No groups available. You can still remove the current assignment."
+                                      : undefined)
+                            }
                         />
                     )}
                 />

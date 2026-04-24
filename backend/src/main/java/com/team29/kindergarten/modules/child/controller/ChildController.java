@@ -4,6 +4,7 @@ import com.team29.kindergarten.common.dto.PageResponseDto;
 import com.team29.kindergarten.common.exception.ApiErrorResponse;
 import com.team29.kindergarten.modules.child.dto.ChildRequestDto;
 import com.team29.kindergarten.modules.child.dto.ChildResponseDto;
+import com.team29.kindergarten.modules.child.dto.UpdateChildGroupRequestDto;
 import com.team29.kindergarten.modules.child.service.ChildService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -49,11 +50,9 @@ public class ChildController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Unassigned children returned successfully")
     })
-  public ResponseEntity<PageResponseDto<ChildResponseDto>> findUnassigned(
-        @ParameterObject @PageableDefault(size = 10, sort = "lastName") Pageable pageable
-) {
+  public ResponseEntity<List<ChildResponseDto>> findUnassigned() {
     Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.ok(PageResponseDto.from(childService.findUnassigned(tenantId, pageable)));
+    return ResponseEntity.ok(childService.findUnassigned(tenantId));
 }
 
     @GetMapping("/{id}")
@@ -133,6 +132,29 @@ public ResponseEntity<List<ChildResponseDto>> findClassRecords(
 ) {
     Long tenantId = TenantContext.getTenantId();
     return ResponseEntity.ok(childService.update(id, request, tenantId));
+}
+
+    @PatchMapping("/{id}/group")
+    @Operation(summary = "Update child group assignment")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Child group updated successfully"),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid group update request",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Child or related group not found",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+  public ResponseEntity<ChildResponseDto> updateGroup(
+        @PathVariable Long id,
+        @Valid @RequestBody UpdateChildGroupRequestDto request
+) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.ok(childService.updateGroup(id, request, tenantId));
 }
 
     @DeleteMapping("/{id}")
