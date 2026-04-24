@@ -8,7 +8,7 @@ import { useAuth } from "@/src/context/AuthContext";
 
 import { DailyJournalEntry } from "@/src/modules/teachers/model/dailyJournalEntry";
 import { format } from "date-fns";
-import {getParentJournalEntryById} from "@/src/modules/parent/api/getJournalEntry";
+import {getParentJournalEntryById} from "@/src/modules/parents/api/getJournalEntry";
 import Link from "next/link";
 
 export default function ParentJournalEntryPage() {

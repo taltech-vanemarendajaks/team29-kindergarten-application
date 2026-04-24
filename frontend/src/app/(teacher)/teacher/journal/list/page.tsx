@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {Paper, Typography, Stack, Card, CardContent, CardMedia, Box, Button} from "@mui/material";
+import {Paper, Typography, Stack, Card, CardContent, CardMedia, Box, Button, IconButton} from "@mui/material";
 import { useAuth } from "@/src/context/AuthContext";
-import {getTeacherJournalEntries} from "@/src/modules/teachers/api/createDailyJournalEntry";
+import {getTeacherJournalEntries} from "@/src/modules/teachers/api/callDailyJournalEntry";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import EditIcon from "@mui/icons-material/Edit";
 
 
 export default function TeacherJournalListPage() {
@@ -43,8 +44,22 @@ export default function TeacherJournalListPage() {
                             gap: 2,
                             p: 2,
                             alignItems: "center",
+                            position: "relative",
                         }}
                     >
+                        <IconButton
+                            component={Link}
+                            href={`/teacher/journal/edit/${entry.id}`}
+                            sx={{
+                                position: "absolute",
+                                top: 8,
+                                right: 8,
+                                color: "primary.main",
+                                "&:hover": { backgroundColor: "rgba(25,118,210,0.08)" }
+                            }}
+                        >
+                            <EditIcon />
+                        </IconButton>
                         {entry.photoUrls?.[0] && (
                             <CardMedia
                                 component="img"

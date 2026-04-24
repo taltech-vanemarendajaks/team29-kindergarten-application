@@ -2,6 +2,8 @@ package com.team29.kindergarten.modules.teacher.controller;
 
 import com.team29.kindergarten.modules.teacher.dto.DailyJournalEntryRequest;
 import com.team29.kindergarten.modules.teacher.dto.DailyJournalEntryResponse;
+import com.team29.kindergarten.modules.teacher.dto.DailyJournalEntryUpdateRequest;
+import com.team29.kindergarten.modules.teacher.model.DailyJournalEntry;
 import com.team29.kindergarten.modules.teacher.service.DailyJournalService;
 import com.team29.kindergarten.modules.user.entity.User;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,4 +37,12 @@ public class TeacherJournalController {
     public DailyJournalEntryResponse getEntry(@AuthenticationPrincipal User teacher, @PathVariable Long id) {
         return journalService.getEntryById(teacher, id);
     }
+
+    @PutMapping("/{id}")
+    public DailyJournalEntryResponse updateEntry(@PathVariable Long id, @AuthenticationPrincipal User teacher,
+                                         @RequestBody DailyJournalEntryUpdateRequest request) {
+        DailyJournalEntry entry = journalService.updateEntry(id, teacher, request);
+        return DailyJournalEntryResponse.from(entry);
+    }
+
 }

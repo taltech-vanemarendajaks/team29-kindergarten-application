@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {Paper, Typography, Stack, Box, Button, ImageList, ImageListItem} from "@mui/material";
 import { useAuth } from "@/src/context/AuthContext";
-import {getDailyJournalEntry} from "@/src/modules/teachers/api/createDailyJournalEntry";
+import {getDailyJournalEntry} from "@/src/modules/teachers/api/callDailyJournalEntry";
 import Link from "next/link";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import {API_URL} from "@/src/services/api";

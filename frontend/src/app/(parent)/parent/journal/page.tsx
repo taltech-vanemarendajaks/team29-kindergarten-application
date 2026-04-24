@@ -18,7 +18,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { getParentJournalEntries } from "@/src/modules/parent/api/getJournalEntry";
+import { getParentJournalEntries } from "@/src/modules/parents/api/getJournalEntry";
 import {DailyJournalEntry} from "@/src/modules/teachers/model/dailyJournalEntry";
 import Link from "next/link";
 
