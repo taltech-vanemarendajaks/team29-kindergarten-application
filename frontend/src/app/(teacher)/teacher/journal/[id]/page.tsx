@@ -8,12 +8,13 @@ import {getDailyJournalEntry} from "@/src/modules/teachers/api/callDailyJournalE
 import Link from "next/link";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import {API_URL} from "@/src/services/api";
+import {DailyJournalEntry} from "@/src/modules/teachers/model/dailyJournalEntry";
 
 export default function JournalEntryPage() {
 
     const { id } = useParams();
     const { token } = useAuth();
-    const [entry, setEntry] = useState<any>(null);
+    const [entry, setEntry] = useState<DailyJournalEntry | null>(null);
 
     useEffect(() => {
         if (!token) return;
