@@ -12,7 +12,6 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 @Mapper(componentModel = "spring")
 public interface ChildMapper {
 
-    @Mapping(target = "groupId", source = "group.id")
     @Mapping(target = "groupName", source = "group.name")
     ChildResponseDto toResponseDto(Child child);
 
