@@ -8,14 +8,14 @@ import type { Child } from "../model/child";
 
 type UnassignedChildrenTableProps = {
     rows: Child[];
-    onViewContactsAction?: (child: Child) => void;
+    onViewParentsAction?: (child: Child) => void;
     onAssignGroupAction?: (child: Child) => void;
     onViewGroupAction?: (child: Child) => void;
 };
 
 export default function UnassignedChildrenTable({
     rows,
-    onViewContactsAction,
+    onViewParentsAction,
     onAssignGroupAction,
     onViewGroupAction,
 }: UnassignedChildrenTableProps) {
@@ -60,13 +60,13 @@ export default function UnassignedChildrenTable({
                 ),
         },
         {
-            key: "contacts",
+            key: "parents",
             label: "Parents",
             render: (child) => (
                 <Button
                     size="small"
                     variant="text"
-                    onClick={() => onViewContactsAction?.(child)}
+                    onClick={() => onViewParentsAction?.(child)}
                     sx={{ px: 0, minWidth: 0 }}
                 >
                     View parents

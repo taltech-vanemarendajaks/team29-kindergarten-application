@@ -1,8 +1,8 @@
 package com.team29.kindergarten.modules.child.service;
 
 import com.team29.kindergarten.common.exception.ResourceNotFoundException;
-import com.team29.kindergarten.modules.child.dto.ChildContactSummaryDto;
 import com.team29.kindergarten.modules.child.dto.ChildRequestDto;
+import com.team29.kindergarten.modules.child.dto.ParentSummaryDto;
 import com.team29.kindergarten.modules.child.dto.ChildResponseDto;
 import com.team29.kindergarten.modules.child.mapper.ChildMapper;
 import com.team29.kindergarten.modules.child.model.Child;
@@ -183,7 +183,7 @@ public class ChildService {
 
         List<ChildParent> childParents = childParentRepository.findAllByIdChildIdInAndTenantId(childIds, tenantId);
         if (childParents.isEmpty()) {
-            children.forEach(child -> child.setContacts(Collections.emptyList()));
+            children.forEach(child -> child.setParents(Collections.emptyList()));
             return;
         }
 
@@ -194,24 +194,24 @@ public class ChildService {
         Map<Long, User> parentsById = userRepository.findAllByIdInAndTenantIdAndRoles_Name(parentUserIds, tenantId, RoleName.PARENT).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
 
-        Map<Long, List<ChildContactSummaryDto>> contactsByChildId = childParents.stream()
+        Map<Long, List<ParentSummaryDto>> parentsByChildId = childParents.stream()
                 .collect(Collectors.groupingBy(
                         link -> link.getId().getChildId(),
                         Collectors.mapping(
-                                link -> toContactSummary(parentsById.get(link.getId().getParentUserId())),
-                                Collectors.filtering(contact -> contact != null, Collectors.toList())
+                                link -> toParentSummary(parentsById.get(link.getId().getParentUserId())),
+                                Collectors.filtering(parent -> parent != null, Collectors.toList())
                         )
                 ));
 
-        children.forEach(child -> child.setContacts(contactsByChildId.getOrDefault(child.getId(), Collections.emptyList())));
+        children.forEach(child -> child.setParents(parentsByChildId.getOrDefault(child.getId(), Collections.emptyList())));
     }
 
-    private ChildContactSummaryDto toContactSummary(User parentUser) {
+    private ParentSummaryDto toParentSummary(User parentUser) {
         if (parentUser == null) {
             return null;
         }
 
-        return ChildContactSummaryDto.builder()
+        return ParentSummaryDto.builder()
                 .id(parentUser.getId())
                 .fullName(parentUser.getFullName())
                 .email(parentUser.getEmail())

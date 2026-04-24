@@ -9,7 +9,7 @@ import { ErrorState, Pagination, Spinner, Toast } from "@/src/components/ui";
 import { useAuth } from "@/src/context/AuthContext";
 import {
     AssignChildGroupDialog,
-    ChildContactsDialog,
+    ChildParentsDialog,
     ChildrenTable,
     type Child,
     GroupDetailsDialog,
@@ -25,7 +25,7 @@ export default function KindergartenAdminChildrenPage() {
     const { token, hydrated } = useAuth();
     const [childrenPageNumber, setChildrenPageNumber] = useState(1);
     const [unassignedPageNumber, setUnassignedPageNumber] = useState(1);
-    const [contactsChild, setContactsChild] = useState<Child | null>(null);
+    const [parentsChild, setParentsChild] = useState<Child | null>(null);
     const [childToAssign, setChildToAssign] = useState<Child | null>(null);
     const [groupDetails, setGroupDetails] = useState<Group | null>(null);
     const [groupDetailsOpen, setGroupDetailsOpen] = useState(false);
@@ -152,7 +152,7 @@ export default function KindergartenAdminChildrenPage() {
                         <>
                             <UnassignedChildrenTable
                                 rows={unassignedChildren}
-                                onViewContactsAction={setContactsChild}
+                                onViewParentsAction={setParentsChild}
                                 onAssignGroupAction={setChildToAssign}
                                 onViewGroupAction={handleViewGroup}
                             />
@@ -201,7 +201,7 @@ export default function KindergartenAdminChildrenPage() {
                         <>
                             <ChildrenTable
                                 rows={children}
-                                onViewContactsAction={setContactsChild}
+                                onViewParentsAction={setParentsChild}
                                 onManageGroupAction={setChildToAssign}
                                 onViewGroupAction={handleViewGroup}
                             />
@@ -223,10 +223,10 @@ export default function KindergartenAdminChildrenPage() {
                     )}
                 </Stack>
 
-                <ChildContactsDialog
-                    child={contactsChild}
-                    open={!!contactsChild}
-                    onCloseAction={() => setContactsChild(null)}
+                <ChildParentsDialog
+                    child={parentsChild}
+                    open={!!parentsChild}
+                    onCloseAction={() => setParentsChild(null)}
                 />
 
                 <AssignChildGroupDialog

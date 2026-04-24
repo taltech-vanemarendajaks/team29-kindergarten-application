@@ -9,14 +9,14 @@ import type { Child } from "../model/child";
 
 type ChildrenTableProps = {
     rows: Child[];
-    onViewContactsAction?: (child: Child) => void;
+    onViewParentsAction?: (child: Child) => void;
     onManageGroupAction?: (child: Child) => void;
     onViewGroupAction?: (child: Child) => void;
 };
 
 export default function ChildrenTable({
     rows,
-    onViewContactsAction,
+    onViewParentsAction,
     onManageGroupAction,
     onViewGroupAction,
 }: ChildrenTableProps) {
@@ -61,14 +61,14 @@ export default function ChildrenTable({
                 ),
         },
         {
-            key: "contacts",
+            key: "parents",
             label: "Parents",
             render: (child) =>
-                onViewContactsAction ? (
+                onViewParentsAction ? (
                     <Button
                         size="small"
                         variant="text"
-                        onClick={() => onViewContactsAction(child)}
+                        onClick={() => onViewParentsAction(child)}
                         sx={{ px: 0, minWidth: 0 }}
                     >
                         View parents

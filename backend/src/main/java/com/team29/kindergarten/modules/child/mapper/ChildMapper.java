@@ -14,7 +14,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 @Mapper(componentModel = "spring")
 public interface ChildMapper {
 
-    @Mapping(target = "contacts", ignore = true)
+    @Mapping(target = "parents", ignore = true)
     ChildResponseDto toResponseDto(Child child);
 
     ChildGroupSummaryDto toGroupSummaryDto(Group group);

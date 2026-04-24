@@ -22,7 +22,7 @@ public class ChildResponseDto {
     private String lastName;
     private LocalDate birthDate;
     private ChildGroupSummaryDto group;
-    private List<ChildContactSummaryDto> contacts;
+    private List<ParentSummaryDto> parents;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

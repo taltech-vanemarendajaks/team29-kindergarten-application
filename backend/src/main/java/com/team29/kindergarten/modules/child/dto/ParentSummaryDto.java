@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChildContactSummaryDto {
+public class ParentSummaryDto {
     private Long id;
     private String fullName;
     private String email;

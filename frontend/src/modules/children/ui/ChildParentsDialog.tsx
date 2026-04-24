@@ -7,23 +7,23 @@ import type { TableColumn } from "@/src/components/ui";
 import type { Child } from "../model/child";
 import { formatFullName, formatPersonName } from "@/src/shared/utils/formatPersonName";
 
-type ChildContactsDialogProps = {
+type ChildParentsDialogProps = {
     child: Child | null;
     open: boolean;
     onCloseAction: () => void;
 };
 
-export default function ChildContactsDialog({ child, open, onCloseAction }: ChildContactsDialogProps) {
-    const columns: TableColumn<NonNullable<Child["contacts"]>[number]>[] = [
+export default function ChildParentsDialog({ child, open, onCloseAction }: ChildParentsDialogProps) {
+    const columns: TableColumn<NonNullable<Child["parents"]>[number]>[] = [
         {
             key: "fullName",
             label: "Name",
-            render: (contact) => formatFullName(contact.fullName),
+            render: (parent) => formatFullName(parent.fullName),
         },
         {
             key: "email",
             label: "Email",
-            render: (contact) => contact.email || "-",
+            render: (parent) => parent.email || "-",
         },
     ];
 
@@ -42,11 +42,11 @@ export default function ChildContactsDialog({ child, open, onCloseAction }: Chil
             ]}
         >
             <Stack spacing={2} sx={{ mt: 1 }}>
-                {child?.contacts.length ? (
+                {child?.parents.length ? (
                     <Table
                         columns={columns}
-                        rows={child.contacts}
-                        rowKey={(contact) => String(contact.id)}
+                        rows={child.parents}
+                        rowKey={(parent) => String(parent.id)}
                     />
                 ) : (
                     <Typography color="text.secondary" variant="body2">

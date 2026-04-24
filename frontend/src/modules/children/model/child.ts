@@ -3,7 +3,7 @@ export type ChildGroupSummary = {
     name: string;
 };
 
-export type ChildContactSummary = {
+export type ParentSummary = {
     id: number;
     fullName: string;
     email: string;
@@ -16,7 +16,7 @@ export type Child = {
     lastName: string;
     birthDate: string | null;
     group: ChildGroupSummary | null;
-    contacts: ChildContactSummary[];
+    parents: ParentSummary[];
     createdAt: string;
     updatedAt: string;
 };
