@@ -29,7 +29,7 @@ public class DailyJournalService {
 
     public DailyJournalEntryResponse createEntry(User teacherUser, DailyJournalEntryRequest request) {
 
-        Group group = groupRepository.findByTeacherUserId(teacherUser.getId())
+        Group group = groupRepository.findByTeacherUserIdAndTenantId(teacherUser.getId(), teacherUser.getTenantId())
                 .orElseThrow(() -> new RuntimeException("Group not found for teacher"));
 
         User teacher = group.getTeacherUser();
@@ -54,7 +54,7 @@ public class DailyJournalService {
     }
 
     public List<DailyJournalEntryResponse> getEntriesForTeacher(User teacherUser) {
-        Group group = groupRepository.findByTeacherUserId(teacherUser.getId())
+        Group group = groupRepository.findByTeacherUserIdAndTenantId(teacherUser.getId(), teacherUser.getTenantId())
                 .orElseThrow(() -> new RuntimeException("Group not found for teacher"));
 
         return journalRepository.findByKindergartenGroupIdOrderByDateDesc(group.getId())

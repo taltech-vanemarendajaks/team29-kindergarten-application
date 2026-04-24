@@ -19,6 +19,4 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
     Optional<Group> findByIdAndTenantId(Long id, Long tenantId);
 
     Optional<Group> findByTeacherUserIdAndTenantId(Long teacherUserId, Long tenantId);
-    Optional<Group> findByTeacherUserId(Long teacherUserId);
-
 }
