@@ -35,7 +35,7 @@ export default function ParentJournalEntryPage() {
         <Paper sx={{ p: 3, maxWidth: 900, mx: "auto" }}>
             <Button
                 component={Link}
-                href="/parent/dashboard"
+                href="/parent/journal"
                 variant="text"
                 startIcon={<ArrowBackIcon />}
                 sx={{

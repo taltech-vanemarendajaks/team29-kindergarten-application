@@ -36,8 +36,10 @@ public class DailyJournalService {
             throw new RuntimeException("Group has no teacher assigned");
         }
 
+        LocalDate date = request.date() != null ? request.date() : LocalDate.now();
+
         DailyJournalEntry entry = new DailyJournalEntry();
-        entry.setDate(LocalDate.now());
+        entry.setDate(date);
         entry.setSummary(request.summary());
         entry.setMilestones(request.milestones());
         entry.setPhotoUrls(request.photoUrls());

@@ -2,6 +2,7 @@ export interface DailyJournalEntryPayload {
     summary: string;
     milestones: string;
     photoUrls: string[];
+    date: string;
 }
 
 export interface DailyJournalEntry {

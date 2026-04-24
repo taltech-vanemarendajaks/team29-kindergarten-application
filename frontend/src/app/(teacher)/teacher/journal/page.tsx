@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { Paper, TextField, Button, Stack, Typography, Box } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
+import type { Dayjs } from "dayjs";
 
 import { useAuth } from "@/src/context/AuthContext";
 import {createDailyJournalEntry} from "@/src/modules/teachers/api/createDailyJournalEntry";
@@ -18,6 +21,7 @@ export default function DailyJournalPage() {
     const [summary, setSummary] = useState("");
     const [milestones, setMilestones] = useState("");
     const [photos, setPhotos] = useState<string[]>([]);
+    const [date, setDate] = useState<Dayjs | null>(dayjs());
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -51,6 +55,7 @@ export default function DailyJournalPage() {
             summary,
             milestones,
             photoUrls: photos,
+            date: date ? date.format("YYYY-MM-DD") : "",
         });
 
         setSummary("");
@@ -68,6 +73,12 @@ export default function DailyJournalPage() {
             </Typography>
 
             <Stack spacing={2}>
+                <DatePicker
+                    label="Entry date"
+                    value={date}
+                    onChange={(newValue) => setDate(newValue)}
+                />
+
                 <TextField
                     label="Summary of the day"
                     multiline
