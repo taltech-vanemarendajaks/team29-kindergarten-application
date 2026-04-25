@@ -34,3 +34,6 @@ logging:
   level:
     root: INFO
     com.team29.kindergarten: DEBUG
+
+storage:
+  upload-path: ${STORAGE_UPLOAD_PATH}

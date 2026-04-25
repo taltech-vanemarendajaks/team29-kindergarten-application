@@ -42,6 +42,14 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        // Allow to get uploaded photos
+                        .requestMatchers("/uploads/**").permitAll()
+
+                        // Teacher API
+                        .requestMatchers("/api/teacher/**").hasRole("TEACHER")
+                        .requestMatchers("/api/upload/**").hasRole("TEACHER")
+
+                        // Admin API
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/teachers").hasRole("KINDERGARTEN_ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/users/teachers/*").hasRole("KINDERGARTEN_ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/users/teachers/*").hasRole("KINDERGARTEN_ADMIN")

@@ -1,6 +1,6 @@
 import AppProvider from "@/src/providers/AppProvider";
 import ThemeRegistry from "@/src/providers/ThemeRegistry";
-import {ReactNode} from "react";
+import { ReactNode } from "react";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
     return (

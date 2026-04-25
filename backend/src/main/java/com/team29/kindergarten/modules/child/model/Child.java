@@ -1,6 +1,7 @@
 package com.team29.kindergarten.modules.child.model;
 
 import com.team29.kindergarten.modules.group.model.Group;
+import com.team29.kindergarten.modules.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -46,6 +47,10 @@ public class Child {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", foreignKey = @ForeignKey(name = "fk_child_group"))
     private Group group;
+
+    @ManyToOne
+    @JoinColumn(name = "parent_id")
+    private User parent;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

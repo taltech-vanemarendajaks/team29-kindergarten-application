@@ -1,7 +1,10 @@
-export type NavItem = {
-  href: string;
+export type NavItem =
+    | { label: string; href: string }
+    | {
   label: string;
+  children: { label: string; href: string }[]; // dropdown
 };
+
 
 export const dashboardNavItems: NavItem[] = [
   { href: "/", label: "Home" },
