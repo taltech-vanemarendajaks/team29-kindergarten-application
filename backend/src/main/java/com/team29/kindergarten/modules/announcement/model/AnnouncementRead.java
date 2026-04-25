@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
  */
 
 @Entity
+@Builder
 @Table(name = "user_announcement")
 @SQLRestriction("deleted_at IS NULL")
 @Getter

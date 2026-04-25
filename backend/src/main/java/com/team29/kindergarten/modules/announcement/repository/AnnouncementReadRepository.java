@@ -15,4 +15,6 @@ public interface AnnouncementReadRepository extends JpaRepository<AnnouncementRe
     List<AnnouncementRead> findByUserId(Long userId);
 
     List<AnnouncementRead> findByUserIdAndAnnouncementIdIn(Long userId, List<Long> announcementIds);
+
+    boolean existsByUserIdAndAnnouncement_Id(Long userId, Long announcementId);
 }

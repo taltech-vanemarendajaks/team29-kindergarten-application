@@ -21,7 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import com.team29.kindergarten.tenant.TenantContext;
+
 
 @RestController
 @RequestMapping("/api/v1/announcements")
@@ -29,66 +29,63 @@ import com.team29.kindergarten.tenant.TenantContext;
 @Tag(name = "Announcements", description = "Announcement endpoints")
 public class AnnouncementController {
 
-    private final AnnouncementService announcementService;
+        private final AnnouncementService announcementService;
 
-    @GetMapping
-    @Operation(summary = "List announcements for a tenant")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Announcements returned successfully")
-    })
-  public ResponseEntity<Page<AnnouncementResponseDto>> findAll(
-    @ParameterObject Pageable pageable
-) {
-    Long tenantId = TenantContext.getTenantId();
+        @GetMapping
+        @Operation(summary = "List announcements for a tenant")
+        @ApiResponses({
+                @ApiResponse(responseCode = "200", description = "Announcements returned successfully")
+        })
+        public ResponseEntity<Page<AnnouncementResponseDto>> findAll(
+        @ParameterObject Pageable pageable
+        ) {
 
-    Pageable safePageable = PageRequest.of(
-        pageable.getPageNumber(),
-        pageable.getPageSize(),
-        Sort.by("createdAt").descending()
-    );
 
-    return ResponseEntity.ok(announcementService.findAll(tenantId, safePageable));
-}
+        Pageable safePageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by("createdAt").descending()
+        );
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Get announcement by ID")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Announcement returned successfully"),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Announcement not found",
-                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
-            )
-    })
-  public ResponseEntity<AnnouncementResponseDto> findById(@PathVariable Long id) {
-    Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.ok(announcementService.findById(id, tenantId));
-}
+        return ResponseEntity.ok(announcementService.findAll(safePageable));
+        }
+
+        @GetMapping("/{id}")
+        @Operation(summary = "Get announcement by ID")
+        @ApiResponses({
+                @ApiResponse(responseCode = "200", description = "Announcement returned successfully"),
+                @ApiResponse(
+                        responseCode = "404",
+                        description = "Announcement not found",
+                        content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+                )
+        })
+        public ResponseEntity<AnnouncementResponseDto> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(announcementService.findById(id));
+        }
  
 
-@PostMapping
-    @Operation(summary = "Create announcement")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Announcement created"),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid announcement request",
-                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
-            )
+        @PostMapping
+        @Operation(summary = "Create announcement")
+        @ApiResponses({
+                @ApiResponse(responseCode = "201", description = "Announcement created"),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "Invalid announcement request",
+                        content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+                )
 
-    })
-  public ResponseEntity<AnnouncementResponseDto> create(
-        @Valid @RequestBody AnnouncementRequestDto request,
-    @AuthenticationPrincipal UserPrincipal user
+        })
+        public ResponseEntity<AnnouncementResponseDto> create(
+                @Valid @RequestBody AnnouncementRequestDto request,
+        @AuthenticationPrincipal UserPrincipal user
 
-) {
-        //tenant and user from Token/UserPrincipal
-         Long userId = user.getUserId();
-         Long tenantId = user.getTenantId();
+        ) {
 
-    AnnouncementResponseDto createdAnnouncement = announcementService.create(request, tenantId, userId);
-    return ResponseEntity.status(HttpStatus.CREATED).body(createdAnnouncement);
-}
+
+        AnnouncementResponseDto createdAnnouncement = announcementService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdAnnouncement);
+        }
 
 
 

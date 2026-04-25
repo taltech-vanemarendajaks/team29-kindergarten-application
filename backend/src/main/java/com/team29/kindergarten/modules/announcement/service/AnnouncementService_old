@@ -1,0 +1,67 @@
+package com.team29.kindergarten.modules.announcement.service;
+import com.team29.kindergarten.common.exception.ResourceNotFoundException;
+import com.team29.kindergarten.modules.announcement.dto.AnnouncementRequestDto;
+import com.team29.kindergarten.modules.announcement.dto.AnnouncementResponseDto;
+import com.team29.kindergarten.modules.announcement.mapper.AnnouncementMapper;
+import com.team29.kindergarten.modules.announcement.model.Announcement;
+import com.team29.kindergarten.modules.announcement.model.AnnouncementRead;
+import com.team29.kindergarten.modules.announcement.repository.AnnouncementReadRepository;
+import com.team29.kindergarten.modules.announcement.repository.AnnouncementRepository;
+import com.team29.kindergarten.modules.user.entity.User;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
+import java.util.List;
+
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class AnnouncementService {
+
+    private final AnnouncementRepository announcementRepository;
+    private final AnnouncementMapper announcementMapper;
+    private final AnnouncementReadRepository announcementReadRepository;
+
+
+
+
+
+
+public List<AnnouncementResponseDto> getAnnouncementsForUser(User user) {
+    return announcementReadRepository.findAnnouncementsForUser(user.getId());
+}
+
+
+
+ 
+
+
+
+    public void delete(Long id, Long tenantId) {
+        Announcement announcement = getAnnouncement(id, tenantId);
+
+        announcement.setDeletedAt(LocalDateTime.now());
+        announcementRepository.save(announcement);
+    }
+
+    public Announcement getAnnouncement(Long id, Long tenantId) {
+        return announcementRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Announcement not found: " + id));
+    }
+
+
+
+}
+
+
+
+//User creator = userRepository.getReferenceById(dto.getCreatedBy());
+
+//Announcement announcement =
+  //  mapper.toEntity(dto, creator);

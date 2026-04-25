@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import com.team29.kindergarten.modules.user.repository.UserRepository;
+import com.team29.kindergarten.security.CurrentUserService;
 
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -35,70 +36,75 @@ import lombok.extern.slf4j.Slf4j;
 public class AnnouncementService {
 
     private final AnnouncementRepository announcementRepository;
-    private final AnnouncementReadRepository readRepository;  
+    private final AnnouncementReadRepository announcementReadRepository;  
     private final UserRepository userRepository;
     private final AnnouncementMapper announcementMapper;
+    private final CurrentUserService currentUser;   
 
 
     @Transactional(readOnly = true)
-    public Page<AnnouncementResponseDto> findAll(Long tenantId, Pageable pageable) {
+    public Page<AnnouncementResponseDto> findAll(Pageable pageable) {
+        Long tenantId = currentUser.getTenantId();
         log.info("Fetching all announcements for tenantId={}, page={}", tenantId, pageable.getPageNumber());
         return announcementRepository
                 .findActiveByTenantId(tenantId, LocalDate.now(),pageable)
                 .map(announcementMapper::toResponseDto);
     }    
 
-@Transactional(readOnly = true)
-public AnnouncementResponseDto findById(Long id, Long tenantId) {
-    log.info("Fetching announcement id={} tenantId={}", id, tenantId);
+    @Transactional(readOnly = true)
+    public AnnouncementResponseDto findById(Long id) {
+        Long tenantId = currentUser.getTenantId();
+        log.info("Fetching announcement id={} tenantId={}", id, tenantId);
 
-    return announcementRepository
-            .findByIdAndTenantId(id, tenantId) 
-            .map(announcementMapper::toResponseDto)
-            .orElseThrow(() ->
-                new ResourceNotFoundException("Announcement not found: " + id)
-            );
+        return announcementRepository
+                .findByIdAndTenantId(id, tenantId) 
+                .map(announcementMapper::toResponseDto)
+                .orElseThrow(() ->
+                    new ResourceNotFoundException("Announcement not found: " + id)
+                );
 } 
 
-public Page<AnnouncementUserResponseDto> getAnnouncementsForUser(User user, Pageable pageable) {
+    public Page<AnnouncementUserResponseDto> getAnnouncementsForUser(User user, Pageable pageable) {
+        Long tenantId = currentUser.getTenantId();
+        Long userId = currentUser.getUserId();        
+        Page<Announcement> page =
+            announcementRepository.findActiveByTenantId(
+                tenantId,
+                LocalDate.now(),
+                pageable
+            );
 
-    Page<Announcement> page =
-        announcementRepository.findActiveByTenantId(
-            user.getTenantId(),
-            LocalDate.now(),
-            pageable
+        List<Long> announcementIds = page.getContent().stream()
+            .map(Announcement::getId)
+            .toList();
+
+        Set<Long> readSet = new HashSet<>(
+            announcementReadRepository.findByUserIdAndAnnouncementIdIn(userId, announcementIds)
+                .stream()
+                .map(r -> r.getAnnouncement().getId())
+                .toList()
         );
 
-    List<Long> announcementIds = page.getContent().stream()
-        .map(Announcement::getId)
-        .toList();
+        Map<Long, String> creatorNames = userRepository.findByIdIn(
+            page.getContent().stream()
+                .map(a -> a.getCreator().getId())
+                .toList()
+        ).stream().collect(Collectors.toMap(User::getId, User::getFullName));
 
-    Set<Long> readSet = new HashSet<>(
-        readRepository.findByUserIdAndAnnouncementIdIn(user.getId(), announcementIds)
-            .stream()
-            .map(r -> r.getAnnouncement().getId())
-            .toList()
-    );
-
-    Map<Long, String> creatorNames = userRepository.findByIdIn(
-        page.getContent().stream()
-            .map(a -> a.getCreator().getId())
-            .toList()
-    ).stream().collect(Collectors.toMap(User::getId, User::getFullName));
-
-    return page.map(a -> new AnnouncementUserResponseDto(
-        a.getId(),
-        a.getTitle(),
-        a.getContent(),
-        readSet.contains(a.getId()),
-        creatorNames.get(a.getCreator().getId()),
-        a.getCreatedAt()
-    ));
+        return page.map(a -> new AnnouncementUserResponseDto(
+            a.getId(),
+            a.getTitle(),
+            a.getContent(),
+            readSet.contains(a.getId()),
+            creatorNames.get(a.getCreator().getId()),
+            a.getCreatedAt()
+        ));
 }
 
 
-   public AnnouncementResponseDto create(AnnouncementRequestDto requestDto, Long tenantId, Long userId) {
-
+   public AnnouncementResponseDto create(AnnouncementRequestDto requestDto) {
+        Long tenantId = currentUser.getTenantId();
+        Long userId = currentUser.getUserId();
         log.info("Posting announcement from tenantId={}, userId={}", tenantId, userId);
 
         User creator = userRepository.getReferenceById(userId);
@@ -113,22 +119,26 @@ public Page<AnnouncementUserResponseDto> getAnnouncementsForUser(User user, Page
 
         return announcementMapper.toPostResponseDto(announcementRepository.save(announcement), creator.getFullName());
 
-
-
-
     }
 
-/** 
-    public long createReadRecord(Long announcementId, Long userId) {
-  
 
-        AnnouncementRead readRecord = new AnnouncementRead();
-        readRecord.setAnnouncementId(announcementId);
-        readRecord.setUserId(userId);
+    @Transactional
+    public void markAsRead(Long announcementId) {
+    Long userId = currentUser.getUserId();
 
-        announcementReadRepository.save(readRecord);
-   
-        return announcementReadRepository.findUnReadAnnouncementsCountForUser(userId);
+        if (announcementReadRepository
+                .existsByUserIdAndAnnouncement_Id(userId, announcementId)) {
+            return;
+        }
+        Announcement announcement = announcementRepository
+                .getReferenceById(announcementId);
+
+        AnnouncementRead read = AnnouncementRead.builder()
+                .userId(userId)
+                .announcement(announcement)
+                .build();
+
+        announcementReadRepository.save(read);
     }
-*/
+
 }
