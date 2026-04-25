@@ -76,7 +76,7 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-          STORAGE_UPLOAD_PATH: ${{STORAGE_UPLOAD_PATH}}
+          STORAGE_UPLOAD_PATH: ${{ secrets.STORAGE_UPLOAD_PATH }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
