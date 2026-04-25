@@ -10,14 +10,12 @@ type UnassignedChildrenTableProps = {
     rows: Child[];
     onViewParentsAction?: (child: Child) => void;
     onAssignGroupAction?: (child: Child) => void;
-    onViewGroupAction?: (child: Child) => void;
 };
 
 export default function UnassignedChildrenTable({
     rows,
     onViewParentsAction,
     onAssignGroupAction,
-    onViewGroupAction,
 }: UnassignedChildrenTableProps) {
     if (rows.length === 0) {
         return (
@@ -41,23 +39,6 @@ export default function UnassignedChildrenTable({
                 const age = calculateAge(child.birthDate);
                 return age === null ? "-" : `${age}`;
             },
-        },
-        {
-            key: "group",
-            label: "Group",
-            render: (child) =>
-                child.group && onViewGroupAction ? (
-                    <Button
-                        size="small"
-                        variant="text"
-                        onClick={() => onViewGroupAction(child)}
-                        sx={{ px: 0, minWidth: 0 }}
-                    >
-                        {child.group.name}
-                    </Button>
-                ) : (
-                    child.group?.name ?? "-"
-                ),
         },
         {
             key: "parents",

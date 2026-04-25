@@ -1,4 +1,4 @@
-import { API_URL } from "@/src/shared/constants/api";
+import { API_URL } from "@/src/services/api";
 import { parseApiError } from "@/src/shared/utils/parseApiError";
 import type { Child } from "../model/child";
 

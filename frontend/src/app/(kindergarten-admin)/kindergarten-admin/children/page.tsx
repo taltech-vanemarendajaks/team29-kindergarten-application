@@ -19,7 +19,7 @@ import {
     useUnassignedChildren,
 } from "@/src/modules/children";
 import type { Group } from "@/src/modules/groups";
-import { getGroupById, useGroups } from "@/src/modules/groups";
+import { getGroupById, useGroupOptions } from "@/src/modules/groups";
 
 export default function KindergartenAdminChildrenPage() {
     const { token, hydrated } = useAuth();
@@ -54,7 +54,7 @@ export default function KindergartenAdminChildrenPage() {
         groups,
         loading: groupsLoading,
         error: groupsError,
-    } = useGroups(token, 0, 100, hydrated);
+    } = useGroupOptions(token, hydrated);
 
     const handleViewGroup = async (child: Child) => {
         if (!token || !child.group) {
@@ -145,7 +145,6 @@ export default function KindergartenAdminChildrenPage() {
                                 rows={unassignedChildren}
                                 onViewParentsAction={setParentsChild}
                                 onAssignGroupAction={setChildToAssign}
-                                onViewGroupAction={handleViewGroup}
                             />
                         </>
                     )}

@@ -37,6 +37,13 @@ public class GroupService {
     }
 
     @Transactional(readOnly = true)
+    public List<GroupResponseDto> findAllOptions(Long tenantId) {
+        return groupRepository.findAllByTenantIdOrderByNameAsc(tenantId).stream()
+                .map(groupMapper::toResponseDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public GroupResponseDto findById(Long id, Long tenantId) {
         return groupMapper.toResponseDto(getGroup(id, tenantId));
     }
