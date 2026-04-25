@@ -1,6 +1,6 @@
 import type { Group } from "../model/group";
 import { parseApiError } from "@/src/shared/utils/parseApiError";
-import { API_URL } from "@/src/shared/constants/api";
+import { API_URL } from "@/src/services/api";
 
 export type UpdateGroupPayload = {
     name: string;
