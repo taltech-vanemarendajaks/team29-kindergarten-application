@@ -1,6 +1,7 @@
 package com.team29.kindergarten.modules.parent.controller;
 
 import com.team29.kindergarten.common.exception.ApiErrorResponse;
+import com.team29.kindergarten.modules.user.entity.User;
 import com.team29.kindergarten.modules.parent.dto.ParentRequestDto;
 import com.team29.kindergarten.modules.parent.dto.ParentResponseDto;
 import com.team29.kindergarten.modules.parent.service.ParentService;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +39,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class ParentController {
 
     private final ParentService parentService;
+
+    @GetMapping("/me")
+    @Operation(summary = "Get current authenticated parent profile")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Parent profile returned successfully"),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Parent profile not found for authenticated user",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    public ResponseEntity<ParentResponseDto> findMyProfile(@AuthenticationPrincipal User user) {
+        Long tenantId = TenantContext.getTenantId();
+        return ResponseEntity.ok(parentService.findMyProfile(user, tenantId));
+    }
 
     @GetMapping
     @Operation(summary = "List parents for a tenant")

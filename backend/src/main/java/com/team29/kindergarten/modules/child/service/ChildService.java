@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 
 import java.time.LocalDateTime;
 
@@ -50,18 +51,31 @@ public class ChildService {
                 .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
     }
 
-    public ChildResponseDto create(ChildRequestDto request, Long tenantId, Long parentId) {
-        log.info("Creating child for tenantId={} and linking parentId={}", tenantId, parentId);
+    @Transactional(readOnly = true)
+    public List<ChildResponseDto> findAllByTeacher(Long teacherUserId, Long tenantId) {
+    log.info("Fetching class records for teacherUserId={}, tenantId={}", teacherUserId, tenantId);
 
-        Child child = childMapper.toEntity(request);
-        child.setTenantId(tenantId);
-        resolveGroup(request.getGroupId(), tenantId, child);
+    Group group = groupRepository.findByTeacherUserIdAndTenantId(teacherUserId, tenantId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                    "No group found for teacher userId=" + teacherUserId));
 
-        Child saved = childRepository.save(child);
-        linkParent(saved.getId(), parentId, tenantId);
-        log.info("Created child id={} for tenantId={} and linked parentId={}", saved.getId(), tenantId, parentId);
-        return childMapper.toResponseDto(saved);
-    }
+    return childRepository.findAllByGroupIdAndTenantId(group.getId(), tenantId)
+            .stream()
+            .map(childMapper::toResponseDto)
+            .toList();
+}
+
+    public ChildResponseDto create(ChildRequestDto request, Long tenantId) {
+    log.info("Creating child for tenantId={}", tenantId);
+
+    Child child = childMapper.toEntity(request);
+    child.setTenantId(tenantId);
+    resolveGroup(request.getGroupId(), tenantId, child);
+
+    Child saved = childRepository.save(child);
+    log.info("Created child id={} for tenantId={}", saved.getId(), tenantId);
+    return childMapper.toResponseDto(saved);
+}
 
     public ChildResponseDto update(Long id, ChildRequestDto request, Long tenantId) {
         log.info("Updating child id={} for tenantId={}", id, tenantId);

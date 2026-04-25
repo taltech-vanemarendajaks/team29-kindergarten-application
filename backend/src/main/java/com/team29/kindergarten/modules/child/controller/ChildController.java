@@ -20,6 +20,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.team29.kindergarten.tenant.TenantContext;
+import com.team29.kindergarten.modules.user.entity.User;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/children")
@@ -56,10 +59,28 @@ public class ChildController {
     return ResponseEntity.ok(childService.findById(id, tenantId));
 }
 
-    @PostMapping
-    @Operation(summary = "Create child and link the creating parent")
+    @GetMapping("/class-records")
+    @Operation(summary = "Get children in the teacher's assigned group")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Child created and linked successfully"),
+                @ApiResponse(responseCode = "200", description = "Class records returned successfully"),
+                @ApiResponse(
+                        responseCode = "404",
+                        description = "No group found for this teacher",
+                        content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+                )
+        })
+
+public ResponseEntity<List<ChildResponseDto>> findClassRecords(
+        @AuthenticationPrincipal User currentUser
+) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.ok(childService.findAllByTeacher(currentUser.getId(), tenantId));
+}
+
+    @PostMapping
+    @Operation(summary = "Create child")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Child created successfully"),
             @ApiResponse(
                     responseCode = "400",
                     description = "Invalid child request",
@@ -67,41 +88,16 @@ public class ChildController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Related parent or group not found",
+                    description = "Related group not found",
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
   public ResponseEntity<ChildResponseDto> create(
-        @Valid @RequestBody ChildRequestDto request,
-        @RequestParam Long parentId
+        @Valid @RequestBody ChildRequestDto request
 ) {
     Long tenantId = TenantContext.getTenantId();
-    ChildResponseDto createdChild = childService.create(request, tenantId, parentId);
+    ChildResponseDto createdChild = childService.create(request, tenantId);
     return ResponseEntity.status(HttpStatus.CREATED).body(createdChild);
-}
-
-    @PostMapping("/{id}/parents/{parentId}")
-    @Operation(summary = "Link an additional parent to a child")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Parent linked to child successfully"),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid child-parent link request",
-                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Child or parent not found",
-                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
-            )
-    })
-   public ResponseEntity<Void> addParentLink(
-        @PathVariable Long id,
-        @PathVariable Long parentId
-) {
-    Long tenantId = TenantContext.getTenantId();
-    childService.addParentLink(id, parentId, tenantId);
-    return ResponseEntity.status(HttpStatus.CREATED).build();
 }
 
     @PutMapping("/{id}")
