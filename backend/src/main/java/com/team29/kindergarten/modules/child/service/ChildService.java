@@ -12,6 +12,7 @@ import com.team29.kindergarten.modules.child.repository.ChildParentRepository;
 import com.team29.kindergarten.modules.child.repository.ChildRepository;
 import com.team29.kindergarten.modules.group.model.Group;
 import com.team29.kindergarten.modules.group.repository.GroupRepository;
+import com.team29.kindergarten.modules.parent.service.ParentService;
 import com.team29.kindergarten.modules.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ public class ChildService {
     private final ChildParentRepository childParentRepository;
     private final ChildMapper childMapper;
     private final GroupRepository groupRepository;
+    private final ParentService parentService;
 
     @Transactional(readOnly = true)
     public Page<ChildResponseDto> findAll(Long tenantId, Pageable pageable, User user) {
@@ -56,6 +58,20 @@ public class ChildService {
     public ChildResponseDto findById(Long id, Long tenantId, User user) {
         log.info("Fetching child id={} for tenantId={}", id, tenantId);
         return childMapper.toResponseDto(getChild(id, tenantId, user));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ChildResponseDto> findAllByTeacher(Long teacherUserId, Long tenantId) {
+        log.info("Fetching class records for teacherUserId={}, tenantId={}", teacherUserId, tenantId);
+
+        Group group = groupRepository.findByTeacherUserIdAndTenantId(teacherUserId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No group found for teacher userId=" + teacherUserId));
+
+        return childRepository.findAllByGroupIdAndTenantId(group.getId(), tenantId)
+                .stream()
+                .map(childMapper::toResponseDto)
+                .toList();
     }
 
     public ChildResponseDto create(ChildRequestDto request, Long tenantId, User user) {
@@ -108,6 +124,13 @@ public class ChildService {
         return getChild(id, tenantId, null);
     }
 
+    public void addParentLink(Long childId, Long parentId, Long tenantId) {
+        log.info("Linking parentId={} to childId={} for tenantId={}", parentId, childId, tenantId);
+        getChild(childId, tenantId);
+        linkParent(childId, parentId, tenantId);
+        log.info("Linked parentId={} to childId={} for tenantId={}", parentId, childId, tenantId);
+    }
+
     private void linkChildToParentUserIfNeeded(Long childId, Long tenantId, User user) {
         if (!isParent(user)) {
             return;
@@ -142,5 +165,25 @@ public class ChildService {
                         "Group not found or does not belong to tenant: " + groupId));
 
         child.setGroup(group);
+    }
+
+    private void linkParent(Long childId, Long parentId, Long tenantId) {
+        parentService.getParent(parentId, tenantId);
+
+        childParentRepository
+                .findByIdChildIdAndIdParentIdAndTenantId(childId, parentId, tenantId)
+                .ifPresent(existingLink -> {
+                    throw new IllegalArgumentException("Parent is already linked to child");
+                });
+
+        ChildParent childParent = ChildParent.builder()
+                .id(ChildParentId.builder()
+                        .childId(childId)
+                        .parentId(parentId)
+                        .build())
+                .tenantId(tenantId)
+                .build();
+
+        childParentRepository.save(childParent);
     }
 }

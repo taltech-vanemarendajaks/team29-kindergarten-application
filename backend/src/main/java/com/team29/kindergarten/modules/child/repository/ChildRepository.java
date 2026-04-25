@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface ChildRepository extends JpaRepository<Child, Long> {
@@ -17,6 +18,8 @@ public interface ChildRepository extends JpaRepository<Child, Long> {
     Page<Child> findAllByTenantIdAndIdIn(Long tenantId, Collection<Long> ids, Pageable pageable);
 
     Optional<Child> findByIdAndTenantId(Long id, Long tenantId);
+
+    List<Child> findAllByGroupIdAndTenantId(Long groupId, Long tenantId);
 
     Optional<Child> findByIdAndTenantIdAndIdIn(Long id, Long tenantId, Collection<Long> ids);
 }

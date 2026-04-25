@@ -4,7 +4,6 @@
 The app now initializes contexts for these modules:
 - `kindergarten`
 - `groups`
-- `teachers`
 - `parents`
 - `children`
 
@@ -12,9 +11,8 @@ Provider order in `src/providers/AppProvider.tsx`:
 1. `AuthProvider` (must be outer, other contexts can depend on auth later)
 2. `KindergartenProvider`
 3. `GroupsProvider`
-4. `TeachersProvider`
-5. `ParentsProvider`
-6. `ChildrenProvider`
+4. `ParentsProvider`
+5. `ChildrenProvider`
 
 This is a valid setup for modular growth. Keep `AuthProvider` outermost.
 
@@ -23,7 +21,6 @@ This is a valid setup for modular growth. Keep `AuthProvider` outermost.
 2. Import the hook you need:
    - `useKindergartenState`
    - `useGroupsState`
-   - `useTeachersState`
    - `useParentsState`
    - `useChildrenState`
 3. Read context state and render UI states (loading/empty/error/success when available).
@@ -45,12 +42,12 @@ This is a valid setup for modular growth. Keep `AuthProvider` outermost.
 6. Keep page components thin and reuse context actions.
 
 ## Recommended pattern for data modules
-For API-backed modules (like `teachers` and `children`):
+For API-backed modules (like `children`):
 1. Keep API calls in `services` or `modules/*/api`.
 2. Expose `isLoading`, `error`, and `refresh...` from context.
 3. Normalize errors into user-friendly messages.
 4. Avoid duplicate sources of truth between page state and context state.
 
 ## Current baseline
-- `TeachersContext` and `ChildrenContext` are data-ready examples.
+- `ChildrenContext` is a data-ready example.
 - `KindergartenContext`, `GroupsContext`, and `ParentsContext` are lightweight scaffolds intended for fast extension by feature developers.
