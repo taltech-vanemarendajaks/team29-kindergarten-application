@@ -1,93 +1,134 @@
 package com.team29.kindergarten.modules.announcement.service;
+
+
 import com.team29.kindergarten.common.exception.ResourceNotFoundException;
 import com.team29.kindergarten.modules.announcement.dto.AnnouncementRequestDto;
 import com.team29.kindergarten.modules.announcement.dto.AnnouncementResponseDto;
+import com.team29.kindergarten.modules.announcement.dto.AnnouncementUserResponseDto;
 import com.team29.kindergarten.modules.announcement.mapper.AnnouncementMapper;
 import com.team29.kindergarten.modules.announcement.model.Announcement;
+import com.team29.kindergarten.modules.announcement.model.AnnouncementRead;
 import com.team29.kindergarten.modules.announcement.repository.AnnouncementReadRepository;
 import com.team29.kindergarten.modules.announcement.repository.AnnouncementRepository;
 import com.team29.kindergarten.modules.user.entity.User;
+
+import java.time.LocalDate;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Service;
+
+import com.team29.kindergarten.modules.user.repository.UserRepository;
+
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDateTime;
-import java.util.List;
-
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class AnnouncementService {
 
     private final AnnouncementRepository announcementRepository;
+    private final AnnouncementReadRepository readRepository;  
+    private final UserRepository userRepository;
     private final AnnouncementMapper announcementMapper;
-    private final AnnouncementReadRepository announcementReadRepository;
 
 
     @Transactional(readOnly = true)
     public Page<AnnouncementResponseDto> findAll(Long tenantId, Pageable pageable) {
-        log.info("Fetching all children for tenantId={}, page={}", tenantId, pageable.getPageNumber());
+        log.info("Fetching all announcements for tenantId={}, page={}", tenantId, pageable.getPageNumber());
         return announcementRepository
-                .findAllByTenantId(tenantId, pageable)
+                .findActiveByTenantId(tenantId, LocalDate.now(),pageable)
                 .map(announcementMapper::toResponseDto);
-    }
+    }    
 
-    @Transactional(readOnly = true)
-    public AnnouncementResponseDto findById(Long id, Long tenantId) {
-        log.info("Fetching announcement id={} for tenantId={}", id, tenantId);
-        return announcementRepository
-                .findByIdAndTenantId(id, tenantId)
-                .map(announcementMapper::toResponseDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Announcement not found: " + id));
-    }
+@Transactional(readOnly = true)
+public AnnouncementResponseDto findById(Long id, Long tenantId) {
+    log.info("Fetching announcement id={} tenantId={}", id, tenantId);
 
-public List<AnnouncementResponseDto> getAnnouncementsForUser(User user) {
-    return announcementReadRepository.findAnnouncementsForUser(user.getId());
+    return announcementRepository
+            .findByIdAndTenantId(id, tenantId) 
+            .map(announcementMapper::toResponseDto)
+            .orElseThrow(() ->
+                new ResourceNotFoundException("Announcement not found: " + id)
+            );
+} 
+
+public Page<AnnouncementUserResponseDto> getAnnouncementsForUser(User user, Pageable pageable) {
+
+    Page<Announcement> page =
+        announcementRepository.findActiveByTenantId(
+            user.getTenantId(),
+            LocalDate.now(),
+            pageable
+        );
+
+    List<Long> announcementIds = page.getContent().stream()
+        .map(Announcement::getId)
+        .toList();
+
+    Set<Long> readSet = new HashSet<>(
+        readRepository.findByUserIdAndAnnouncementIdIn(user.getId(), announcementIds)
+            .stream()
+            .map(r -> r.getAnnouncement().getId())
+            .toList()
+    );
+
+    Map<Long, String> creatorNames = userRepository.findByIdIn(
+        page.getContent().stream()
+            .map(a -> a.getCreator().getId())
+            .toList()
+    ).stream().collect(Collectors.toMap(User::getId, User::getFullName));
+
+    return page.map(a -> new AnnouncementUserResponseDto(
+        a.getId(),
+        a.getTitle(),
+        a.getContent(),
+        readSet.contains(a.getId()),
+        creatorNames.get(a.getCreator().getId()),
+        a.getCreatedAt()
+    ));
 }
 
 
+   public AnnouncementResponseDto create(AnnouncementRequestDto requestDto, Long tenantId, Long userId) {
 
-    public AnnouncementResponseDto create(AnnouncementRequestDto request, Long tenantId, Long userId) {
+        log.info("Posting announcement from tenantId={}, userId={}", tenantId, userId);
+
+        User creator = userRepository.getReferenceById(userId);
+
+        Announcement announcement = Announcement.builder()
+            .title(requestDto.getTitle())
+            .content(requestDto.getContent())
+            .expiresAt(requestDto.getExpires_At())
+            .creator(creator)
+            .tenantId(tenantId)
+            .build();
+
+        return announcementMapper.toPostResponseDto(announcementRepository.save(announcement), creator.getFullName());
 
 
-        Announcement announcement = announcementMapper.toEntity(request);
-        announcement.setTenantId(tenantId);
-        announcement.setCreatedBy(userId);
-        Announcement saved = announcementRepository.save(announcement);
 
-        return announcementMapper.toResponseDto(saved);
+
     }
 
-    public AnnouncementResponseDto update(Long id, AnnouncementRequestDto request, Long tenantId) {
-        log.info("Updating child id={} for tenantId={}", id, tenantId);
+/** 
+    public long createReadRecord(Long announcementId, Long userId) {
+  
 
-        Announcement announcement = announcementRepository
-                .findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
+        AnnouncementRead readRecord = new AnnouncementRead();
+        readRecord.setAnnouncementId(announcementId);
+        readRecord.setUserId(userId);
 
-        announcementMapper.updateEntityFromDto(request, announcement);
-
-        announcementRepository.save(announcement);
-        log.info("Updated child id={} for tenantId={}", id, tenantId);
-        return announcementMapper.toResponseDto(announcement);
+        announcementReadRepository.save(readRecord);
+   
+        return announcementReadRepository.findUnReadAnnouncementsCountForUser(userId);
     }
-
-    public void delete(Long id, Long tenantId) {
-        Announcement announcement = getAnnouncement(id, tenantId);
-
-        announcement.setDeletedAt(LocalDateTime.now());
-        announcementRepository.save(announcement);
-    }
-
-    public Announcement getAnnouncement(Long id, Long tenantId) {
-        return announcementRepository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Announcement not found: " + id));
-    }
-
-
-
+*/
 }

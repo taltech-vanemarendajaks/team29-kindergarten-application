@@ -18,19 +18,17 @@ import java.time.LocalDate;
 @Builder
 public class AnnouncementRequestDto {
 
-    @NotBlank(message = "Tile is required")
+    @NotBlank(message = "Title is required")
     @Size(max = 100, message = "Title must not exceed 100 characters")
     private String title;
 
     @NotBlank(message = "Message is required")
-    @Size(max = 100, message = "message must not exceed 100 characters")
-    private String message;
+    @Size(max = 100, message = "Message must not exceed 100 characters")
+    private String content;
 
     @Future(message = "Expiring date must be in the future")
     private LocalDate expires_At;
     
-    @Positive(message = "User ID must be a positive number")
-    private Long userId;    
 
 
 }

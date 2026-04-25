@@ -1,7 +1,10 @@
 package com.team29.kindergarten.modules.announcement.model;
-
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Table;
@@ -14,7 +17,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UpdateTimestamp;
 
-
 import java.time.LocalDateTime;
 
 /**
@@ -24,34 +26,25 @@ import java.time.LocalDateTime;
  * Soft delete is handled in the service layer by setting deletedAt.
  * @SQLRestriction ensures deleted links are invisible to all queries automatically.
  */
+
 @Entity
 @Table(name = "user_announcement")
 @SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class AnnouncementRead {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", updatable = false)
-    private Long tenantId;
+    private Long userId;
 
-   @Column(name = "announcement_id", updatable = false)
-    private Long announcementId;    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "announcement_id")
+    private Announcement announcement;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 }
