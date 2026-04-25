@@ -72,13 +72,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .map(role -> (GrantedAuthority) new SimpleGrantedAuthority("ROLE_" + role))
                         .toList();
 
-
                 // extract fields from JWT
                 Long userId = jwtService.extractUserId(token);
                 Long tenantId = jwtService.extractTenantId(token);
                 String username = jwtService.extractEmail(token);
 
-                TenantContext.setTenantId(tenantId);
+                if (tenantId != null) {
+                    TenantContext.setTenantId(tenantId);
+                }
 
                 UserPrincipal principal = new UserPrincipal(
                     userId,
@@ -86,7 +87,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     username,
                     authorities
                 );
-
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
                                 principal,
@@ -95,6 +95,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         );
 
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+            } else {
+                // Explicitly clear authentication if token is invalid or user not found
+                SecurityContextHolder.clearContext();
             }
         }
         try {
