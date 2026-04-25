@@ -1,5 +1,6 @@
 package com.team29.kindergarten.modules.user.service;
 
+import com.team29.kindergarten.common.exception.ConflictException;
 import com.team29.kindergarten.modules.auth.entity.Role;
 import com.team29.kindergarten.modules.auth.entity.enums.RoleName;
 import com.team29.kindergarten.modules.auth.repository.RoleRepository;
@@ -79,7 +80,7 @@ public class UserService {
             String groupNames = assignedGroups.stream()
                     .map(Group::getName)
                     .collect(Collectors.joining(", "));
-            throw new IllegalArgumentException(
+            throw new ConflictException(
                     "Teacher cannot be deleted because they are assigned to group(s): " + groupNames
             );
         }
