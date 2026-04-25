@@ -1,0 +1,35 @@
+import { API_URL } from "@/src/services/api";
+import type { PageResponse } from "@/src/shared/model/page";
+import type { Child } from "../model/child";
+
+export async function getChildren(token: string, page: number, size = 10): Promise<PageResponse<Child>> {
+    const response = await fetch(`${API_URL}/api/v1/children?page=${page}&size=${size}`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to load children");
+    }
+
+    return (await response.json()) as PageResponse<Child>;
+}
+
+export async function getUnassignedChildren(
+    token: string,
+): Promise<Child[]> {
+    const response = await fetch(`${API_URL}/api/v1/children/unassigned`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to load unassigned children");
+    }
+
+    return (await response.json()) as Child[];
+}

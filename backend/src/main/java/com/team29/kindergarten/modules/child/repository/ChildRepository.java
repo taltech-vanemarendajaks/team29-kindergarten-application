@@ -14,6 +14,8 @@ public interface ChildRepository extends JpaRepository<Child, Long> {
 
     Page<Child> findAllByTenantId(Long tenantId, Pageable pageable);
 
+    List<Child> findAllByTenantIdAndGroupIsNullOrderByCreatedAtAsc(Long tenantId);
+
     Optional<Child> findByIdAndTenantId(Long id, Long tenantId);
 
     List<Child> findAllByGroupIdAndTenantId(Long groupId, Long tenantId);

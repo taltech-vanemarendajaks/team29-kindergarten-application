@@ -1,14 +1,6 @@
-export type Child = {
-    id: number;
-    tenantId: number;
-    firstName: string;
-    lastName: string;
-    birthDate: string | null;
-    groupId: number | null;
-    groupName: string | null;
-    createdAt: string;
-    updatedAt: string;
-};
+import type { Child } from "@/src/modules/children";
+
+export type { Child };
 
 export type CreateChildPayload = {
     firstName: string;
@@ -20,6 +12,6 @@ export type CreateChildPayload = {
 export type UpdateChildPayload = {
     firstName: string;
     lastName: string;
-    birthDate: string;
+    birthDate: string | null;
     groupId?: number;
 };
