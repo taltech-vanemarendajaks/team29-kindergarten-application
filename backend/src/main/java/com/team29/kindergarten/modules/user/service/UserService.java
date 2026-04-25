@@ -3,6 +3,8 @@ package com.team29.kindergarten.modules.user.service;
 import com.team29.kindergarten.modules.auth.entity.Role;
 import com.team29.kindergarten.modules.auth.entity.enums.RoleName;
 import com.team29.kindergarten.modules.auth.repository.RoleRepository;
+import com.team29.kindergarten.modules.group.model.Group;
+import com.team29.kindergarten.modules.group.repository.GroupRepository;
 import com.team29.kindergarten.modules.user.dto.CreateUserRequestDto;
 import com.team29.kindergarten.modules.user.dto.UpdateUserRequestDto;
 import com.team29.kindergarten.modules.user.dto.UserResponseDto;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +31,7 @@ public class UserService {
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final GroupRepository groupRepository;
 
     
     public Page<UserResponseDto> findUsersByRole(Long tenantId, RoleName roleName, Pageable pageable) {
@@ -69,6 +73,17 @@ public class UserService {
     @Transactional
     public void deleteTeacherUser(Long id, Long tenantId) {
         User user = getUserByRole(id, tenantId, RoleName.TEACHER);
+
+        List<Group> assignedGroups = groupRepository.findAllByTeacherUserIdAndTenantIdOrderByNameAsc(id, tenantId);
+        if (!assignedGroups.isEmpty()) {
+            String groupNames = assignedGroups.stream()
+                    .map(Group::getName)
+                    .collect(Collectors.joining(", "));
+            throw new IllegalArgumentException(
+                    "Teacher cannot be deleted because they are assigned to group(s): " + groupNames
+            );
+        }
+
         userRepository.delete(user);
     }
 
