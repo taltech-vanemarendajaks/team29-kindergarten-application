@@ -16,4 +16,5 @@ public class UserResponseDto {
     private Long tenantId;
     private String fullName;
     private String email;
+    private String assignedGroupName;
 }

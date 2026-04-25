@@ -1,5 +1,6 @@
 package com.team29.kindergarten.modules.group.service;
 
+import com.team29.kindergarten.common.exception.ConflictException;
 import com.team29.kindergarten.common.exception.ResourceNotFoundException;
 import com.team29.kindergarten.modules.group.dto.GroupRequestDto;
 import com.team29.kindergarten.modules.group.dto.GroupResponseDto;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +43,7 @@ public class GroupService {
         normalizeRequest(request);
         Group group = groupMapper.toEntity(request);
         group.setTenantId(tenantId);
-        applyTeacher(group, request.getTeacherId(), tenantId);
+        applyTeacher(group, request.getTeacherId(), tenantId, null);
         return groupMapper.toResponseDto(groupRepository.save(group));
     }
 
@@ -49,7 +51,7 @@ public class GroupService {
         normalizeRequest(request);
         Group group = getGroup(id, tenantId);
         groupMapper.updateEntityFromDto(request, group);
-        applyTeacher(group, request.getTeacherId(), tenantId);
+        applyTeacher(group, request.getTeacherId(), tenantId, id);
         return groupMapper.toResponseDto(groupRepository.save(group));
     }
 
@@ -64,10 +66,17 @@ public class GroupService {
                 .orElseThrow(() -> new ResourceNotFoundException("Group not found: " + id));
     }
 
-    private void applyTeacher(Group group, Long teacherId, Long tenantId) {
+    private void applyTeacher(Group group, Long teacherId, Long tenantId, Long currentGroupId) {
         if (teacherId == null) {
             group.setTeacherUser(null);
             return;
+        }
+
+        Optional<Group> assignedGroup = currentGroupId == null
+                ? groupRepository.findByTeacherUserIdAndTenantId(teacherId, tenantId)
+                : groupRepository.findByTeacherUserIdAndTenantIdAndIdNot(teacherId, tenantId, currentGroupId);
+        if (assignedGroup.isPresent()) {
+            throw new ConflictException("Teacher is already assigned to group: " + assignedGroup.get().getName());
         }
 
         User teacherUser = userRepository.findByIdAndTenantIdAndRoles_Name(teacherId, tenantId, RoleName.TEACHER)

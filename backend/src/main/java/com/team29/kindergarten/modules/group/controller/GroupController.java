@@ -77,6 +77,11 @@ public class GroupController {
                     responseCode = "404",
                     description = "Related tenant or teacher not found",
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Teacher assignment conflicts with another active group",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
   public ResponseEntity<GroupResponseDto> create(@Valid @RequestBody GroupRequestDto request) {
@@ -96,6 +101,11 @@ public class GroupController {
             @ApiResponse(
                     responseCode = "404",
                     description = "Group or related teacher not found",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Teacher assignment conflicts with another active group",
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
