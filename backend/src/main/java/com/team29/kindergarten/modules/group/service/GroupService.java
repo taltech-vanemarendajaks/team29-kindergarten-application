@@ -2,6 +2,8 @@ package com.team29.kindergarten.modules.group.service;
 
 import com.team29.kindergarten.common.exception.ConflictException;
 import com.team29.kindergarten.common.exception.ResourceNotFoundException;
+import com.team29.kindergarten.modules.child.model.Child;
+import com.team29.kindergarten.modules.child.repository.ChildRepository;
 import com.team29.kindergarten.modules.group.dto.GroupRequestDto;
 import com.team29.kindergarten.modules.group.dto.GroupResponseDto;
 import com.team29.kindergarten.modules.group.mapper.GroupMapper;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,11 +30,19 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final GroupMapper groupMapper;
     private final UserRepository userRepository;
+    private final ChildRepository childRepository;
 
     @Transactional(readOnly = true)
     public Page<GroupResponseDto> findAll(Long tenantId, Pageable pageable) {
         return groupRepository.findAllByTenantId(tenantId, pageable)
                 .map(groupMapper::toResponseDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<GroupResponseDto> findAllOptions(Long tenantId) {
+        return groupRepository.findAllByTenantIdOrderByNameAsc(tenantId).stream()
+                .map(groupMapper::toResponseDto)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -57,6 +68,12 @@ public class GroupService {
 
     public void delete(Long id, Long tenantId) {
         Group group = getGroup(id, tenantId);
+
+        List<Child> childrenInGroup = childRepository.findAllByGroupIdAndTenantId(group.getId(), tenantId);
+        childrenInGroup.forEach(child -> child.setGroup(null));
+        childRepository.saveAll(childrenInGroup);
+
+        group.setTeacherUser(null);
         group.setDeletedAt(LocalDateTime.now());
         groupRepository.save(group);
     }

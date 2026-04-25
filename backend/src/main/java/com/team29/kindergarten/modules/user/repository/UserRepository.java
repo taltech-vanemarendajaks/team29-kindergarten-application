@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
@@ -21,6 +22,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findDistinctByTenantIdAndRoles_NameOrderByFullNameAsc(Long tenantId, RoleName roleName, Pageable pageable);
 
     List<User> findDistinctByTenantIdAndRoles_NameOrderByFullNameAsc(Long tenantId, RoleName roleName);
+
+    List<User> findAllByIdInAndTenantIdAndRoles_Name(Set<Long> ids, Long tenantId, RoleName roleName);
 
     @Query("""
             SELECT DISTINCT u
