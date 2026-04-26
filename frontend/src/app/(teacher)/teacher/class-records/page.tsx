@@ -66,8 +66,8 @@ export default function ClassRecordsPage() {
                   <TableRow key={child.id}>
                     <TableCell>{child.firstName}</TableCell>
                     <TableCell>{child.lastName}</TableCell>
-                    <TableCell>{child.birthDate}</TableCell>
-                    <TableCell>{child.groupName}</TableCell>
+                    <TableCell>{child.birthDate ?? "-"}</TableCell>
+                    <TableCell>{child.group?.name ?? "-"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

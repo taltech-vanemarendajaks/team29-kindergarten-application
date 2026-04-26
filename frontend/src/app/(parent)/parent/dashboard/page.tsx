@@ -156,8 +156,8 @@ export default function ParentDashboardPage() {
                                 <Typography>
                                     {child.firstName} {child.lastName} - {child.birthDate ?? "Not set"} (
                                     {getAgeLabel(child.birthDate)})
-                                    {child.groupId
-                                        ? ` (${child.groupName && child.groupName.trim().length > 0 ? child.groupName : `Group #${child.groupId}`})`
+                                    {child.group
+                                        ? ` (${child.group.name && child.group.name.trim().length > 0 ? child.group.name : `Group #${child.group.id}`})`
                                         : ""}
                                 </Typography>
                                 <Button

@@ -3,6 +3,7 @@ import RoleGuard from "@/src/components/RoleGuard";
 import { adminNavItems } from "@/src/components/navigation/adminNav";
 import {ReactNode} from "react";
 import MainLayout from "@/src/app/main-layout";
+import {Toaster} from "react-hot-toast";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
     return (
@@ -13,6 +14,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 footerText="Kindergarten Admin Portal"
             >
                 {children}
+                <Toaster position="top-right" />
             </MainLayout>
         </RoleGuard>
     );

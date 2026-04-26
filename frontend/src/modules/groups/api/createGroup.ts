@@ -1,7 +1,7 @@
 import type { Group } from "../model/group";
 import type { UpdateGroupPayload } from "./updateGroup";
 import { parseApiError } from "@/src/shared/utils/parseApiError";
-import { API_URL } from "@/src/shared/constants/api";
+import { API_URL } from "@/src/services/api";
 
 export async function createGroup(
     token: string,
