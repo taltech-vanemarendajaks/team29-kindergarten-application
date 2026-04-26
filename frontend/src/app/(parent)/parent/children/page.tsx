@@ -22,6 +22,7 @@ import {
 } from "@mui/material";
 import Dialog from "@/src/components/ui/dialog";
 import Snackbar from "@/src/components/ui/snackbar";
+import AttendanceTab from "@/src/components/attendance/AttendanceTab";
 import { useAuth } from "@/src/context/AuthContext";
 import { useChildrenState } from "@/src/context/ChildrenContext";
 import { getGroups } from "@/src/modules/groups/api/getGroups";
@@ -427,9 +428,7 @@ export default function ParentChildrenPage() {
                             ) : null}
 
                             {tab === "attendance" ? (
-                                <Typography color="text.secondary">
-                                    Stage 2 placeholder: attendance and parent/group context will be added next.
-                                </Typography>
+                                <AttendanceTab childId={selectedChild.id} />
                             ) : null}
 
                             {tab === "development" ? (

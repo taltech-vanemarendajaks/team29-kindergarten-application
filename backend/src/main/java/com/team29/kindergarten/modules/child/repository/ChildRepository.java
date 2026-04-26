@@ -6,17 +6,22 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ChildRepository extends JpaRepository<Child, Long> {
 
     Page<Child> findAllByTenantId(Long tenantId, Pageable pageable);
 
+    Page<Child> findAllByTenantIdAndIdIn(Long tenantId, Collection<Long> ids, Pageable pageable);
+
     List<Child> findAllByTenantIdAndGroupIsNullOrderByCreatedAtAsc(Long tenantId);
 
     Optional<Child> findByIdAndTenantId(Long id, Long tenantId);
 
     List<Child> findAllByGroupIdAndTenantId(Long groupId, Long tenantId);
+
+    Optional<Child> findByIdAndTenantIdAndIdIn(Long id, Long tenantId, Collection<Long> ids);
 }

@@ -1,9 +1,10 @@
 package com.team29.kindergarten.modules.child.service;
 
 import com.team29.kindergarten.common.exception.ResourceNotFoundException;
+import com.team29.kindergarten.modules.auth.entity.enums.RoleName;
 import com.team29.kindergarten.modules.child.dto.ChildRequestDto;
-import com.team29.kindergarten.modules.child.dto.ParentSummaryDto;
 import com.team29.kindergarten.modules.child.dto.ChildResponseDto;
+import com.team29.kindergarten.modules.child.dto.ParentSummaryDto;
 import com.team29.kindergarten.modules.child.dto.UpdateChildGroupRequestDto;
 import com.team29.kindergarten.modules.child.mapper.ChildMapper;
 import com.team29.kindergarten.modules.child.model.Child;
@@ -11,7 +12,6 @@ import com.team29.kindergarten.modules.child.model.ChildParent;
 import com.team29.kindergarten.modules.child.model.ChildParentId;
 import com.team29.kindergarten.modules.child.repository.ChildParentRepository;
 import com.team29.kindergarten.modules.child.repository.ChildRepository;
-import com.team29.kindergarten.modules.auth.entity.enums.RoleName;
 import com.team29.kindergarten.modules.group.model.Group;
 import com.team29.kindergarten.modules.group.repository.GroupRepository;
 import com.team29.kindergarten.modules.user.entity.User;
@@ -19,6 +19,7 @@ import com.team29.kindergarten.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,66 +39,79 @@ import java.util.stream.Collectors;
 public class ChildService {
 
     private final ChildRepository childRepository;
+    private final ChildParentRepository childParentRepository;
     private final ChildMapper childMapper;
     private final GroupRepository groupRepository;
-    private final ChildParentRepository childParentRepository;
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
-    public Page<ChildResponseDto> findAll(Long tenantId, Pageable pageable) {
+    public Page<ChildResponseDto> findAll(Long tenantId, Pageable pageable, User user) {
         log.info("Fetching all children for tenantId={}, page={}", tenantId, pageable.getPageNumber());
-        return mapChildrenWithParents(childRepository.findAllByTenantId(tenantId, pageable), tenantId);
+        if (user != null && isParent(user)) {
+            List<Long> childIds = childParentRepository.findChildIdsByParentUserIdAndTenantId(user.getId(), tenantId);
+            if (childIds.isEmpty()) {
+                return new PageImpl<>(List.of(), pageable, 0);
+            }
+            Page<Child> page = childRepository.findAllByTenantIdAndIdIn(tenantId, childIds, pageable);
+            return mapChildrenWithParents(page, tenantId);
+        }
+        Page<Child> page = childRepository.findAllByTenantId(tenantId, pageable);
+        return mapChildrenWithParents(page, tenantId);
     }
 
     @Transactional(readOnly = true)
     public List<ChildResponseDto> findUnassigned(Long tenantId) {
         log.info("Fetching all unassigned children for tenantId={}", tenantId);
-        return mapChildrenWithParents(childRepository.findAllByTenantIdAndGroupIsNullOrderByCreatedAtAsc(tenantId), tenantId);
+        return mapChildrenWithParents(
+                childRepository.findAllByTenantIdAndGroupIsNullOrderByCreatedAtAsc(tenantId),
+                tenantId
+        );
     }
 
     @Transactional(readOnly = true)
-    public ChildResponseDto findById(Long id, Long tenantId) {
+    public ChildResponseDto findById(Long id, Long tenantId, User user) {
         log.info("Fetching child id={} for tenantId={}", id, tenantId);
-        ChildResponseDto response = childRepository
-                .findByIdAndTenantId(id, tenantId)
-                .map(childMapper::toResponseDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
+        Child child = getChild(id, tenantId, user);
+        ChildResponseDto response = childMapper.toResponseDto(child);
         attachParents(List.of(response), tenantId);
         return response;
     }
 
     @Transactional(readOnly = true)
     public List<ChildResponseDto> findAllByTeacher(Long teacherUserId, Long tenantId) {
-    log.info("Fetching class records for teacherUserId={}, tenantId={}", teacherUserId, tenantId);
+        log.info("Fetching class records for teacherUserId={}, tenantId={}", teacherUserId, tenantId);
 
-    Group group = groupRepository.findByTeacherUserIdAndTenantId(teacherUserId, tenantId)
-            .orElseThrow(() -> new ResourceNotFoundException(
-                    "No group found for teacher userId=" + teacherUserId));
+        Group group = groupRepository.findByTeacherUserIdAndTenantId(teacherUserId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No group found for teacher userId=" + teacherUserId));
 
-    return childRepository.findAllByGroupIdAndTenantId(group.getId(), tenantId)
-            .stream()
-            .map(childMapper::toResponseDto)
-            .toList();
-}
+        List<ChildResponseDto> responses = childRepository.findAllByGroupIdAndTenantId(group.getId(), tenantId)
+                .stream()
+                .map(childMapper::toResponseDto)
+                .toList();
+        attachParents(responses, tenantId);
+        return responses;
+    }
 
-    public ChildResponseDto create(ChildRequestDto request, Long tenantId) {
-    log.info("Creating child for tenantId={}", tenantId);
+    public ChildResponseDto create(ChildRequestDto request, Long tenantId, User user) {
+        log.info("Creating child for tenantId={}", tenantId);
 
-    Child child = childMapper.toEntity(request);
-    child.setTenantId(tenantId);
-    resolveGroup(request.getGroupId(), tenantId, child);
+        Child child = childMapper.toEntity(request);
+        child.setTenantId(tenantId);
+        resolveGroup(request.getGroupId(), tenantId, child);
 
-    Child saved = childRepository.save(child);
-    log.info("Created child id={} for tenantId={}", saved.getId(), tenantId);
-    return childMapper.toResponseDto(saved);
-}
+        Child saved = childRepository.save(child);
+        linkChildToParentUserIfNeeded(saved.getId(), tenantId, user);
+        log.info("Created child id={} for tenantId={}", saved.getId(), tenantId);
+        ChildResponseDto response = childMapper.toResponseDto(saved);
+        attachParents(List.of(response), tenantId);
+        return response;
+    }
 
-    public ChildResponseDto update(Long id, ChildRequestDto request, Long tenantId) {
+    public ChildResponseDto update(Long id, ChildRequestDto request, Long tenantId, User user) {
         log.info("Updating child id={} for tenantId={}", id, tenantId);
 
-        Child child = childRepository
-                .findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
+        Child child = getChild(id, tenantId, user);
 
         childMapper.updateEntityFromDto(request, child);
         resolveGroup(request.getGroupId(), tenantId, child);
@@ -124,16 +138,31 @@ public class ChildService {
         return response;
     }
 
-    public void delete(Long id, Long tenantId) {
-        Child child = getChild(id, tenantId);
+    public void delete(Long id, Long tenantId, User user) {
+        Child child = getChild(id, tenantId, user);
 
         child.setDeletedAt(LocalDateTime.now());
         childRepository.save(child);
     }
 
-    public Child getChild(Long id, Long tenantId) {
+    public Child getChild(Long id, Long tenantId, User user) {
+        if (user != null && isParent(user)) {
+            List<Long> childIds = childParentRepository.findChildIdsByParentUserIdAndTenantId(user.getId(), tenantId);
+            if (childIds.isEmpty()) {
+                throw new ResourceNotFoundException("Child not found: " + id);
+            }
+            return childRepository.findByIdAndTenantIdAndIdIn(id, tenantId, childIds)
+                    .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
+        }
         return childRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
+    }
+
+    /**
+     * Resolve child for admin/staff flows without applying parent visibility scope.
+     */
+    public Child getChild(Long id, Long tenantId) {
+        return getChild(id, tenantId, null);
     }
 
     public void addParentLink(Long childId, Long parentUserId, Long tenantId) {
@@ -143,6 +172,28 @@ public class ChildService {
         getChild(childId, tenantId);
         linkParent(childId, parentUserId, tenantId);
         log.info("Linked parentUserId={} to childId={} for tenantId={}", parentUserId, childId, tenantId);
+    }
+
+    private void linkChildToParentUserIfNeeded(Long childId, Long tenantId, User user) {
+        if (!isParent(user)) {
+            return;
+        }
+        Long parentUserId = user.getId();
+        childParentRepository
+                .findByIdChildIdAndIdParentUserIdAndTenantId(childId, parentUserId, tenantId)
+                .orElseGet(() -> childParentRepository.save(ChildParent.builder()
+                        .id(ChildParentId.builder()
+                                .childId(childId)
+                                .parentUserId(parentUserId)
+                                .build())
+                        .tenantId(tenantId)
+                        .build()));
+    }
+
+    private boolean isParent(User user) {
+        return user != null
+                && user.getRoles() != null
+                && user.getRoles().stream().anyMatch(role -> role.getName() == RoleName.PARENT);
     }
 
     private void resolveGroup(Long groupId, Long tenantId, Child child) {

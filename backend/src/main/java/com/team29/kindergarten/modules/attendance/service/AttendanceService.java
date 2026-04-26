@@ -14,7 +14,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -35,10 +39,53 @@ public class AttendanceService {
         return attendanceMapper.toResponseDto(getAttendance(id, tenantId));
     }
 
+    @Transactional(readOnly = true)
+    public List<AttendanceResponseDto> findForChildInRange(Long childId, LocalDate from, LocalDate to, Long tenantId) {
+        resolveChild(childId, tenantId);
+
+        LocalDate resolvedFrom = from;
+        LocalDate resolvedTo = to;
+        if (resolvedFrom == null || resolvedTo == null) {
+            YearMonth month = YearMonth.now();
+            resolvedFrom = month.atDay(1);
+            resolvedTo = month.atEndOfMonth();
+        }
+
+        if (resolvedFrom.isAfter(resolvedTo)) {
+            throw new IllegalArgumentException("'from' date must be before or equal to 'to' date");
+        }
+
+        long daySpan = resolvedTo.toEpochDay() - resolvedFrom.toEpochDay();
+        if (daySpan > 92) {
+            throw new IllegalArgumentException("Date range is too large. Maximum allowed range is 92 days");
+        }
+
+        return attendanceRepository
+                .findAllByTenantIdAndChildIdAndDateBetweenOrderByDateAsc(tenantId, childId, resolvedFrom, resolvedTo)
+                .stream()
+                .map(attendanceMapper::toResponseDto)
+                .toList();
+    }
+
     public AttendanceResponseDto create(AttendanceRequestDto request, Long tenantId) {
-        Attendance attendance = attendanceMapper.toEntity(request);
-        attendance.setTenantId(tenantId);
-        attendance.setChild(resolveChild(request.getChildId(), tenantId));
+        Child child = resolveChild(request.getChildId(), tenantId);
+        Optional<Attendance> existingAttendance = attendanceRepository.findAnyByTenantIdAndChildIdAndDate(
+                tenantId,
+                request.getChildId(),
+                request.getDate()
+        );
+
+        Attendance attendance;
+        if (existingAttendance.isPresent()) {
+            attendance = existingAttendance.get();
+            attendanceMapper.updateEntityFromDto(request, attendance);
+            attendance.setDeletedAt(null);
+        } else {
+            attendance = attendanceMapper.toEntity(request);
+            attendance.setTenantId(tenantId);
+        }
+
+        attendance.setChild(child);
         return attendanceMapper.toResponseDto(attendanceRepository.save(attendance));
     }
 
