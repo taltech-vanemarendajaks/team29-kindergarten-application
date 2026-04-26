@@ -1,4 +1,4 @@
-package com.team29.kindergarten.modules.user.dto;
+package com.team29.kindergarten.modules.child.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,10 +11,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserResponseDto {
+public class ParentSummaryDto {
     private Long id;
-    private Long tenantId;
     private String fullName;
     private String email;
-    private String assignedGroupName;
 }

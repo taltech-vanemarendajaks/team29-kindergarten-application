@@ -26,6 +26,6 @@ public class ChildParentId implements Serializable {
     @Column(name = "child_id")
     private Long childId;
 
-    @Column(name = "parent_id")
-    private Long parentId;
+    @Column(name = "parent_user_id")
+    private Long parentUserId;
 }

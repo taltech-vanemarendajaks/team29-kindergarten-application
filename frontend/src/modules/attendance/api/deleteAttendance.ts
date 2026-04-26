@@ -1,4 +1,4 @@
-import { API_URL } from "@/src/shared/constants/api";
+import { API_URL } from "@/src/services/api";
 import { throwApiRequestError } from "@/src/shared/utils/apiRequestError";
 
 export async function deleteAttendance(token: string, attendanceId: number): Promise<void> {

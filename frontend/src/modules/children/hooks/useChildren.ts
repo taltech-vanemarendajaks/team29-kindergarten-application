@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import type { PageResponse } from "@/src/shared/model/page";
-import { getGroups } from "../api/getGroups";
-import { getGroupOptions } from "../api/getGroupOptions";
-import type { Group } from "../model/group";
+import { getChildren, getUnassignedChildren } from "../api/getChildren";
+import type { Child } from "../model/child";
 
-export function useGroups(token: string | null, page: number, size = 10, enabled = true) {
-    const [groupPage, setGroupPage] = useState<PageResponse<Group> | null>(null);
-    const [groups, setGroups] = useState<Group[]>([]);
+export function useChildren(token: string | null, page: number, size = 10, enabled = true) {
+    const [childPage, setChildPage] = useState<PageResponse<Child> | null>(null);
+    const [children, setChildren] = useState<Child[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [reloadKey, setReloadKey] = useState(0);
@@ -17,23 +16,23 @@ export function useGroups(token: string | null, page: number, size = 10, enabled
         if (!enabled || !token) {
             return;
         }
-        const resolvedToken = token;
 
+        const resolvedToken = token;
         let cancelled = false;
 
-        async function loadGroups() {
+        async function loadChildren() {
             try {
                 setLoading(true);
                 setError(null);
-                const data = await getGroups(resolvedToken, page, size);
+                const data = await getChildren(resolvedToken, page, size);
 
                 if (!cancelled) {
-                    setGroupPage(data);
-                    setGroups(data.content);
+                    setChildPage(data);
+                    setChildren(data.content);
                 }
             } catch (err) {
                 if (!cancelled) {
-                    setError(err instanceof Error ? err.message : "Failed to load groups");
+                    setError(err instanceof Error ? err.message : "Failed to load children");
                 }
             } finally {
                 if (!cancelled) {
@@ -42,7 +41,7 @@ export function useGroups(token: string | null, page: number, size = 10, enabled
             }
         }
 
-        void loadGroups();
+        void loadChildren();
 
         return () => {
             cancelled = true;
@@ -50,17 +49,16 @@ export function useGroups(token: string | null, page: number, size = 10, enabled
     }, [enabled, page, reloadKey, size, token]);
 
     return {
-        groups,
-        groupPage,
+        childPage,
+        children,
         loading,
         error,
-        setGroups,
         refetch: () => setReloadKey((currentValue) => currentValue + 1),
     };
 }
 
-export function useGroupOptions(token: string | null, enabled = true) {
-    const [groups, setGroups] = useState<Group[]>([]);
+export function useUnassignedChildren(token: string | null, enabled = true) {
+    const [children, setChildren] = useState<Child[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [reloadKey, setReloadKey] = useState(0);
@@ -73,18 +71,18 @@ export function useGroupOptions(token: string | null, enabled = true) {
         const resolvedToken = token;
         let cancelled = false;
 
-        async function loadGroupOptions() {
+        async function loadUnassignedChildren() {
             try {
                 setLoading(true);
                 setError(null);
-                const data = await getGroupOptions(resolvedToken);
+                const data = await getUnassignedChildren(resolvedToken);
 
                 if (!cancelled) {
-                    setGroups(data);
+                    setChildren(data);
                 }
             } catch (err) {
                 if (!cancelled) {
-                    setError(err instanceof Error ? err.message : "Failed to load group options");
+                    setError(err instanceof Error ? err.message : "Failed to load unassigned children");
                 }
             } finally {
                 if (!cancelled) {
@@ -93,7 +91,7 @@ export function useGroupOptions(token: string | null, enabled = true) {
             }
         }
 
-        void loadGroupOptions();
+        void loadUnassignedChildren();
 
         return () => {
             cancelled = true;
@@ -101,7 +99,7 @@ export function useGroupOptions(token: string | null, enabled = true) {
     }, [enabled, reloadKey, token]);
 
     return {
-        groups,
+        children,
         loading,
         error,
         refetch: () => setReloadKey((currentValue) => currentValue + 1),

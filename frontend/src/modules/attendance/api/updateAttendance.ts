@@ -1,4 +1,4 @@
-import { API_URL } from "@/src/shared/constants/api";
+import { API_URL } from "@/src/services/api";
 import { throwApiRequestError } from "@/src/shared/utils/apiRequestError";
 import type { AttendanceRecord, AttendanceStatus } from "../model/attendance";
 
