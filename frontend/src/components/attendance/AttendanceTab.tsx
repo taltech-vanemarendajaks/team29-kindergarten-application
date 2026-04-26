@@ -6,13 +6,15 @@ import { Button, Stack, Typography } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import Snackbar from "@/src/components/ui/snackbar";
 import AttendanceStats from "./AttendanceStats";
-import LogAbsenceDialog from "./LogAbsenceDialog";
+import LogAbsenceDialog, { type AttendanceDialogAudience } from "./LogAbsenceDialog";
 import MonthCalendar from "./MonthCalendar";
 import MonthSwitcher from "./MonthSwitcher";
 import RecentRecords from "./RecentRecords";
 
 interface AttendanceTabProps {
     childId: number;
+    /** Controls copy and which statuses the log dialog offers. */
+    audience?: AttendanceDialogAudience;
 }
 
 function monthStart(date: Date): Date {
@@ -26,7 +28,7 @@ function toIsoDate(date: Date): string {
     return `${year}-${month}-${day}`;
 }
 
-export default function AttendanceTab({ childId }: AttendanceTabProps) {
+export default function AttendanceTab({ childId, audience = "parent" }: AttendanceTabProps) {
     const { token } = useAuth();
     const [month, setMonth] = useState(() => monthStart(new Date()));
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -109,7 +111,11 @@ export default function AttendanceTab({ childId }: AttendanceTabProps) {
             return next;
         });
         showFeedback(
-            mode === "created" ? "Absence logged successfully." : "Attendance record updated.",
+            mode === "created"
+                ? audience === "teacher"
+                    ? "Attendance record saved."
+                    : "Absence logged successfully."
+                : "Attendance record updated.",
             "success"
         );
     };
@@ -119,7 +125,7 @@ export default function AttendanceTab({ childId }: AttendanceTabProps) {
         showFeedback("Attendance record reset successfully.", "success");
     };
 
-    const logButtonLabel = "Log Absence";
+    const logButtonLabel = audience === "teacher" ? "Log attendance" : "Log absence";
 
     return (
         <Stack spacing={2}>
@@ -177,6 +183,7 @@ export default function AttendanceTab({ childId }: AttendanceTabProps) {
                 onSaved={handleAttendanceSaved}
                 onReset={handleAttendanceReset}
                 onError={(message) => showFeedback(message, "error")}
+                audience={audience}
             />
 
             <Snackbar

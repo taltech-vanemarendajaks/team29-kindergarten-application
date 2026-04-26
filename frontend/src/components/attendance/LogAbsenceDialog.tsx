@@ -22,6 +22,8 @@ import {
 } from "@/src/modules/attendance";
 import { ApiRequestError } from "@/src/shared/utils/apiRequestError";
 
+export type AttendanceDialogAudience = "parent" | "teacher";
+
 interface LogAbsenceDialogProps {
     open: boolean;
     onClose: () => void;
@@ -32,6 +34,8 @@ interface LogAbsenceDialogProps {
     onSaved: (record: AttendanceRecord, mode: "created" | "updated") => void;
     onReset: (date: string) => void;
     onError: (message: string) => void;
+    /** Parent: only absent/sick. Teacher: present/absent/sick. */
+    audience?: AttendanceDialogAudience;
 }
 
 type AbsenceStatus = Extract<AttendanceStatus, "ABSENT" | "SICK">;
@@ -65,8 +69,10 @@ export default function LogAbsenceDialog({
     onSaved,
     onReset,
     onError,
+    audience = "parent",
 }: LogAbsenceDialogProps) {
     const { token } = useAuth();
+    const isTeacher = audience === "teacher";
 
     const monthEnd = useMemo(
         () => new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0),
@@ -82,7 +88,8 @@ export default function LogAbsenceDialog({
     };
 
     const [date, setDate] = useState<string>(resolveInitialDate);
-    const [status, setStatus] = useState<AbsenceStatus>("ABSENT");
+    const [statusParent, setStatusParent] = useState<AbsenceStatus>("ABSENT");
+    const [statusTeacher, setStatusTeacher] = useState<AttendanceStatus>("PRESENT");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -93,18 +100,26 @@ export default function LogAbsenceDialog({
         const baseIso = initialDate ?? toIsoDate(new Date());
         const nextDate = clampDateToMonth(baseIso, monthStart, monthEnd);
         setDate(nextDate);
-        const existing = records.find((record) => record.date === nextDate);
-        setStatus(existing && existing.status !== "PRESENT" ? (existing.status as AbsenceStatus) : "ABSENT");
         setValidationError(null);
-        // `records` intentionally omitted from deps: we only want to seed status when the dialog opens,
-        // not every time the records list is refreshed.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, initialDate, monthStart, monthEnd]);
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+        const existing = records.find((record) => record.date === date);
+        if (isTeacher) {
+            setStatusTeacher(existing ? existing.status : "PRESENT");
+        } else {
+            setStatusParent(existing && existing.status !== "PRESENT" ? (existing.status as AbsenceStatus) : "ABSENT");
+        }
+    }, [open, date, records, isTeacher]);
 
     const existingRecord = useMemo(
         () => records.find((record) => record.date === date) ?? null,
         [records, date]
     );
+    const isParentPresentLocked = !isTeacher && existingRecord?.status === "PRESENT";
 
     const handleClose = () => {
         if (isSubmitting) {
@@ -114,6 +129,10 @@ export default function LogAbsenceDialog({
     };
 
     const handleSubmit = async () => {
+        if (isParentPresentLocked) {
+            setValidationError("Present records are set by teachers and cannot be edited by parents.");
+            return;
+        }
         if (!token) {
             setValidationError("Please sign in to log attendance.");
             return;
@@ -131,20 +150,22 @@ export default function LogAbsenceDialog({
 
         setValidationError(null);
 
+        const statusToSave: AttendanceStatus = isTeacher ? statusTeacher : statusParent;
+
         try {
             setIsSubmitting(true);
             if (existingRecord) {
                 const updated = await updateAttendance(token, existingRecord.id, {
                     childId,
                     date,
-                    status,
+                    status: statusToSave,
                 });
                 onSaved(updated, "updated");
             } else {
                 const created = await createAttendance(token, {
                     childId,
                     date,
-                    status,
+                    status: statusToSave,
                 });
                 onSaved(created, "created");
             }
@@ -161,6 +182,10 @@ export default function LogAbsenceDialog({
     };
 
     const handleReset = async () => {
+        if (isParentPresentLocked) {
+            setValidationError("Present records are set by teachers and cannot be edited by parents.");
+            return;
+        }
         if (!token || !existingRecord) {
             return;
         }
@@ -185,14 +210,18 @@ export default function LogAbsenceDialog({
     const submitLabel = isSubmitting
         ? "Saving..."
         : existingRecord
-        ? "Update Record"
-        : "Log Absence";
+          ? "Update record"
+          : isTeacher
+            ? "Save record"
+            : "Log absence";
+
+    const dialogTitle = isTeacher ? "Log attendance" : "Log absence";
 
     return (
         <Dialog
             open={open}
             onClose={handleClose}
-            title="Log Absence"
+            title={dialogTitle}
             actions={[
                 {
                     label: "Cancel",
@@ -202,6 +231,7 @@ export default function LogAbsenceDialog({
                     disabled: isSubmitting,
                 },
                 ...(existingRecord
+                    && !isParentPresentLocked
                     ? [
                           {
                               label: "Reset",
@@ -219,13 +249,15 @@ export default function LogAbsenceDialog({
                     onClick: () => {
                         void handleSubmit();
                     },
-                    disabled: isSubmitting,
+                    disabled: isSubmitting || isParentPresentLocked,
                 },
             ]}
         >
             <Stack spacing={2} sx={{ pt: 1 }}>
                 <Typography variant="body2" color="text.secondary">
-                    Record an absence for this child within the currently viewed month.
+                    {isTeacher
+                        ? "Set attendance for this child for a date in the month you are viewing."
+                        : "Record an absence for this child within the currently viewed month."}
                 </Typography>
 
                 <TextField
@@ -240,24 +272,46 @@ export default function LogAbsenceDialog({
 
                 <FormControl fullWidth>
                     <InputLabel id="absence-status-label">Status</InputLabel>
-                    <Select
-                        labelId="absence-status-label"
-                        label="Status"
-                        value={status}
-                        onChange={(event) => setStatus(event.target.value as AbsenceStatus)}
-                    >
-                        <MenuItem value="ABSENT">Absent</MenuItem>
-                        <MenuItem value="SICK">Sick</MenuItem>
-                    </Select>
+                    {isTeacher ? (
+                        <Select
+                            labelId="absence-status-label"
+                            label="Status"
+                            value={statusTeacher}
+                            onChange={(event) => setStatusTeacher(event.target.value as AttendanceStatus)}
+                        >
+                            <MenuItem value="PRESENT">Present</MenuItem>
+                            <MenuItem value="ABSENT">Absent</MenuItem>
+                            <MenuItem value="SICK">Sick</MenuItem>
+                        </Select>
+                    ) : (
+                        <Select
+                            labelId="absence-status-label"
+                            label="Status"
+                            value={statusParent}
+                            onChange={(event) => setStatusParent(event.target.value as AbsenceStatus)}
+                        >
+                            <MenuItem value="ABSENT">Absent</MenuItem>
+                            <MenuItem value="SICK">Sick</MenuItem>
+                        </Select>
+                    )}
                     <FormHelperText>
-                        Choose Absent for a planned absence or Sick when the child is ill.
+                        {isTeacher
+                            ? "Present marks the child as attended; absent and sick match parent-reported statuses."
+                            : "Choose Absent for a planned absence or Sick when the child is ill."}
                     </FormHelperText>
                 </FormControl>
 
                 {existingRecord ? (
                     <Typography variant="body2" color="warning.main">
-                        A record for this date already exists ({existingRecord.status}). Submitting will update it, or use
-                        Reset to remove the record.
+                        {isParentPresentLocked
+                            ? `A record for this date already exists (${existingRecord.status}).`
+                            : `A record for this date already exists (${existingRecord.status}). Submitting will update it, or use Reset to remove the record.`}
+                    </Typography>
+                ) : null}
+
+                {isParentPresentLocked ? (
+                    <Typography variant="body2" color="info.main">
+                        This record is marked Present by a teacher and is read-only for parents.
                     </Typography>
                 ) : null}
 

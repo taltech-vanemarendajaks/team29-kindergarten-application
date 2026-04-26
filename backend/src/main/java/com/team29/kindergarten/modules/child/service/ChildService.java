@@ -146,13 +146,31 @@ public class ChildService {
     }
 
     public Child getChild(Long id, Long tenantId, User user) {
-        if (user != null && isParent(user)) {
+        if (user == null) {
+            return childRepository.findByIdAndTenantId(id, tenantId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
+        }
+        if (hasKindergartenAdminAccess(user)) {
+            return childRepository.findByIdAndTenantId(id, tenantId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
+        }
+        if (isParent(user)) {
             List<Long> childIds = childParentRepository.findChildIdsByParentUserIdAndTenantId(user.getId(), tenantId);
             if (childIds.isEmpty()) {
                 throw new ResourceNotFoundException("Child not found: " + id);
             }
             return childRepository.findByIdAndTenantIdAndIdIn(id, tenantId, childIds)
                     .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
+        }
+        if (isTeacher(user)) {
+            Group teacherGroup = groupRepository.findByTeacherUserIdAndTenantId(user.getId(), tenantId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
+            Child child = childRepository.findByIdAndTenantId(id, tenantId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
+            if (child.getGroup() == null || !child.getGroup().getId().equals(teacherGroup.getId())) {
+                throw new ResourceNotFoundException("Child not found: " + id);
+            }
+            return child;
         }
         return childRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Child not found: " + id));
@@ -194,6 +212,21 @@ public class ChildService {
         return user != null
                 && user.getRoles() != null
                 && user.getRoles().stream().anyMatch(role -> role.getName() == RoleName.PARENT);
+    }
+
+    private boolean isTeacher(User user) {
+        return user != null
+                && user.getRoles() != null
+                && user.getRoles().stream().anyMatch(role -> role.getName() == RoleName.TEACHER);
+    }
+
+    private boolean hasKindergartenAdminAccess(User user) {
+        if (user == null || user.getRoles() == null) {
+            return false;
+        }
+        return user.getRoles().stream()
+                .anyMatch(role -> role.getName() == RoleName.KINDERGARTEN_ADMIN
+                        || role.getName() == RoleName.SUPER_ADMIN);
     }
 
     private void resolveGroup(Long groupId, Long tenantId, Child child) {
