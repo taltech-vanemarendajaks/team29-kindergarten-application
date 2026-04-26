@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { DashboardStats } from "@/src/modules/kindergarten-admin/model/dashboardStats";
+import { adminQuickActions } from "@/src/components/navigation/adminNav";
 import {
   Paper,
   Typography,
@@ -15,23 +17,7 @@ import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { useAuth } from "@/src/context/AuthContext";
 import { API_URL } from "@/src/services/api";
 
-interface DashboardStats {
-  children: number;
-  groups: number;
-  teachers: number;
-  attendance: {
-    present: number;
-    absent: number;
-    sick: number;
-  };
-}
-
 const COLOURS = ["#4caf50", "#f44336", "#ff9800"];
-
-const QUICK_ACTIONS = [
-  { label: "Manage Teachers", path: "/kindergarten-admin/teachers" },
-  { label: "Manage Groups", path: "/kindergarten-admin/groups" },
-];
 
 export default function KindergartenAdminDashboardPage() {
   const { token } = useAuth();
@@ -98,9 +84,9 @@ export default function KindergartenAdminDashboardPage() {
     : [];
 
   const legendItems = [
-    { name: "Present",   value: stats?.attendance.present ?? 0, colour: COLOURS[0] },
-    { name: "Absent",    value: stats?.attendance.absent  ?? 0, colour: COLOURS[1] },
-    { name: "Sick",      value: stats?.attendance.sick    ?? 0, colour: COLOURS[2] },
+    { name: "Present", value: stats?.attendance.present ?? 0, colour: COLOURS[0] },
+    { name: "Absent",  value: stats?.attendance.absent  ?? 0, colour: COLOURS[1] },
+    { name: "Sick",    value: stats?.attendance.sick    ?? 0, colour: COLOURS[2] },
   ];
 
   return (
@@ -136,7 +122,7 @@ export default function KindergartenAdminDashboardPage() {
                   Quick Actions
                 </Typography>
                 <Stack spacing={1}>
-                  {QUICK_ACTIONS.map((action) => (
+                  {adminQuickActions.map((action) => (
                     <Button
                       key={action.label}
                       variant="contained"
@@ -164,8 +150,6 @@ export default function KindergartenAdminDashboardPage() {
             )}
 
             <Stack direction="row" alignItems="center" spacing={4}>
-
-              {/* Donut chart with centre label overlay */}
               <Box sx={{ position: "relative", width: 220, height: 220 }}>
                 <PieChart width={220} height={220}>
                   <Pie
@@ -185,7 +169,6 @@ export default function KindergartenAdminDashboardPage() {
                   <Tooltip />
                 </PieChart>
 
-                {/* Centre label overlay */}
                 <Box
                   sx={{
                     position: "absolute",
@@ -205,7 +188,6 @@ export default function KindergartenAdminDashboardPage() {
                 </Box>
               </Box>
 
-              {/* Custom legend with values */}
               <Stack spacing={1.5}>
                 {legendItems.map((item) => (
                   <Stack key={item.name} direction="row" alignItems="center" spacing={1.5}>
@@ -227,7 +209,6 @@ export default function KindergartenAdminDashboardPage() {
                   </Stack>
                 ))}
               </Stack>
-
             </Stack>
           </Box>
 
