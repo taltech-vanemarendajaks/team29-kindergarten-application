@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { useAuth } from "@/src/context/AuthContext";
-import { API_URL } from "@/src/shared/constants/api";
+import { API_URL } from "@/src/services/api";
 
 interface DashboardStats {
   children: number;
