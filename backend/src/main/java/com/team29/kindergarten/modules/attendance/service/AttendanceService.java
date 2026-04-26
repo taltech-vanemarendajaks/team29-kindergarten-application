@@ -88,6 +88,7 @@ public class AttendanceService {
         Attendance attendance;
         if (existingAttendance.isPresent()) {
             attendance = existingAttendance.get();
+            assertParentCannotEditPresentRecord(user, attendance);
             attendanceMapper.updateEntityFromDto(request, attendance);
             attendance.setDeletedAt(null);
         } else {
@@ -102,6 +103,7 @@ public class AttendanceService {
     public AttendanceResponseDto update(Long id, AttendanceRequestDto request, Long tenantId, User user) {
         assertParentCannotSetPresent(user, request.getStatus());
         Attendance attendance = getAttendance(id, tenantId);
+        assertParentCannotEditPresentRecord(user, attendance);
         assertCanAccessChild(attendance.getChild().getId(), tenantId, user);
         assertCanAccessChild(request.getChildId(), tenantId, user);
 
@@ -112,6 +114,7 @@ public class AttendanceService {
 
     public void delete(Long id, Long tenantId, User user) {
         Attendance attendance = getAttendance(id, tenantId);
+        assertParentCannotEditPresentRecord(user, attendance);
         assertCanAccessChild(attendance.getChild().getId(), tenantId, user);
         attendance.setDeletedAt(LocalDateTime.now());
         attendanceRepository.save(attendance);
@@ -124,6 +127,12 @@ public class AttendanceService {
     private void assertParentCannotSetPresent(User user, AttendanceStatus status) {
         if (status == AttendanceStatus.PRESENT && isParentOnly(user)) {
             throw new IllegalArgumentException("Parents cannot set attendance status to present.");
+        }
+    }
+
+    private void assertParentCannotEditPresentRecord(User user, Attendance attendance) {
+        if (isParentOnly(user) && attendance.getStatus() == AttendanceStatus.PRESENT) {
+            throw new ForbiddenException("Parents cannot edit attendance records marked as present.");
         }
     }
 

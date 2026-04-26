@@ -119,6 +119,7 @@ export default function LogAbsenceDialog({
         () => records.find((record) => record.date === date) ?? null,
         [records, date]
     );
+    const isParentPresentLocked = !isTeacher && existingRecord?.status === "PRESENT";
 
     const handleClose = () => {
         if (isSubmitting) {
@@ -128,6 +129,10 @@ export default function LogAbsenceDialog({
     };
 
     const handleSubmit = async () => {
+        if (isParentPresentLocked) {
+            setValidationError("Present records are set by teachers and cannot be edited by parents.");
+            return;
+        }
         if (!token) {
             setValidationError("Please sign in to log attendance.");
             return;
@@ -177,6 +182,10 @@ export default function LogAbsenceDialog({
     };
 
     const handleReset = async () => {
+        if (isParentPresentLocked) {
+            setValidationError("Present records are set by teachers and cannot be edited by parents.");
+            return;
+        }
         if (!token || !existingRecord) {
             return;
         }
@@ -222,6 +231,7 @@ export default function LogAbsenceDialog({
                     disabled: isSubmitting,
                 },
                 ...(existingRecord
+                    && !isParentPresentLocked
                     ? [
                           {
                               label: "Reset",
@@ -239,7 +249,7 @@ export default function LogAbsenceDialog({
                     onClick: () => {
                         void handleSubmit();
                     },
-                    disabled: isSubmitting,
+                    disabled: isSubmitting || isParentPresentLocked,
                 },
             ]}
         >
@@ -293,8 +303,15 @@ export default function LogAbsenceDialog({
 
                 {existingRecord ? (
                     <Typography variant="body2" color="warning.main">
-                        A record for this date already exists ({existingRecord.status}). Submitting will update it, or use
-                        Reset to remove the record.
+                        {isParentPresentLocked
+                            ? `A record for this date already exists (${existingRecord.status}).`
+                            : `A record for this date already exists (${existingRecord.status}). Submitting will update it, or use Reset to remove the record.`}
+                    </Typography>
+                ) : null}
+
+                {isParentPresentLocked ? (
+                    <Typography variant="body2" color="info.main">
+                        This record is marked Present by a teacher and is read-only for parents.
                     </Typography>
                 ) : null}
 

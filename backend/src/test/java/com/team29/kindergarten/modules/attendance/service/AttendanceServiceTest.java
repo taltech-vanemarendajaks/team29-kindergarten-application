@@ -171,6 +171,74 @@ class AttendanceServiceTest {
     }
 
     @Test
+    void parentCannotEditExistingPresentViaCreateUpsert() {
+        User parent = parentUser(11L);
+        Child child = Child.builder().id(7L).tenantId(1L).build();
+        Attendance existingPresent = Attendance.builder()
+                .id(31L)
+                .tenantId(1L)
+                .child(child)
+                .date(LocalDate.of(2026, 4, 11))
+                .status(AttendanceStatus.PRESENT)
+                .build();
+
+        when(childService.getChild(7L, 1L, parent)).thenReturn(child);
+        when(attendanceRepository.findAnyByTenantIdAndChildIdAndDate(1L, 7L, LocalDate.of(2026, 4, 11)))
+                .thenReturn(Optional.of(existingPresent));
+
+        AttendanceRequestDto request = AttendanceRequestDto.builder()
+                .childId(7L)
+                .date(LocalDate.of(2026, 4, 11))
+                .status(AttendanceStatus.ABSENT)
+                .build();
+
+        assertThrows(ForbiddenException.class, () -> attendanceService.create(request, 1L, parent));
+        verify(attendanceRepository, never()).save(any());
+    }
+
+    @Test
+    void parentCannotUpdateExistingPresentRecord() {
+        User parent = parentUser(12L);
+        Child child = Child.builder().id(8L).tenantId(1L).build();
+        Attendance existingPresent = Attendance.builder()
+                .id(32L)
+                .tenantId(1L)
+                .child(child)
+                .date(LocalDate.of(2026, 4, 12))
+                .status(AttendanceStatus.PRESENT)
+                .build();
+
+        when(attendanceRepository.findByIdAndTenantId(32L, 1L)).thenReturn(Optional.of(existingPresent));
+
+        AttendanceRequestDto request = AttendanceRequestDto.builder()
+                .childId(8L)
+                .date(LocalDate.of(2026, 4, 12))
+                .status(AttendanceStatus.SICK)
+                .build();
+
+        assertThrows(ForbiddenException.class, () -> attendanceService.update(32L, request, 1L, parent));
+        verify(attendanceRepository, never()).save(any());
+    }
+
+    @Test
+    void parentCannotDeleteExistingPresentRecord() {
+        User parent = parentUser(13L);
+        Child child = Child.builder().id(9L).tenantId(1L).build();
+        Attendance existingPresent = Attendance.builder()
+                .id(33L)
+                .tenantId(1L)
+                .child(child)
+                .date(LocalDate.of(2026, 4, 13))
+                .status(AttendanceStatus.PRESENT)
+                .build();
+
+        when(attendanceRepository.findByIdAndTenantId(33L, 1L)).thenReturn(Optional.of(existingPresent));
+
+        assertThrows(ForbiddenException.class, () -> attendanceService.delete(33L, 1L, parent));
+        verify(attendanceRepository, never()).save(any());
+    }
+
+    @Test
     void teacherCanCreatePresent() {
         User teacher = teacherUser(8L);
         Child child = Child.builder().id(7L).tenantId(1L).build();
