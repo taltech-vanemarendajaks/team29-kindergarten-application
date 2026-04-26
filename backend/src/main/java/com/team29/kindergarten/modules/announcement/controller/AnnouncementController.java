@@ -101,8 +101,8 @@ public ResponseEntity<Void> delete(@PathVariable Long id) {
         announcementService.delete(id, tenantId);
         return ResponseEntity.noContent().build();
 }
-
-    @PostMapping("/{id}/read/")
+*/
+    @PostMapping("/{id}/read")
     @Operation(summary = "Mark announcement read by user")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Read status marked for announcement"),
@@ -117,15 +117,16 @@ public ResponseEntity<Void> delete(@PathVariable Long id) {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })    
-public ResponseEntity<Long> markAnnouncementRead(
-    @AuthenticationPrincipal UserPrincipal user
+public ResponseEntity<Void> markAnnouncementRead(
+        @PathVariable Long id
 ) {
-    Long userId = user.getUserId();
-    Long unReadAnnouncements = announcementService.createReadRecord(1L, userId);
-    return ResponseEntity.ok(unReadAnnouncements);
+  
+     announcementService.markAsRead(id);
+    return ResponseEntity.ok().build();
+}
 }
 
-*/
 
 
-}
+
+

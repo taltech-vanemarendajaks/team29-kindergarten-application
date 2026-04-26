@@ -45,7 +45,11 @@ public class AnnouncementRead {
     @JoinColumn(name = "announcement_id")
     private Announcement announcement;
 
+    @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
+
     private LocalDateTime deletedAt;
 }

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
@@ -101,7 +102,7 @@ public class AnnouncementService {
         ));
 }
 
-
+    @PreAuthorize("hasAnyRole('ADMIN','KINDERGARTEN_ADMIN' )")
    public AnnouncementResponseDto create(AnnouncementRequestDto requestDto) {
         Long tenantId = currentUser.getTenantId();
         Long userId = currentUser.getUserId();
