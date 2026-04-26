@@ -4,6 +4,8 @@ import com.team29.kindergarten.common.exception.ApiErrorResponse;
 import com.team29.kindergarten.modules.attendance.dto.AttendanceRequestDto;
 import com.team29.kindergarten.modules.attendance.dto.AttendanceResponseDto;
 import com.team29.kindergarten.modules.attendance.service.AttendanceService;
+import com.team29.kindergarten.modules.user.entity.User;
+import com.team29.kindergarten.tenant.TenantContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,6 +21,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,8 +30,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import com.team29.kindergarten.tenant.TenantContext;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
@@ -52,12 +53,18 @@ public class AttendanceController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             ),
             @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden to list all attendance without administrator role",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
                     responseCode = "404",
                     description = "Child not found for the current tenant",
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
     public ResponseEntity<?> findAll(
+            @AuthenticationPrincipal User user,
             @RequestParam(required = false) Long childId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
@@ -65,10 +72,10 @@ public class AttendanceController {
     ) {
         Long tenantId = TenantContext.getTenantId();
         if (childId != null) {
-            List<AttendanceResponseDto> childAttendance = attendanceService.findForChildInRange(childId, from, to, tenantId);
+            List<AttendanceResponseDto> childAttendance = attendanceService.findForChildInRange(childId, from, to, tenantId, user);
             return ResponseEntity.ok(childAttendance);
         }
-        return ResponseEntity.ok(attendanceService.findAll(tenantId, pageable));
+        return ResponseEntity.ok(attendanceService.findAll(tenantId, pageable, user));
     }
 
     @GetMapping("/{id}")
@@ -81,10 +88,13 @@ public class AttendanceController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-   public ResponseEntity<AttendanceResponseDto> findById(@PathVariable Long id) {
-    Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.ok(attendanceService.findById(id, tenantId));
-}
+    public ResponseEntity<AttendanceResponseDto> findById(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id
+    ) {
+        Long tenantId = TenantContext.getTenantId();
+        return ResponseEntity.ok(attendanceService.findById(id, tenantId, user));
+    }
 
     @PostMapping
     @Operation(summary = "Create attendance record")
@@ -101,13 +111,13 @@ public class AttendanceController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-  public ResponseEntity<AttendanceResponseDto> create(
-        @Valid @RequestBody AttendanceRequestDto request
-) {
-    Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.status(HttpStatus.CREATED).body(attendanceService.create(request, tenantId));
-}
-
+    public ResponseEntity<AttendanceResponseDto> create(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody AttendanceRequestDto request
+    ) {
+        Long tenantId = TenantContext.getTenantId();
+        return ResponseEntity.status(HttpStatus.CREATED).body(attendanceService.create(request, tenantId, user));
+    }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update attendance record")
@@ -124,14 +134,14 @@ public class AttendanceController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-  public ResponseEntity<AttendanceResponseDto> update(
-        @PathVariable Long id,
-        @Valid @RequestBody AttendanceRequestDto request
-) {
-    Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.ok(attendanceService.update(id, request, tenantId));
-}
-
+    public ResponseEntity<AttendanceResponseDto> update(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id,
+            @Valid @RequestBody AttendanceRequestDto request
+    ) {
+        Long tenantId = TenantContext.getTenantId();
+        return ResponseEntity.ok(attendanceService.update(id, request, tenantId, user));
+    }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete attendance record")
@@ -143,9 +153,12 @@ public class AttendanceController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-  public ResponseEntity<Void> delete(@PathVariable Long id) {
-    Long tenantId = TenantContext.getTenantId();
-    attendanceService.delete(id, tenantId);
-    return ResponseEntity.noContent().build();
-}
+    public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id
+    ) {
+        Long tenantId = TenantContext.getTenantId();
+        attendanceService.delete(id, tenantId, user);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -3,6 +3,8 @@ package com.team29.kindergarten.modules.attendance.controller;
 import com.team29.kindergarten.common.enums.AttendanceStatus;
 import com.team29.kindergarten.modules.attendance.dto.AttendanceResponseDto;
 import com.team29.kindergarten.modules.attendance.service.AttendanceService;
+import com.team29.kindergarten.modules.user.entity.User;
+import com.team29.kindergarten.tenant.TenantContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,9 +21,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import com.team29.kindergarten.tenant.TenantContext;
 
 @ExtendWith(MockitoExtension.class)
 class AttendanceControllerTest {
@@ -40,6 +42,7 @@ class AttendanceControllerTest {
     @Test
     void findAllReturnsChildRangeWhenChildIdProvided() {
         TenantContext.setTenantId(2L);
+        User user = User.builder().id(9L).build();
         LocalDate from = LocalDate.of(2026, 4, 1);
         LocalDate to = LocalDate.of(2026, 4, 30);
         AttendanceResponseDto dto = AttendanceResponseDto.builder()
@@ -49,25 +52,26 @@ class AttendanceControllerTest {
                 .date(LocalDate.of(2026, 4, 1))
                 .status(AttendanceStatus.PRESENT)
                 .build();
-        when(attendanceService.findForChildInRange(5L, from, to, 2L)).thenReturn(List.of(dto));
+        when(attendanceService.findForChildInRange(5L, from, to, 2L, user)).thenReturn(List.of(dto));
 
-        ResponseEntity<?> response = attendanceController.findAll(5L, from, to, PageRequest.of(0, 20));
+        ResponseEntity<?> response = attendanceController.findAll(user, 5L, from, to, PageRequest.of(0, 20));
 
         assertEquals(200, response.getStatusCode().value());
         assertInstanceOf(List.class, response.getBody());
-        verify(attendanceService).findForChildInRange(5L, from, to, 2L);
+        verify(attendanceService).findForChildInRange(5L, from, to, 2L, user);
     }
 
     @Test
     void findAllReturnsPageWhenChildIdMissing() {
         TenantContext.setTenantId(3L);
+        User user = User.builder().id(1L).build();
         Page<AttendanceResponseDto> page = new PageImpl<>(List.of(), PageRequest.of(0, 20), 0);
-        when(attendanceService.findAll(3L, PageRequest.of(0, 20))).thenReturn(page);
+        when(attendanceService.findAll(eq(3L), eq(PageRequest.of(0, 20)), eq(user))).thenReturn(page);
 
-        ResponseEntity<?> response = attendanceController.findAll(null, null, null, PageRequest.of(0, 20));
+        ResponseEntity<?> response = attendanceController.findAll(user, null, null, null, PageRequest.of(0, 20));
 
         assertEquals(200, response.getStatusCode().value());
         assertInstanceOf(Page.class, response.getBody());
-        verify(attendanceService).findAll(3L, PageRequest.of(0, 20));
+        verify(attendanceService).findAll(3L, PageRequest.of(0, 20), user);
     }
 }
