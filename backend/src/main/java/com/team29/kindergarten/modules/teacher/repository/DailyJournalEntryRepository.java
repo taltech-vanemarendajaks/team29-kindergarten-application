@@ -17,7 +17,11 @@ public interface DailyJournalEntryRepository extends JpaRepository<DailyJournalE
     WHERE e.kindergartenGroup.id IN (
         SELECT c.group.id
         FROM Child c
-        WHERE c.parent.id = :parentId
+        WHERE c.id IN (
+            SELECT cp.id.childId
+            FROM ChildParent cp
+            WHERE cp.id.parentUserId = :parentId
+        )
     )
     ORDER BY e.date DESC
     """)
@@ -30,7 +34,11 @@ public interface DailyJournalEntryRepository extends JpaRepository<DailyJournalE
       AND e.kindergartenGroup.id IN (
           SELECT c.group.id
           FROM Child c
-          WHERE c.parent.id = :parentId
+          WHERE c.id IN (
+              SELECT cp.id.childId
+              FROM ChildParent cp
+              WHERE cp.id.parentUserId = :parentId
+          )
       )
     """)
     Optional<DailyJournalEntry> findEntryForParent(Long parentId, Long entryId);
