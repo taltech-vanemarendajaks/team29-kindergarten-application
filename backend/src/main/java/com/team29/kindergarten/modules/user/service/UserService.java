@@ -1,8 +1,11 @@
 package com.team29.kindergarten.modules.user.service;
 
+import com.team29.kindergarten.common.exception.ConflictException;
 import com.team29.kindergarten.modules.auth.entity.Role;
 import com.team29.kindergarten.modules.auth.entity.enums.RoleName;
 import com.team29.kindergarten.modules.auth.repository.RoleRepository;
+import com.team29.kindergarten.modules.group.model.Group;
+import com.team29.kindergarten.modules.group.repository.GroupRepository;
 import com.team29.kindergarten.modules.user.dto.CreateUserRequestDto;
 import com.team29.kindergarten.modules.user.dto.UpdateUserRequestDto;
 import com.team29.kindergarten.modules.user.dto.UserResponseDto;
@@ -17,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,16 +33,41 @@ public class UserService {
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final GroupRepository groupRepository;
 
-    
     public Page<UserResponseDto> findUsersByRole(Long tenantId, RoleName roleName, Pageable pageable) {
-        return userRepository.findDistinctByTenantIdAndRoles_NameOrderByFullNameAsc(tenantId, roleName, pageable)
-                .map(userMapper::toUserResponseDto);
+        Page<User> usersPage = userRepository.findDistinctByTenantIdAndRoles_NameOrderByFullNameAsc(tenantId, roleName, pageable);
+        Page<UserResponseDto> responsePage = usersPage.map(userMapper::toUserResponseDto);
+
+        if (roleName != RoleName.TEACHER || responsePage.isEmpty()) {
+            return responsePage;
+        }
+
+        Map<Long, String> groupNameByTeacherId = groupRepository.findAllByTeacherUserIdInAndTenantId(
+                        responsePage.getContent().stream()
+                                .map(UserResponseDto::getId)
+                                .toList(),
+                        tenantId
+                ).stream()
+                .filter(group -> group.getTeacherUser() != null)
+                .collect(Collectors.toMap(group -> group.getTeacherUser().getId(), Group::getName));
+
+        responsePage.getContent().forEach(teacher ->
+                teacher.setAssignedGroupName(groupNameByTeacherId.get(teacher.getId()))
+        );
+
+        return responsePage;
     }
 
     public List<UserResponseDto> findUserOptionsByRole(Long tenantId, RoleName roleName) {
         return userRepository.findDistinctByTenantIdAndRoles_NameOrderByFullNameAsc(tenantId, roleName)
                 .stream()
+                .map(userMapper::toUserResponseDto)
+                .toList();
+    }
+
+    public List<UserResponseDto> findAvailableTeachersForGroup(Long tenantId, Long groupId) {
+        return userRepository.findAvailableByTenantIdAndRoleNameForGroup(tenantId, RoleName.TEACHER, groupId).stream()
                 .map(userMapper::toUserResponseDto)
                 .toList();
     }
@@ -69,6 +99,14 @@ public class UserService {
     @Transactional
     public void deleteTeacherUser(Long id, Long tenantId) {
         User user = getUserByRole(id, tenantId, RoleName.TEACHER);
+
+        groupRepository.findByTeacherUserIdAndTenantId(id, tenantId)
+                .ifPresent(assignedGroup -> {
+            throw new ConflictException(
+                    "Teacher cannot be deleted because they are assigned to group: " + assignedGroup.getName()
+            );
+                });
+
         userRepository.delete(user);
     }
 

@@ -67,6 +67,18 @@ public class UserController {
         return ResponseEntity.ok(userService.findUserOptionsByRole(tenantId, role));
     }
 
+    @GetMapping("/teachers/available-options")
+    @Operation(summary = "List available teacher options for group assignment")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Available teacher options returned successfully")
+    })
+    public ResponseEntity<List<UserResponseDto>> findAvailableTeachersForGroup(
+            @RequestParam(required = false) Long groupId
+    ) {
+        Long tenantId = TenantContext.getTenantId();
+        return ResponseEntity.ok(userService.findAvailableTeachersForGroup(tenantId, groupId));
+    }
+
     @PostMapping("/teachers")
     @Operation(summary = "Create a teacher user in the authenticated tenant")
     @ApiResponses({
@@ -93,7 +105,8 @@ public class UserController {
     @DeleteMapping("/teachers/{id}")
     @Operation(summary = "Delete a teacher user in the authenticated tenant")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Teacher user deleted successfully")
+            @ApiResponse(responseCode = "204", description = "Teacher user deleted successfully"),
+            @ApiResponse(responseCode = "409", description = "Teacher cannot be deleted because they are assigned to a group")
     })
     public ResponseEntity<Void> deleteTeacher(@PathVariable Long id) {
         Long tenantId = TenantContext.getTenantId();

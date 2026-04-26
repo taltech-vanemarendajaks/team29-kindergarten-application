@@ -39,6 +39,12 @@ export default function TeachersTable({ teachers, onEditAction, onDeleteAction }
                 <TableRowActions
                     onEditAction={onEditAction ? () => onEditAction(teacher) : undefined}
                     onDeleteAction={onDeleteAction ? () => onDeleteAction(teacher) : undefined}
+                    deleteDisabled={!!teacher.assignedGroupName}
+                    deleteLabel={
+                        teacher.assignedGroupName
+                            ? `Cannot delete: assigned to group ${teacher.assignedGroupName}`
+                            : "Delete"
+                    }
                 />
             ),
         },
