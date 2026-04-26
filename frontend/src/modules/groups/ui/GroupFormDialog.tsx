@@ -121,7 +121,12 @@ export default function GroupFormDialog({
                             options={teacherOptions}
                             disabled={teachersLoading}
                             error={!!teachersError}
-                            helperText={teachersError ?? (teachersLoading ? "Loading teachers..." : undefined)}
+                            helperText={
+                                teachersError ??
+                                (teachersLoading
+                                    ? "Loading teachers..."
+                                    : "Only available teachers are shown.")
+                            }
                         />
                     )}
                 />

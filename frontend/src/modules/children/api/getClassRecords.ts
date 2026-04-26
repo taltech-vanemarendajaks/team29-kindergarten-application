@@ -1,5 +1,5 @@
-import { API_URL } from "@/src/shared/constants/api";
 import type { Child } from "../model/child";
+import {API_URL} from "@/src/services/api";
 
 export async function getClassRecords(token: string): Promise<Child[]> {
   const response = await fetch(`${API_URL}/api/v1/children/class-records`, {

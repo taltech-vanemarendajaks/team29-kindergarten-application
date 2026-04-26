@@ -1,8 +1,10 @@
 package com.team29.kindergarten.modules.child.mapper;
 
 import com.team29.kindergarten.modules.child.dto.ChildRequestDto;
+import com.team29.kindergarten.modules.child.dto.ChildGroupSummaryDto;
 import com.team29.kindergarten.modules.child.dto.ChildResponseDto;
 import com.team29.kindergarten.modules.child.model.Child;
+import com.team29.kindergarten.modules.group.model.Group;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -12,8 +14,10 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 @Mapper(componentModel = "spring")
 public interface ChildMapper {
 
-    @Mapping(target = "groupName", source = "group.name")
+    @Mapping(target = "parents", ignore = true)
     ChildResponseDto toResponseDto(Child child);
+
+    ChildGroupSummaryDto toGroupSummaryDto(Group group);
 
     @Mapping(target = "id",        ignore = true)
     @Mapping(target = "tenantId",  ignore = true)

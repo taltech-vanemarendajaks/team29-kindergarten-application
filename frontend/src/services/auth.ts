@@ -1,4 +1,4 @@
-import { API_URL } from "@/src/shared/constants/api";
+import { API_URL } from "@/src/services/api";
 
 export async function register(data: {
   fullName: string;

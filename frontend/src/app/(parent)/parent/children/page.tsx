@@ -94,15 +94,15 @@ export default function ParentChildrenPage() {
     };
 
     const resolveGroupLabel = (child: Child): string => {
-        if (!child.groupId) {
+        if (!child.group) {
             return "Group not assigned";
         }
 
-        if (child.groupName && child.groupName.trim().length > 0) {
-            return child.groupName;
+        if (child.group.name && child.group.name.trim().length > 0) {
+            return child.group.name;
         }
 
-        return `Group #${child.groupId}`;
+        return `Group #${child.group.id}`;
     };
 
     const loadGroups = async (authToken: string) => {
@@ -220,19 +220,21 @@ export default function ParentChildrenPage() {
         });
 
         children.forEach((child) => {
-            if (!child.groupId) {
+            if (!child.group) {
                 return;
             }
 
             const knownName =
-                child.groupName && child.groupName.trim().length > 0 ? child.groupName : `Group #${child.groupId}`;
-            if (!merged.has(child.groupId)) {
-                merged.set(child.groupId, knownName);
+                child.group.name && child.group.name.trim().length > 0
+                    ? child.group.name
+                    : `Group #${child.group.id}`;
+            if (!merged.has(child.group.id)) {
+                merged.set(child.group.id, knownName);
             }
         });
 
-        if (selectedChild?.groupId && !merged.has(selectedChild.groupId)) {
-            merged.set(selectedChild.groupId, resolveGroupLabel(selectedChild));
+        if (selectedChild?.group && !merged.has(selectedChild.group.id)) {
+            merged.set(selectedChild.group.id, resolveGroupLabel(selectedChild));
         }
 
         return Array.from(merged.entries())
@@ -248,7 +250,7 @@ export default function ParentChildrenPage() {
         setEditFirstName(selectedChild.firstName);
         setEditLastName(selectedChild.lastName);
         setEditBirthDate(selectedChild.birthDate ?? "");
-        setEditGroupId(selectedChild.groupId ? String(selectedChild.groupId) : "");
+        setEditGroupId(selectedChild.group ? String(selectedChild.group.id) : "");
         setIsEditDialogOpen(true);
     };
 
@@ -419,7 +421,7 @@ export default function ParentChildrenPage() {
                                     <Typography>
                                         Group:{" "}
                                         <strong>
-                                            {selectedChild.groupId ? groupLabel : "Not assigned"}
+                                            {selectedChild.group ? groupLabel : "Not assigned"}
                                         </strong>
                                     </Typography>
                                 </Stack>
