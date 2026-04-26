@@ -36,6 +36,11 @@ export default function TeacherAttendancePage() {
         setSelectedChildId(typeof value === "number" ? value : Number(value));
     };
 
+    const selectedChild = useMemo(
+        () => children.find((child) => child.id === resolvedChildId) ?? null,
+        [children, resolvedChildId]
+    );
+
     return (
         <Paper sx={{ p: 3, borderRadius: 1 }}>
             <Stack spacing={2}>
@@ -57,6 +62,14 @@ export default function TeacherAttendancePage() {
                     <Typography color="text.secondary">No children found in your group.</Typography>
                 ) : resolvedChildId != null ? (
                     <>
+                        <Typography fontWeight={700}>
+                            <Typography component="span" color="text.primary" fontWeight={700}>
+                                Group:
+                            </Typography>{" "}
+                            <Typography component="span" color="text.secondary" fontWeight={700}>
+                                {selectedChild?.group?.name ?? "Not assigned"}
+                            </Typography>
+                        </Typography>
                         <FormControl fullWidth sx={{ maxWidth: 420 }}>
                             <InputLabel id="teacher-attendance-child-label">Child</InputLabel>
                             <Select<number>
