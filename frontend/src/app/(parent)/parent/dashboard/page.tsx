@@ -7,6 +7,9 @@ import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { Box, Button, CircularProgress, Paper, Stack, TextField, Typography } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import Dialog from "@/src/components/ui/dialog";
 import Snackbar from "@/src/components/ui/snackbar";
 import { useAuth } from "@/src/context/AuthContext";
@@ -205,11 +208,13 @@ export default function ParentDashboardPage() {
                 <Typography>{`Welcome, ${parentName}! Here you can manage your child’s activities.`}</Typography>
 
                 <Stack direction="row" spacing={1}>
-                    <Button onClick={openDialog} sx={{ alignSelf: "flex-start" }} variant="contained">
+                    <Button
+                        onClick={openDialog}
+                        sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 500, fontSize: "0.875rem" }}
+                        variant="contained"
+                        startIcon={<EditOutlinedIcon fontSize="small" />}
+                    >
                         Add Child
-                    </Button>
-                    <Button component={Link} href="/parent/children" variant="outlined">
-                        Open Children Page
                     </Button>
                 </Stack>
 
@@ -256,8 +261,10 @@ export default function ParentDashboardPage() {
                                     href={`/parent/children?childId=${child.id}`}
                                     variant="outlined"
                                     size="small"
+                                    sx={{ minWidth: "auto", px: 1, minHeight: 28 }}
+                                    aria-label="Open child profile"
                                 >
-                                    Open
+                                    <VisibilityOutlinedIcon fontSize="small" />
                                 </Button>
                             </Box>
                         ))}
@@ -268,7 +275,14 @@ export default function ParentDashboardPage() {
                     <Stack spacing={2}>
                         <Stack direction="row" justifyContent="space-between" alignItems="center">
                             <Typography variant="h6">Daily Journal Feed</Typography>
-                            <Button component={Link} href="/parent/journal" variant="text" size="small">
+                            <Button
+                                component={Link}
+                                href="/parent/journal"
+                                variant="outlined"
+                                size="small"
+                                endIcon={<ArrowForwardIcon fontSize="small" />}
+                                sx={{ textTransform: "none", fontWeight: 500, fontSize: "0.875rem" }}
+                            >
                                 View History
                             </Button>
                         </Stack>
@@ -293,13 +307,14 @@ export default function ParentDashboardPage() {
                                 {journalEntries.map((entry, index) => (
                                     <Box key={entry.id} sx={{ display: "flex", gap: 1.5, py: 2 }}>
                                         <Stack alignItems="center" sx={{ minWidth: 28 }}>
-                                            <CheckCircleIcon color="action" fontSize="small" />
+                                            <CheckCircleIcon color="primary" fontSize="small" />
                                             {index < journalEntries.length - 1 ? (
                                                 <Box
                                                     sx={{
                                                         width: 2,
                                                         flex: 1,
-                                                        bgcolor: "divider",
+                                                        bgcolor: "primary.main",
+                                                        opacity: 0.45,
                                                         mt: 0.75,
                                                         minHeight: 24,
                                                     }}
@@ -321,11 +336,12 @@ export default function ParentDashboardPage() {
                                             <Button
                                                 component={Link}
                                                 href={`/parent/journal/${entry.id}`}
-                                                variant="text"
+                                                variant="outlined"
                                                 size="small"
-                                                sx={{ minWidth: "auto", p: 0 }}
+                                                sx={{ minWidth: "auto", px: 1, minHeight: 28 }}
+                                                aria-label="Open journal entry"
                                             >
-                                                Open
+                                                <VisibilityOutlinedIcon fontSize="small" />
                                             </Button>
                                         </Stack>
                                     </Box>
@@ -345,7 +361,7 @@ export default function ParentDashboardPage() {
                         label: "Cancel",
                         onClick: closeDialog,
                         variant: "outlined",
-                        color: "inherit",
+                        color: "primary",
                     },
                     {
                         label: "Create",
