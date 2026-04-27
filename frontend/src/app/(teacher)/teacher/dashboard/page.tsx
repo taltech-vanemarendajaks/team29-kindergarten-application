@@ -18,7 +18,6 @@ export default function TeacherDashboard() {
     return (
         <Paper sx={{ p: 4, borderRadius: 2 }}>
             <Stack spacing={4}>
-                {/* Header */}
                 <Box>
                     <Typography variant="h4" fontWeight={700}>
                         Teacher Dashboard
@@ -28,7 +27,7 @@ export default function TeacherDashboard() {
                     </Typography>
                 </Box>
 
-                {/* Quick Actions — ghost buttons aligned left */}
+                {/* Quick Actions*/}
                 <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
                     <Stack spacing={1.2} sx={{ width: "220px" }}>
                         <Link href="/teacher/journal" passHref>
