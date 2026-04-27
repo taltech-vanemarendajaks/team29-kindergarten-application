@@ -30,4 +30,32 @@ Page<Announcement> findActiveByTenantId(
 
 Optional<Announcement> findByIdAndTenantId(Long announcementId, Long tenantId);
 
+
+@Query(
+    value = """
+        SELECT 
+            a as announcement,
+            CASE WHEN ar.id IS NOT NULL THEN true ELSE false END as isRead
+        FROM Announcement a
+        LEFT JOIN AnnouncementRead ar
+            ON ar.announcement = a
+            AND ar.userId = :userId
+            AND ar.deletedAt IS NULL
+        WHERE a.tenantId = :tenantId
+          AND (a.expiresAt IS NULL OR a.expiresAt > CURRENT_DATE)
+    """,
+    countQuery = """
+        SELECT COUNT(a)
+        FROM Announcement a
+        WHERE a.tenantId = :tenantId
+          AND (a.expiresAt IS NULL OR a.expiresAt > CURRENT_DATE)
+    """
+)
+Page<AnnouncementWithRead> findAllWithReadStatus(
+    Long tenantId,
+    Long userId,
+    Pageable pageable
+);
+
+
 }

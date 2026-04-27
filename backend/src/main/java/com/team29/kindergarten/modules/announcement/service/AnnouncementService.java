@@ -10,14 +10,10 @@ import com.team29.kindergarten.modules.announcement.model.Announcement;
 import com.team29.kindergarten.modules.announcement.model.AnnouncementRead;
 import com.team29.kindergarten.modules.announcement.repository.AnnouncementReadRepository;
 import com.team29.kindergarten.modules.announcement.repository.AnnouncementRepository;
+import com.team29.kindergarten.modules.announcement.repository.AnnouncementWithRead;
 import com.team29.kindergarten.modules.user.entity.User;
-
 import java.time.LocalDate;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
+
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import com.team29.kindergarten.modules.user.repository.UserRepository;
 import com.team29.kindergarten.security.CurrentUserService;
+
 
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -50,8 +47,24 @@ public class AnnouncementService {
         return announcementRepository
                 .findActiveByTenantId(tenantId, LocalDate.now(),pageable)
                 .map(announcementMapper::toResponseDto);
-    }    
+    }
+    
+@Transactional(readOnly = true)
+public Page<AnnouncementUserResponseDto> findAllUser(Pageable pageable) {
 
+    Long tenantId = currentUser.getTenantId();
+    Long userId = currentUser.getUserId();
+
+    Page<AnnouncementWithRead> page = announcementRepository
+        .findAllWithReadStatus(tenantId, userId, pageable);
+
+    return page.map(p -> 
+        announcementMapper.toUserResponseDto(
+            p.getAnnouncement(),
+            p.getIsRead()
+        )
+    );
+}
     @Transactional(readOnly = true)
     public AnnouncementResponseDto findById(Long id) {
         Long tenantId = currentUser.getTenantId();
@@ -65,45 +78,8 @@ public class AnnouncementService {
                 );
 } 
 
-    public Page<AnnouncementUserResponseDto> getAnnouncementsForUser(User user, Pageable pageable) {
-        Long tenantId = currentUser.getTenantId();
-        Long userId = currentUser.getUserId();        
-        Page<Announcement> page =
-            announcementRepository.findActiveByTenantId(
-                tenantId,
-                LocalDate.now(),
-                pageable
-            );
-
-        List<Long> announcementIds = page.getContent().stream()
-            .map(Announcement::getId)
-            .toList();
-
-        Set<Long> readSet = new HashSet<>(
-            announcementReadRepository.findByUserIdAndAnnouncementIdIn(userId, announcementIds)
-                .stream()
-                .map(r -> r.getAnnouncement().getId())
-                .toList()
-        );
-
-        Map<Long, String> creatorNames = userRepository.findByIdIn(
-            page.getContent().stream()
-                .map(a -> a.getCreator().getId())
-                .toList()
-        ).stream().collect(Collectors.toMap(User::getId, User::getFullName));
-
-        return page.map(a -> new AnnouncementUserResponseDto(
-            a.getId(),
-            a.getTitle(),
-            a.getContent(),
-            readSet.contains(a.getId()),
-            creatorNames.get(a.getCreator().getId()),
-            a.getCreatedAt()
-        ));
-}
-
     @PreAuthorize("hasAnyRole('ADMIN','KINDERGARTEN_ADMIN' )")
-   public AnnouncementResponseDto create(AnnouncementRequestDto requestDto) {
+    public AnnouncementResponseDto create(AnnouncementRequestDto requestDto) {
         Long tenantId = currentUser.getTenantId();
         Long userId = currentUser.getUserId();
         log.info("Posting announcement from tenantId={}, userId={}", tenantId, userId);
@@ -121,7 +97,6 @@ public class AnnouncementService {
         return announcementMapper.toPostResponseDto(announcementRepository.save(announcement), creator.getFullName());
 
     }
-
 
     @Transactional
     public void markAsRead(Long announcementId) {
