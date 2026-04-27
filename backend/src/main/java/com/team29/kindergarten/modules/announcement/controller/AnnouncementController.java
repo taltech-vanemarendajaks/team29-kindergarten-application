@@ -2,6 +2,7 @@ package com.team29.kindergarten.modules.announcement.controller;
 import com.team29.kindergarten.security.UserPrincipal;
 import com.team29.kindergarten.common.exception.ApiErrorResponse;
 import com.team29.kindergarten.modules.announcement.dto.AnnouncementResponseDto;
+import com.team29.kindergarten.modules.announcement.dto.AnnouncementUserResponseDto;
 import com.team29.kindergarten.modules.announcement.service.AnnouncementService;
 import com.team29.kindergarten.modules.announcement.dto.AnnouncementRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,7 +34,7 @@ public class AnnouncementController {
         private final AnnouncementService announcementService;
 
         @GetMapping
-        @Operation(summary = "List announcements for a tenant")
+        @Operation(summary = "List announcements for current tenant")
         @ApiResponses({
                 @ApiResponse(responseCode = "200", description = "Announcements returned successfully")
         })
@@ -49,6 +51,25 @@ public class AnnouncementController {
 
         return ResponseEntity.ok(announcementService.findAll(safePageable));
         }
+
+        @GetMapping("/me")
+        @Operation(summary = "List announcements for current user (with read status)")
+        @ApiResponses({
+                @ApiResponse(responseCode = "200", description = "Announcements returned successfully")
+        })
+        public ResponseEntity<Page<AnnouncementUserResponseDto>> findAllUser(
+                @ParameterObject
+                @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+                Pageable pageable
+        ) {
+
+        Page<AnnouncementUserResponseDto> result =
+                announcementService.findAllUser(pageable);
+
+        return ResponseEntity.ok(result);
+        }
+
+
 
         @GetMapping("/{id}")
         @Operation(summary = "Get announcement by ID")
@@ -89,41 +110,43 @@ public class AnnouncementController {
 
 
 
-/** 
-@DeleteMapping("/{id}")
-@Operation(summary = "Delete announcement")
-@ApiResponses({
+        /** 
+        @DeleteMapping("/{id}")
+        @Operation(summary = "Delete announcement")
+        @ApiResponses({
                 @ApiResponse(responseCode = "204", description = "Announcement deleted successfully"),
                 @ApiResponse(responseCode = "404", description = "Announcement not found", content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-})
-public ResponseEntity<Void> delete(@PathVariable Long id) {
-        Long tenantId = TenantContext.getTenantId();
-        announcementService.delete(id, tenantId);
-        return ResponseEntity.noContent().build();
-}
-*/
-    @PostMapping("/{id}/read")
-    @Operation(summary = "Mark announcement read by user")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Read status marked for announcement"),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid announcement read status update request",
-                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Announcement not found",
-                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
-            )
-    })    
-public ResponseEntity<Void> markAnnouncementRead(
-        @PathVariable Long id
-) {
-  
-     announcementService.markAsRead(id);
-    return ResponseEntity.ok().build();
-}
+        })
+        public ResponseEntity<Void> delete(@PathVariable Long id) {
+                Long tenantId = TenantContext.getTenantId();
+                announcementService.delete(id, tenantId);
+                return ResponseEntity.noContent().build();
+        }
+        */
+        @PostMapping("/{id}/read")
+        @Operation(summary = "Mark announcement read by user")
+        @ApiResponses({
+                @ApiResponse(responseCode = "200", description = "Read status already exists for announcement"),                
+                @ApiResponse(responseCode = "201", description = "Read status marked for announcement"),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "Invalid announcement read status update request",
+                        content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+                ),
+                @ApiResponse(
+                        responseCode = "404",
+                        description = "Announcement not found",
+                        content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+                )
+          })    
+        public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
+
+        boolean created = announcementService.markAsRead(id);
+        if (created) {
+                return ResponseEntity.status(HttpStatus.CREATED).build();
+        }
+        return ResponseEntity.ok().build(); 
+        }
 }
 
 

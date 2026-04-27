@@ -49,22 +49,23 @@ public class AnnouncementService {
                 .map(announcementMapper::toResponseDto);
     }
     
-@Transactional(readOnly = true)
-public Page<AnnouncementUserResponseDto> findAllUser(Pageable pageable) {
+    @Transactional(readOnly = true)
+    public Page<AnnouncementUserResponseDto> findAllUser(Pageable pageable) {
 
-    Long tenantId = currentUser.getTenantId();
-    Long userId = currentUser.getUserId();
+        Long tenantId = currentUser.getTenantId();
+        Long userId = currentUser.getUserId();
+            log.info("Fetching announcements for tenantId={}, userId={}", tenantId, userId);
+        Page<AnnouncementWithRead> page = announcementRepository
+            .findAllWithReadStatus(tenantId, userId, pageable);
 
-    Page<AnnouncementWithRead> page = announcementRepository
-        .findAllWithReadStatus(tenantId, userId, pageable);
+        return page.map(p -> 
+            announcementMapper.toUserResponseDto(
+                p.getAnnouncement(),
+                p.getIsRead()
+            )
+        );
+    }
 
-    return page.map(p -> 
-        announcementMapper.toUserResponseDto(
-            p.getAnnouncement(),
-            p.getIsRead()
-        )
-    );
-}
     @Transactional(readOnly = true)
     public AnnouncementResponseDto findById(Long id) {
         Long tenantId = currentUser.getTenantId();
@@ -76,7 +77,7 @@ public Page<AnnouncementUserResponseDto> findAllUser(Pageable pageable) {
                 .orElseThrow(() ->
                     new ResourceNotFoundException("Announcement not found: " + id)
                 );
-} 
+    } 
 
     @PreAuthorize("hasAnyRole('ADMIN','KINDERGARTEN_ADMIN' )")
     public AnnouncementResponseDto create(AnnouncementRequestDto requestDto) {
@@ -99,13 +100,15 @@ public Page<AnnouncementUserResponseDto> findAllUser(Pageable pageable) {
     }
 
     @Transactional
-    public void markAsRead(Long announcementId) {
-    Long userId = currentUser.getUserId();
+    public boolean markAsRead(Long announcementId) {
+
+        Long userId = currentUser.getUserId();
 
         if (announcementReadRepository
                 .existsByUserIdAndAnnouncement_Id(userId, announcementId)) {
-            return;
+            return false; // already exists
         }
+
         Announcement announcement = announcementRepository
                 .getReferenceById(announcementId);
 
@@ -115,6 +118,7 @@ public Page<AnnouncementUserResponseDto> findAllUser(Pageable pageable) {
                 .build();
 
         announcementReadRepository.save(read);
-    }
 
+        return true; // created
+    }
 }
