@@ -32,11 +32,15 @@ public class GroupService {
     private final UserRepository userRepository;
     private final ChildRepository childRepository;
 
-    @Transactional(readOnly = true)
-    public Page<GroupResponseDto> findAll(Long tenantId, Pageable pageable) {
-        return groupRepository.findAllByTenantId(tenantId, pageable)
+   @Transactional(readOnly = true)
+public Page<GroupResponseDto> findAll(Long tenantId, String search, Pageable pageable) {
+    if (search != null && !search.isBlank()) {
+        return groupRepository.findAllByTenantIdAndNameContainingIgnoreCase(tenantId, search, pageable)
                 .map(groupMapper::toResponseDto);
     }
+    return groupRepository.findAllByTenantId(tenantId, pageable)
+            .map(groupMapper::toResponseDto);
+}
 
     @Transactional(readOnly = true)
     public List<GroupResponseDto> findAllOptions(Long tenantId) {

@@ -35,8 +35,11 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final GroupRepository groupRepository;
 
-    public Page<UserResponseDto> findUsersByRole(Long tenantId, RoleName roleName, Pageable pageable) {
-        Page<User> usersPage = userRepository.findDistinctByTenantIdAndRoles_NameOrderByFullNameAsc(tenantId, roleName, pageable);
+    public Page<UserResponseDto> findUsersByRole(Long tenantId, RoleName roleName, String search, Pageable pageable) {
+    Page<User> usersPage = (search != null && !search.isBlank())
+            ? userRepository.findDistinctByTenantIdAndRoles_NameAndFullNameContainingIgnoreCaseOrderByFullNameAsc(tenantId, roleName, search, pageable)
+            : userRepository.findDistinctByTenantIdAndRoles_NameOrderByFullNameAsc(tenantId, roleName, pageable);
+
         Page<UserResponseDto> responsePage = usersPage.map(userMapper::toUserResponseDto);
 
         if (roleName != RoleName.TEACHER || responsePage.isEmpty()) {

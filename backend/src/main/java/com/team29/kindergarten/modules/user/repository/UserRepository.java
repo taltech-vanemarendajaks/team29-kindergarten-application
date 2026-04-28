@@ -21,6 +21,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Page<User> findDistinctByTenantIdAndRoles_NameOrderByFullNameAsc(Long tenantId, RoleName roleName, Pageable pageable);
 
+    Page<User> findDistinctByTenantIdAndRoles_NameAndFullNameContainingIgnoreCaseOrderByFullNameAsc(
+        Long tenantId, RoleName roleName, String fullName, Pageable pageable);
+
     List<User> findDistinctByTenantIdAndRoles_NameOrderByFullNameAsc(Long tenantId, RoleName roleName);
 
     List<User> findAllByIdInAndTenantIdAndRoles_Name(Set<Long> ids, Long tenantId, RoleName roleName);

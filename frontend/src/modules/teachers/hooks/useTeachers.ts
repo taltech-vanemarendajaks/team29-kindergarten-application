@@ -6,22 +6,22 @@ import { API_URL } from "@/src/services/api";
 import { parseApiError } from "@/src/shared/utils/parseApiError";
 import type { User } from "@/src/modules/users";
 
-export function useTeachers(token: string | null, page: number, size = 10, enabled = true) {
-    const {
-        users: teachers,
-        userPage: teacherPage,
-        loading,
-        error,
-        refetch,
-    } = useUsersByRole(
-        token,
-        "TEACHER",
-        page,
-        size,
-        enabled,
-    );
+export function useTeachers(
+  token: string | null,
+  page: number,
+  size = 10,
+  enabled = true,
+  search = "",
+) {
+  const {
+    users: teachers,
+    userPage: teacherPage,
+    loading,
+    error,
+    refetch,
+  } = useUsersByRole(token, "TEACHER", page, size, enabled, search);
 
-    return { teachers, teacherPage, loading, error, refetch };
+  return { teachers, teacherPage, loading, error, refetch };
 }
 
 export function useAvailableTeacherOptions(token: string | null, groupId?: number | null, enabled = true) {
