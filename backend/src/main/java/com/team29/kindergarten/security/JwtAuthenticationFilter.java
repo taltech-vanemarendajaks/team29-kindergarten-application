@@ -7,8 +7,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,7 +18,6 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -75,33 +72,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .map(role -> (GrantedAuthority) new SimpleGrantedAuthority("ROLE_" + role))
                         .toList();
 
-                // extract fields from JWT
-                Long userId = jwtService.extractUserId(token);
-                Long tenantId = jwtService.extractTenantId(token);
-                String username = jwtService.extractEmail(token);
-
-                if (tenantId != null) {
-                    TenantContext.setTenantId(tenantId);
-                }
-
-                UserPrincipal principal = new UserPrincipal(
-                    userId,
-                    tenantId,
-                    username,
-                    authorities
-                );
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
-                                principal,
+                                user,
                                 null,
                                 authorities
                         );
-                log.info("Authorities={}", authorities);
+
+                Long tenantId = jwtService.extractTenantId(token);
+                TenantContext.setTenantId(tenantId);
 
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-            } else {
-                // Explicitly clear authentication if token is invalid or user not found
-                SecurityContextHolder.clearContext();
             }
         }
         try {
