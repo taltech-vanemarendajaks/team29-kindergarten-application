@@ -83,6 +83,9 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           envs: POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,DOCKERHUB_USERNAME,SSH_USER,JWT_SECRET,NEXT_PUBLIC_API_URL,STORAGE_UPLOAD_PATH
           script: |
+            docker rmi $DOCKERHUB_USERNAME/kindergarten-backend:latest || true
+            docker rmi $DOCKERHUB_USERNAME/kindergarten-frontend:latest || true
+            
             docker pull $DOCKERHUB_USERNAME/kindergarten-backend:latest
             docker pull $DOCKERHUB_USERNAME/kindergarten-frontend:latest
             
