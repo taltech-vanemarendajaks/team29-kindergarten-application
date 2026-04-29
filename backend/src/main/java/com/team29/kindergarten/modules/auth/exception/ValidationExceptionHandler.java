@@ -1,7 +1,5 @@
 package com.team29.kindergarten.modules.auth.exception;
 
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,14 +27,4 @@ public class ValidationExceptionHandler {
                 .body(Map.of("error", ex.getMessage()));
     }
 
-
-
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<?> handleDbError(Exception ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body("Invalid data");
-    }
 }
-
-
-
