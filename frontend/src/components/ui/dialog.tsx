@@ -33,11 +33,6 @@ export default function Dialog({ title, actions, children, ...props }: DialogPro
               key={action.label}
               onClick={action.onClick}
               variant={action.variant ?? "contained"}
-              sx={{
-                textTransform: "none",
-                fontWeight: 500,
-                fontSize: "0.875rem",
-              }}
             >
               {action.label}
             </Button>
