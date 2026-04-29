@@ -16,6 +16,8 @@ import { API_URL } from "@/src/services/api";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import GroupIcon from "@mui/icons-material/Group";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 
 type JournalEntry = {
     id: number;
@@ -368,6 +370,67 @@ export default function TeacherDashboard() {
                 <Typography variant="h5" fontWeight={700}>
                     Your workspace
                 </Typography>
+
+                {/* Stats Overview */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: { xs: "column", sm: "row" },
+                        gap: 2,
+                    }}
+                >
+                    <Card sx={{ flex: 1, borderRadius: 2 }}>
+                        <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                            <Box
+                                sx={{
+                                    bgcolor: "primary.light",
+                                    color: "primary.contrastText",
+                                    borderRadius: 2,
+                                    p: 1.5,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <GroupIcon />
+                            </Box>
+                            <Box>
+                                <Typography variant="h5" fontWeight={700}>
+                                    {loading ? "…" : childrenCount}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Children in Group
+                                </Typography>
+                            </Box>
+                        </CardContent>
+                    </Card>
+
+                    <Card sx={{ flex: 1, borderRadius: 2 }}>
+                        <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                            <Box
+                                sx={{
+                                    bgcolor: "secondary.light",
+                                    color: "secondary.contrastText",
+                                    borderRadius: 2,
+                                    p: 1.5,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <MenuBookIcon />
+                            </Box>
+                            <Box>
+                                <Typography variant="h5" fontWeight={700}>
+                                    {loading ? "…" : entries.length}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Journal Entries
+                                </Typography>
+                            </Box>
+                        </CardContent>
+                    </Card>
+                </Box>
 
                 {/* Notes + Events in two columns */}
                 <Box
