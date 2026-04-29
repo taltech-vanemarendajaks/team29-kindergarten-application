@@ -51,6 +51,9 @@ public class SecurityConfig {
 
                         // Admin API
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/teachers").hasRole("KINDERGARTEN_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/announcements").hasRole("KINDERGARTEN_ADMIN") 
+                        .requestMatchers(HttpMethod.POST, "/api/v1/announcements").hasRole("KINDERGARTEN_ADMIN")                        
+                        .requestMatchers(HttpMethod.POST, "/api/v1/announcements/*/read").hasAnyRole("KINDERGARTEN_ADMIN", "TEACHER", "PARENT")                                                  
                         .requestMatchers(HttpMethod.PUT, "/api/v1/users/teachers/*").hasRole("KINDERGARTEN_ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/users/teachers/*").hasRole("KINDERGARTEN_ADMIN")
                         .anyRequest().authenticated()
