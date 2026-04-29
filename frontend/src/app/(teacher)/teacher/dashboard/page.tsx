@@ -329,7 +329,7 @@ export default function TeacherDashboard() {
 
         Promise.all([
             fetch(`${API_URL}/api/teacher/journal`, { headers }),
-            fetch(`${API_URL}/api/teacher/group/children`, { headers }),
+            fetch(`${API_URL}/api/v1/children/class-records`, { headers }),
         ])
             .then(async ([journalRes, childrenRes]) => {
 
