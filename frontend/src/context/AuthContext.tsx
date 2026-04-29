@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, startTransition } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  startTransition,
+} from "react";
 import { jwtDecode } from "jwt-decode";
 
 export interface MyJwtPayload {
@@ -58,21 +64,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-      <AuthContext.Provider
-          value={{
-            token,
-            userId: payload?.userId ?? null,
-            tenantId: payload?.tenantId ?? null,
-            roles: payload?.roles ?? [],
-            role: payload?.roles?.[0] ?? null,
-            isAuthenticated: !!token,
-            login,
-            logout,
-            hydrated,
-          }}
-      >
-        {children}
-      </AuthContext.Provider>
+    <AuthContext.Provider
+      value={{
+        token,
+        userId: payload?.userId ?? null,
+        tenantId: payload?.tenantId ?? null,
+        roles: payload?.roles ?? [],
+        role: payload?.roles?.[0] ?? null,
+        isAuthenticated: !!token,
+        login,
+        logout,
+        hydrated,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
 }
 

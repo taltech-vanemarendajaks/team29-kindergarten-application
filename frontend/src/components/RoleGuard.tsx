@@ -21,7 +21,7 @@ export default function RoleGuard({ allowed, children }: { allowed: string[]; ch
         if (!allowed.includes(role as string)) {
             router.replace("/login");
         }
-    }, [role, isAuthenticated, hydrated, router, allowed]);
+    }, [allowed, hydrated, role, isAuthenticated, router]);
 
     if (!hydrated) {
         return null;

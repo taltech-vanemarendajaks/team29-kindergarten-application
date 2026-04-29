@@ -9,17 +9,18 @@ import { Button, ConfirmDialog, ErrorState, Pagination, Spinner, Toast } from "@
 import { useAuth } from "@/src/context/AuthContext";
 import type { Group, UpdateGroupPayload } from "@/src/modules/groups";
 import { createGroup, deleteGroup, GroupFormDialog, GroupsTable, updateGroup, useGroups } from "@/src/modules/groups";
-import { useTeacherOptions } from "@/src/modules/teachers";
+import { useAvailableTeacherOptions } from "@/src/modules/teachers";
 
 export default function KindergartenAdminGroupsPage() {
     const { token, hydrated } = useAuth();
     const [page, setPage] = useState(1);
     const { groups, groupPage, loading, error, refetch } = useGroups(token, page - 1, 10, hydrated);
     const {
-        teachers,
-        loading: teachersLoading,
-        error: teachersError,
-    } = useTeacherOptions(token, hydrated);
+        teachers: availableTeachersForCreate,
+        loading: createTeachersLoading,
+        error: createTeachersError,
+        refetch: refetchCreateTeachers,
+    } = useAvailableTeacherOptions(token, null, hydrated);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [groupToEdit, setGroupToEdit] = useState<Group | null>(null);
     const [groupToDelete, setGroupToDelete] = useState<Group | null>(null);
@@ -29,6 +30,20 @@ export default function KindergartenAdminGroupsPage() {
         message: string;
         severity: AlertColor;
     } | null>(null);
+    const {
+        teachers: availableTeachersForEdit,
+        loading: editTeachersLoading,
+        error: editTeachersError,
+        refetch: refetchEditTeachers,
+    } = useAvailableTeacherOptions(token, groupToEdit?.id, hydrated && !!groupToEdit);
+
+    const refreshGroupData = () => {
+        refetch();
+        refetchCreateTeachers();
+        if (groupToEdit) {
+            refetchEditTeachers();
+        }
+    };
 
     const handleCreate = async (payload: UpdateGroupPayload) => {
         if (!token) {
@@ -38,7 +53,7 @@ export default function KindergartenAdminGroupsPage() {
         try {
             setSubmitMode("create");
             await createGroup(token, payload);
-            refetch();
+            refreshGroupData();
             setCreateDialogOpen(false);
             setNotification({
                 open: true,
@@ -65,7 +80,7 @@ export default function KindergartenAdminGroupsPage() {
 
         try {
             await deleteGroup(groupId, token);
-            refetch();
+            refreshGroupData();
             setGroupToDelete(null);
             setNotification({
                 open: true,
@@ -91,7 +106,7 @@ export default function KindergartenAdminGroupsPage() {
         try {
             setSubmitMode("edit");
             await updateGroup(groupToEdit.id, token, payload);
-            refetch();
+            refreshGroupData();
             setGroupToEdit(null);
             setNotification({
                 open: true,
@@ -168,9 +183,9 @@ export default function KindergartenAdminGroupsPage() {
                     open={createDialogOpen}
                     title="Add group"
                     submitLabel="Create"
-                    teachers={teachers}
-                    teachersLoading={teachersLoading}
-                    teachersError={teachersError}
+                    teachers={availableTeachersForCreate}
+                    teachersLoading={createTeachersLoading}
+                    teachersError={createTeachersError}
                     loading={submitMode === "create"}
                     onCloseAction={() => setCreateDialogOpen(false)}
                     onSubmitAction={handleCreate}
@@ -182,9 +197,9 @@ export default function KindergartenAdminGroupsPage() {
                     title="Edit group"
                     submitLabel="Save"
                     group={groupToEdit}
-                    teachers={teachers}
-                    teachersLoading={teachersLoading}
-                    teachersError={teachersError}
+                    teachers={availableTeachersForEdit}
+                    teachersLoading={editTeachersLoading}
+                    teachersError={editTeachersError}
                     loading={submitMode === "edit"}
                     onCloseAction={() => setGroupToEdit(null)}
                     onSubmitAction={handleSave}

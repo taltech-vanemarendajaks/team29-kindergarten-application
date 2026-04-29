@@ -29,6 +29,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.team29.kindergarten.tenant.TenantContext;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/groups")
 @RequiredArgsConstructor
@@ -48,6 +50,16 @@ public class GroupController {
     Long tenantId = TenantContext.getTenantId();
     return ResponseEntity.ok(PageResponseDto.from(groupService.findAll(tenantId, pageable)));
 }
+
+    @GetMapping("/options")
+    @Operation(summary = "List group options for a tenant without pagination")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Group options returned successfully")
+    })
+    public ResponseEntity<List<GroupResponseDto>> findAllOptions() {
+        Long tenantId = TenantContext.getTenantId();
+        return ResponseEntity.ok(groupService.findAllOptions(tenantId));
+    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get group by ID")
@@ -77,6 +89,11 @@ public class GroupController {
                     responseCode = "404",
                     description = "Related tenant or teacher not found",
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Teacher assignment conflicts with another active group",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
   public ResponseEntity<GroupResponseDto> create(@Valid @RequestBody GroupRequestDto request) {
@@ -96,6 +113,11 @@ public class GroupController {
             @ApiResponse(
                     responseCode = "404",
                     description = "Group or related teacher not found",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Teacher assignment conflicts with another active group",
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })

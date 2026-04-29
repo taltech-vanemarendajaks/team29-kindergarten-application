@@ -1,9 +1,13 @@
 package com.team29.kindergarten.modules.child.controller;
 
+import com.team29.kindergarten.common.dto.PageResponseDto;
 import com.team29.kindergarten.common.exception.ApiErrorResponse;
 import com.team29.kindergarten.modules.child.dto.ChildRequestDto;
 import com.team29.kindergarten.modules.child.dto.ChildResponseDto;
+import com.team29.kindergarten.modules.child.dto.UpdateChildGroupRequestDto;
 import com.team29.kindergarten.modules.child.service.ChildService;
+import com.team29.kindergarten.modules.user.entity.User;
+import com.team29.kindergarten.tenant.TenantContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,13 +17,22 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.team29.kindergarten.tenant.TenantContext;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/children")
@@ -34,12 +47,23 @@ public class ChildController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Children returned successfully")
     })
-  public ResponseEntity<Page<ChildResponseDto>> findAll(
-        @ParameterObject @PageableDefault(size = 20, sort = "lastName") Pageable pageable
-) {
-    Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.ok(childService.findAll(tenantId, pageable));
-}
+    public ResponseEntity<PageResponseDto<ChildResponseDto>> findAll(
+            @AuthenticationPrincipal User user,
+            @ParameterObject @PageableDefault(size = 20, sort = "lastName") Pageable pageable
+    ) {
+        Long tenantId = TenantContext.getTenantId();
+        return ResponseEntity.ok(PageResponseDto.from(childService.findAll(tenantId, pageable, user)));
+    }
+
+    @GetMapping("/unassigned")
+    @Operation(summary = "List unassigned children for a tenant")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Unassigned children returned successfully")
+    })
+    public ResponseEntity<List<ChildResponseDto>> findUnassigned() {
+        Long tenantId = TenantContext.getTenantId();
+        return ResponseEntity.ok(childService.findUnassigned(tenantId));
+    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get child by ID")
@@ -51,15 +75,32 @@ public class ChildController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-  public ResponseEntity<ChildResponseDto> findById(@PathVariable Long id) {
-    Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.ok(childService.findById(id, tenantId));
-}
+    public ResponseEntity<ChildResponseDto> findById(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        Long tenantId = TenantContext.getTenantId();
+        return ResponseEntity.ok(childService.findById(id, tenantId, user));
+    }
+
+    @GetMapping("/class-records")
+    @Operation(summary = "Get children in the teacher's assigned group")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Class records returned successfully"),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "No group found for this teacher",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    public ResponseEntity<List<ChildResponseDto>> findClassRecords(
+            @AuthenticationPrincipal User currentUser
+    ) {
+        Long tenantId = TenantContext.getTenantId();
+        return ResponseEntity.ok(childService.findAllByTeacher(currentUser.getId(), tenantId));
+    }
 
     @PostMapping
-    @Operation(summary = "Create child and link the creating parent")
+    @Operation(summary = "Create child")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Child created and linked successfully"),
+            @ApiResponse(responseCode = "201", description = "Child created successfully"),
             @ApiResponse(
                     responseCode = "400",
                     description = "Invalid child request",
@@ -67,42 +108,18 @@ public class ChildController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Related parent or group not found",
+                    description = "Related group not found",
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-  public ResponseEntity<ChildResponseDto> create(
-        @Valid @RequestBody ChildRequestDto request,
-        @RequestParam Long parentId
-) {
-    Long tenantId = TenantContext.getTenantId();
-    ChildResponseDto createdChild = childService.create(request, tenantId, parentId);
-    return ResponseEntity.status(HttpStatus.CREATED).body(createdChild);
-}
-
-    @PostMapping("/{id}/parents/{parentId}")
-    @Operation(summary = "Link an additional parent to a child")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Parent linked to child successfully"),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid child-parent link request",
-                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Child or parent not found",
-                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
-            )
-    })
-   public ResponseEntity<Void> addParentLink(
-        @PathVariable Long id,
-        @PathVariable Long parentId
-) {
-    Long tenantId = TenantContext.getTenantId();
-    childService.addParentLink(id, parentId, tenantId);
-    return ResponseEntity.status(HttpStatus.CREATED).build();
-}
+    public ResponseEntity<ChildResponseDto> create(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody ChildRequestDto request
+    ) {
+        Long tenantId = TenantContext.getTenantId();
+        ChildResponseDto createdChild = childService.create(request, tenantId, user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdChild);
+    }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update child")
@@ -119,13 +136,37 @@ public class ChildController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-  public ResponseEntity<ChildResponseDto> update(
-        @PathVariable Long id,
-        @Valid @RequestBody ChildRequestDto request
-) {
-    Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.ok(childService.update(id, request, tenantId));
-}
+    public ResponseEntity<ChildResponseDto> update(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody ChildRequestDto request
+    ) {
+        Long tenantId = TenantContext.getTenantId();
+        return ResponseEntity.ok(childService.update(id, request, tenantId, user));
+    }
+
+    @PatchMapping("/{id}/group")
+    @Operation(summary = "Update child group assignment")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Child group updated successfully"),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid group update request",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Child or related group not found",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
+            )
+    })
+    public ResponseEntity<ChildResponseDto> updateGroup(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateChildGroupRequestDto request
+    ) {
+        Long tenantId = TenantContext.getTenantId();
+        return ResponseEntity.ok(childService.updateGroup(id, request, tenantId));
+    }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete child")
@@ -137,9 +178,9 @@ public class ChildController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
             )
     })
-  public ResponseEntity<Void> delete(@PathVariable Long id) {
-    Long tenantId = TenantContext.getTenantId();
-    childService.delete(id, tenantId);
-    return ResponseEntity.noContent().build();
-}
+    public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        Long tenantId = TenantContext.getTenantId();
+        childService.delete(id, tenantId, user);
+        return ResponseEntity.noContent().build();
+    }
 }

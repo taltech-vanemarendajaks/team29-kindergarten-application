@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.web.SecurityFilterChain;
@@ -42,12 +41,22 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        // Allow to get uploaded photos
+                        .requestMatchers("/uploads/**").permitAll()
+                        // WebSocket endpoint
+                        .requestMatchers("/ws/**").permitAll()
+                        // Teacher API
+                        .requestMatchers("/api/teacher/**").hasRole("TEACHER")
+                        .requestMatchers("/api/upload/**").hasRole("TEACHER")
+
+                        // Admin API
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/teachers").hasRole("KINDERGARTEN_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/announcements").hasRole("KINDERGARTEN_ADMIN") 
                         .requestMatchers(HttpMethod.POST, "/api/v1/announcements").hasRole("KINDERGARTEN_ADMIN")                        
                         .requestMatchers(HttpMethod.POST, "/api/v1/announcements/*/read").hasAnyRole("KINDERGARTEN_ADMIN", "TEACHER", "PARENT")                                                  
                         .requestMatchers(HttpMethod.PUT, "/api/v1/users/teachers/*").hasRole("KINDERGARTEN_ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/users/teachers/*").hasRole("KINDERGARTEN_ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
@@ -62,7 +71,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 

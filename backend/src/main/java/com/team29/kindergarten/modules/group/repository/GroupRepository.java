@@ -16,5 +16,11 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 
     List<Group> findAllByTenantIdOrderByNameAsc(Long tenantId);
 
+    List<Group> findAllByTeacherUserIdInAndTenantId(List<Long> teacherUserIds, Long tenantId);
+
     Optional<Group> findByIdAndTenantId(Long id, Long tenantId);
+
+    Optional<Group> findByTeacherUserIdAndTenantId(Long teacherUserId, Long tenantId);
+
+    Optional<Group> findByTeacherUserIdAndTenantIdAndIdNot(Long teacherUserId, Long tenantId, Long id);
 }

@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -20,7 +21,8 @@ public class ChildResponseDto {
     private String firstName;
     private String lastName;
     private LocalDate birthDate;
-    private Long groupId;
+    private ChildGroupSummaryDto group;
+    private List<ParentSummaryDto> parents;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

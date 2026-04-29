@@ -3,4 +3,5 @@ export type User = {
     tenantId: number;
     fullName: string;
     email: string;
+    assignedGroupName?: string | null;
 };
