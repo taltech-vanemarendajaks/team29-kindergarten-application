@@ -9,13 +9,18 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TableSortLabel,
 } from "@mui/material";
+
+export type SortDirection = "asc" | "desc";
 
 export type TableColumn<T> = {
   key: keyof T | string;
   label: ReactNode;
   align?: "left" | "right" | "center";
   render?: (row: T) => ReactNode;
+  sortable?: boolean;
+  sortKey?: string;
 };
 
 export type TableProps<T> = {
@@ -23,9 +28,27 @@ export type TableProps<T> = {
   rows: T[];
   rowKey?: (row: T, index: number) => string;
   size?: "small" | "medium";
+  sortField?: string;
+  sortDirection?: SortDirection;
+  onSortChange?: (field: string, direction: SortDirection) => void;
 };
 
-export default function Table<T>({ columns, rows, rowKey, size = "small" }: TableProps<T>) {
+export default function Table<T>({
+  columns,
+  rows,
+  rowKey,
+  size = "small",
+  sortField,
+  sortDirection = "asc",
+  onSortChange,
+}: TableProps<T>) {
+  const handleSort = (field: string) => {
+    if (!onSortChange) return;
+    const newDirection =
+      sortField === field && sortDirection === "asc" ? "desc" : "asc";
+    onSortChange(field, newDirection);
+  };
+
   return (
     <TableContainer component={Paper} variant="outlined">
       <MuiTable size={size}>
@@ -33,7 +56,25 @@ export default function Table<T>({ columns, rows, rowKey, size = "small" }: Tabl
           <TableRow>
             {columns.map((column) => (
               <TableCell align={column.align} key={String(column.key)}>
-                {column.label}
+                {column.sortable && onSortChange ? (
+                  <TableSortLabel
+                    active={
+                      sortField === (column.sortKey ?? String(column.key))
+                    }
+                    direction={
+                      sortField === (column.sortKey ?? String(column.key))
+                        ? sortDirection
+                        : "asc"
+                    }
+                    onClick={() =>
+                      handleSort(column.sortKey ?? String(column.key))
+                    }
+                  >
+                    {column.label}
+                  </TableSortLabel>
+                ) : (
+                  column.label
+                )}
               </TableCell>
             ))}
           </TableRow>
@@ -43,7 +84,9 @@ export default function Table<T>({ columns, rows, rowKey, size = "small" }: Tabl
             <TableRow hover key={rowKey?.(row, index) ?? String(index)}>
               {columns.map((column) => (
                 <TableCell align={column.align} key={String(column.key)}>
-                  {column.render ? column.render(row) : (row as Record<string, ReactNode>)[String(column.key)]}
+                  {column.render
+                    ? column.render(row)
+                    : (row as Record<string, ReactNode>)[String(column.key)]}
                 </TableCell>
               ))}
             </TableRow>

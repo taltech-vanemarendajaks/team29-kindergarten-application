@@ -32,12 +32,16 @@ export default function KindergartenAdminTeachersPage() {
   const { token, hydrated } = useAuth();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState("fullName");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const { teachers, teacherPage, loading, error, refetch } = useTeachers(
     token,
     page - 1,
     10,
     hydrated,
     search,
+    sortField,
+    sortDirection,
   );
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [teacherToEdit, setTeacherToEdit] = useState<Teacher | null>(null);
@@ -181,6 +185,13 @@ export default function KindergartenAdminTeachersPage() {
               teachers={teachers}
               onEditAction={(teacher) => setTeacherToEdit(teacher)}
               onDeleteAction={(teacher) => setTeacherToDelete(teacher)}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              onSortChange={(field, direction) => {
+                setSortField(field);
+                setSortDirection(direction);
+                setPage(1);
+              }}
             />
             {teacherPage && teacherPage.totalElements > 0 ? (
               <Typography variant="body2" color="text.secondary" align="center">

@@ -7,10 +7,13 @@ export async function getGroups(
   page: number,
   size = 10,
   search?: string,
+  sortField = "name",
+  sortDirection = "asc",
 ): Promise<PageResponse<Group>> {
   const params = new URLSearchParams({
     page: String(page),
     size: String(size),
+    sort: `${sortField},${sortDirection}`,
   });
   if (search && search.trim()) {
     params.set("search", search.trim());

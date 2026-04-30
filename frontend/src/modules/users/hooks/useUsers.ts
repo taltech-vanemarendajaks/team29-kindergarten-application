@@ -12,6 +12,8 @@ export function useUsersByRole(
   size = 10,
   enabled = true,
   search = "",
+  sortField = "fullName",
+  sortDirection: "asc" | "desc" = "asc",
 ) {
   const [userPage, setUserPage] = useState<PageResponse<User> | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -37,6 +39,8 @@ export function useUsersByRole(
           page,
           size,
           search,
+          sortField,
+          sortDirection,
         );
 
         if (!cancelled) {
@@ -59,7 +63,17 @@ export function useUsersByRole(
     return () => {
       cancelled = true;
     };
-  }, [enabled, page, reloadKey, role, search, size, token]);
+  }, [
+    enabled,
+    page,
+    reloadKey,
+    role,
+    search,
+    size,
+    sortDirection,
+    sortField,
+    token,
+  ]);
 
   return {
     users,

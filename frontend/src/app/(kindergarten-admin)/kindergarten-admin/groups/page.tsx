@@ -30,12 +30,16 @@ export default function KindergartenAdminGroupsPage() {
   const { token, hydrated } = useAuth();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const { groups, groupPage, loading, error, refetch } = useGroups(
     token,
     page - 1,
     10,
     hydrated,
     search,
+    sortField,
+    sortDirection,
   );
   const {
     teachers: availableTeachersForCreate,
@@ -207,6 +211,13 @@ export default function KindergartenAdminGroupsPage() {
               groups={groups}
               onEditAction={(group) => setGroupToEdit(group)}
               onDeleteAction={(group) => setGroupToDelete(group)}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              onSortChange={(field, direction) => {
+                setSortField(field);
+                setSortDirection(direction);
+                setPage(1);
+              }}
             />
             {groupPage && groupPage.totalElements > 0 ? (
               <Typography variant="body2" color="text.secondary" align="center">

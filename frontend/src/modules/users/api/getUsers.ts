@@ -8,11 +8,14 @@ export async function getUsersByRole(
   page: number,
   size = 10,
   search?: string,
+  sortField = "fullName",
+  sortDirection = "asc",
 ): Promise<PageResponse<User>> {
   const params = new URLSearchParams({
     role,
     page: String(page),
     size: String(size),
+    sort: `${sortField},${sortDirection}`,
   });
   if (search && search.trim()) {
     params.set("search", search.trim());

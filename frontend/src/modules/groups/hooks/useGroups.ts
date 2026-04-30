@@ -12,6 +12,8 @@ export function useGroups(
   size = 10,
   enabled = true,
   search = "",
+  sortField = "name",
+  sortDirection: "asc" | "desc" = "asc",
 ) {
   const [groupPage, setGroupPage] = useState<PageResponse<Group> | null>(null);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -31,8 +33,14 @@ export function useGroups(
       try {
         setLoading(true);
         setError(null);
-        const data = await getGroups(resolvedToken, page, size, search);
-
+        const data = await getGroups(
+          resolvedToken,
+          page,
+          size,
+          search,
+          sortField,
+          sortDirection,
+        );
         if (!cancelled) {
           setGroupPage(data);
           setGroups(data.content);
@@ -55,7 +63,7 @@ export function useGroups(
     return () => {
       cancelled = true;
     };
-  }, [enabled, page, reloadKey, search, size, token]);
+  }, [enabled, page, reloadKey, search, size, sortDirection, sortField, token]);
 
   return {
     groups,
