@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.web.SecurityFilterChain;
@@ -35,24 +34,42 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+
+                        // Public endpoints
                         .requestMatchers(
                                 "/auth/login",
                                 "/auth/register",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/swagger-ui.html",
+                                "/uploads/**"
                         ).permitAll()
-                        // Allow to get uploaded photos
-                        .requestMatchers("/uploads/**").permitAll()
 
-                        // Teacher API
+                        // Authenticated user info
+                        .requestMatchers("/auth/me").authenticated()
+
+                        // KINDERGARTEN_ADMIN endpoints
+                        .requestMatchers("/api/v1/tenants/**").hasRole("KINDERGARTEN_ADMIN")
+                        .requestMatchers("/api/v1/users/**").hasRole("KINDERGARTEN_ADMIN")
+                        .requestMatchers("/api/v1/groups/**").hasRole("KINDERGARTEN_ADMIN")
+
+                        // TEACHER-only child endpoint
+                        .requestMatchers(HttpMethod.GET, "/api/v1/children/class-records").hasRole("TEACHER")
+
+                        // Children endpoints — KINDERGARTEN_ADMIN and PARENT
+                        .requestMatchers("/api/v1/children/**").hasAnyRole("KINDERGARTEN_ADMIN", "PARENT")
+
+                        // Attendance endpoints — all authenticated roles
+                        .requestMatchers("/api/v1/attendances/**").hasAnyRole("KINDERGARTEN_ADMIN", "TEACHER", "PARENT")
+
+                        // TEACHER endpoints
                         .requestMatchers("/api/teacher/**").hasRole("TEACHER")
                         .requestMatchers("/api/upload/**").hasRole("TEACHER")
 
-                        // Admin API
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users/teachers").hasRole("KINDERGARTEN_ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/users/teachers/*").hasRole("KINDERGARTEN_ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/teachers/*").hasRole("KINDERGARTEN_ADMIN")
+                        // PARENT endpoints
+                        .requestMatchers("/api/parent/**").hasRole("PARENT")
+
+                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
