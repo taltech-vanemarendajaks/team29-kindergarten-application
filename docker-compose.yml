@@ -27,6 +27,8 @@ services:
       - "4000:8080"
     depends_on:
       - postgres
+    volumes:
+      - /home/ubuntu/kindergarten-uploads:/var/kindergarten/uploads
     restart: always
 
   frontend:

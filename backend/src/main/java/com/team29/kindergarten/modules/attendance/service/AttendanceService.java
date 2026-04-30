@@ -17,6 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.team29.kindergarten.modules.attendance.dto.AttendanceSummaryDto;
+import com.team29.kindergarten.common.enums.AttendanceStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -119,6 +121,13 @@ public class AttendanceService {
         attendance.setDeletedAt(LocalDateTime.now());
         attendanceRepository.save(attendance);
     }
+    
+    public AttendanceSummaryDto getAttendanceSummary(Long tenantId) {
+        long present = attendanceRepository.countByTenantIdAndStatus(tenantId, AttendanceStatus.PRESENT);
+        long absent = attendanceRepository.countByTenantIdAndStatus(tenantId, AttendanceStatus.ABSENT);
+        long sick = attendanceRepository.countByTenantIdAndStatus(tenantId, AttendanceStatus.SICK);
+        return new AttendanceSummaryDto(present, absent, sick);
+}
 
     private void assertCanAccessChild(Long childId, Long tenantId, User user) {
         childService.getChild(childId, tenantId, user);
