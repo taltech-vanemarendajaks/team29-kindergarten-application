@@ -11,7 +11,7 @@ export type SnackbarProps = Omit<MuiSnackbarProps, "children"> & {
 
 export default function Snackbar({ message, severity = "info", ...props }: SnackbarProps) {
   return (
-    <MuiSnackbar autoHideDuration={3000} {...props}>
+    <MuiSnackbar autoHideDuration={10000} {...props}>
       <Alert severity={severity}>{message}</Alert>
     </MuiSnackbar>
   );

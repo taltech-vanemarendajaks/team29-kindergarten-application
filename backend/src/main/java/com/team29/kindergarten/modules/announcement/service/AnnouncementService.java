@@ -1,6 +1,7 @@
 package com.team29.kindergarten.modules.announcement.service;
 
 
+import com.team29.kindergarten.common.dto.WsEvent;
 import com.team29.kindergarten.common.exception.ResourceNotFoundException;
 import com.team29.kindergarten.modules.announcement.dto.AnnouncementRequestDto;
 import com.team29.kindergarten.modules.announcement.dto.AnnouncementResponseDto;
@@ -138,9 +139,10 @@ public void handle(AnnouncementCreatedEvent event) {
 
     messagingTemplate.convertAndSend(
         "/topic/tenant/" + tenantId + "/messages",
-        event.dto()
+         new WsEvent(
+        "ANNOUNCEMENT_CREATED",
+         event.dto())
     );
 }
-
 
 }

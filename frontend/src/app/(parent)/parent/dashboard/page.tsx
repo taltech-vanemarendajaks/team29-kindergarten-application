@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -12,6 +12,8 @@ import { useAuth } from "@/src/context/AuthContext";
 import { useChildrenState } from "@/src/context/ChildrenContext";
 import { childFormSchema, type ChildFormValues, createChild } from "@/src/modules/parents";
 import { ApiRequestError } from "@/src/shared/utils/apiRequestError";
+import { useWebSocketConnection } from "@/src/components/hooks/useWebSocketConnection";
+import { WsEvent } from "@/src/modules/announcements/types/ws";
 
 function getAgeLabel(birthDate: string | null): string {
     if (!birthDate) {
@@ -47,6 +49,7 @@ export default function ParentDashboardPage() {
     const [snackbarMessage, setSnackbarMessage] = useState("");
     const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
 
+   
     const {
         register,
         handleSubmit,
@@ -68,11 +71,40 @@ export default function ParentDashboardPage() {
         reset();
     };
 
-    const showFeedback = (message: string, severity: "success" | "error") => {
+const showFeedback = useCallback(
+    (message: string, severity: "success" | "error") => {
         setSnackbarMessage(message);
         setSnackbarSeverity(severity);
         setSnackbarOpen(true);
-    };
+    },
+    []
+);
+
+/*
+useWebSocketConnection((msg) => {
+    console.log("RAW MSG:", msg);
+
+    showFeedback("TEST TOAST", "success");
+});
+
+/** */
+    const initializedRef = useRef(false);
+
+    useWebSocketConnection((msg: WsEvent) => {
+    console.log("RAW MSG:", msg);
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    switch (msg.type) {
+        case "ANNOUNCEMENT_CREATED":
+            showFeedback(msg.payload.title, "success");
+            break;
+
+        case "NEW_MESSAGE":
+            showFeedback("New message received", "success");
+            break;
+    }
+});    
 
     const onSubmit = async (data: ChildFormValues) => {
         if (!token) {
