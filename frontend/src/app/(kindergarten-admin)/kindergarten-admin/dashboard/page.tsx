@@ -77,16 +77,27 @@ export default function KindergartenAdminDashboardPage() {
 
   const chartData = stats
     ? [
-        { name: "Present", value: hasAttendance ? stats.attendance.present : 1 },
-        { name: "Absent",  value: hasAttendance ? stats.attendance.absent  : 1 },
-        { name: "Sick",    value: hasAttendance ? stats.attendance.sick    : 1 },
+        {
+          name: "Present",
+          value: hasAttendance ? stats.attendance.present : 1,
+        },
+        { name: "Absent", value: hasAttendance ? stats.attendance.absent : 1 },
+        { name: "Sick", value: hasAttendance ? stats.attendance.sick : 1 },
       ]
     : [];
 
   const legendItems = [
-    { name: "Present", value: stats?.attendance.present ?? 0, colour: COLOURS[0] },
-    { name: "Absent",  value: stats?.attendance.absent  ?? 0, colour: COLOURS[1] },
-    { name: "Sick",    value: stats?.attendance.sick    ?? 0, colour: COLOURS[2] },
+    {
+      name: "Present",
+      value: stats?.attendance.present ?? 0,
+      colour: COLOURS[0],
+    },
+    {
+      name: "Absent",
+      value: stats?.attendance.absent ?? 0,
+      colour: COLOURS[1],
+    },
+    { name: "Sick", value: stats?.attendance.sick ?? 0, colour: COLOURS[2] },
   ];
 
   return (
@@ -100,9 +111,13 @@ export default function KindergartenAdminDashboardPage() {
 
       {stats && (
         <Stack spacing={4}>
-
           {/* Stat Cards + Quick Actions */}
-          <Stack direction="row" spacing={2} alignItems="flex-start" flexWrap="wrap">
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="stretch"
+            flexWrap="wrap"
+          >
             <Stack direction="row" spacing={2} flexWrap="wrap" flex={1}>
               {statCards.map((card) => (
                 <Card key={card.label} sx={{ minWidth: 140, flex: 1 }}>
@@ -116,7 +131,7 @@ export default function KindergartenAdminDashboardPage() {
               ))}
             </Stack>
 
-            <Card sx={{ minWidth: 180, maxWidth: 220 }}>
+            <Card sx={{ minWidth: 180 }}>
               <CardContent>
                 <Typography variant="subtitle1" fontWeight={700} mb={1.5}>
                   Quick Actions
@@ -128,7 +143,11 @@ export default function KindergartenAdminDashboardPage() {
                       variant="contained"
                       fullWidth
                       onClick={() => router.push(action.path)}
-                      sx={{ textTransform: "none", fontWeight: 600, justifyContent: "flex-start" }}
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: 600,
+                        justifyContent: "flex-start",
+                      }}
                     >
                       {action.label}
                     </Button>
@@ -161,12 +180,13 @@ export default function KindergartenAdminDashboardPage() {
                     dataKey="value"
                     startAngle={90}
                     endAngle={-270}
+                    // isAnimationActive={false}
                   >
                     {chartData.map((_, index) => (
                       <Cell key={index} fill={COLOURS[index]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  {hasAttendance && <Tooltip />}{" "}
                 </PieChart>
 
                 <Box
@@ -182,7 +202,11 @@ export default function KindergartenAdminDashboardPage() {
                   <Typography variant="h5" fontWeight={700} lineHeight={1.1}>
                     {hasAttendance ? `${presentPct}%` : "—"}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" letterSpacing={1}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    letterSpacing={1}
+                  >
                     PRESENT
                   </Typography>
                 </Box>
@@ -190,7 +214,12 @@ export default function KindergartenAdminDashboardPage() {
 
               <Stack spacing={1.5}>
                 {legendItems.map((item) => (
-                  <Stack key={item.name} direction="row" alignItems="center" spacing={1.5}>
+                  <Stack
+                    key={item.name}
+                    direction="row"
+                    alignItems="center"
+                    spacing={1.5}
+                  >
                     <Box
                       sx={{
                         width: 12,
@@ -200,7 +229,11 @@ export default function KindergartenAdminDashboardPage() {
                         flexShrink: 0,
                       }}
                     />
-                    <Typography variant="body2" color="text.secondary" sx={{ minWidth: 60 }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ minWidth: 60 }}
+                    >
                       {item.name}
                     </Typography>
                     <Typography variant="body2" fontWeight={700}>
@@ -211,7 +244,6 @@ export default function KindergartenAdminDashboardPage() {
               </Stack>
             </Stack>
           </Box>
-
         </Stack>
       )}
     </Paper>
