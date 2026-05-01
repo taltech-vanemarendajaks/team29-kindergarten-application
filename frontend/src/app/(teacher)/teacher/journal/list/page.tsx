@@ -37,16 +37,17 @@ export default function TeacherJournalListPage() {
 
             <Stack spacing={3}>
                 {entries.map((entry) => (
-                    <Card
-                        key={entry.id}
-                        sx={{
-                            display: "flex",
-                            gap: 2,
-                            p: 2,
-                            alignItems: "center",
-                            position: "relative",
-                        }}
-                    >
+<Card
+ key={entry.id}
+ sx={{
+ display: "flex",
+ gap: 2,
+ p: 2,
+ alignItems: "center",
+ position: "relative",
+ boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px",
+ }}
+ >
                         <IconButton
                             component={Link}
                             href={`/teacher/journal/edit/${entry.id}`}

@@ -79,7 +79,7 @@ export default function ParentJournalEntryPage() {
                 </ImageList>
             )}
 
-            <Card sx={{ p: 2 }}>
+            <Card sx={{ p: 2, boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px" }}>
                 <CardContent>
                     <Typography variant="h6" sx={{ mb: 1 }}>
                         Summary

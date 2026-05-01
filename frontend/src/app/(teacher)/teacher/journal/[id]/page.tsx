@@ -24,6 +24,8 @@ export default function JournalEntryPage() {
 
     if (!entry) return <div>Loading...</div>;
 
+const shadowStyle = { boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px" };
+
     const fullPhotoUrl = (url: string) =>
         url.startsWith("http") ? url : `${API_URL}${url}`;
 

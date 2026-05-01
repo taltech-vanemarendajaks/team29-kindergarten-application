@@ -109,29 +109,46 @@ export default function KindergartenAdminDashboardPage() {
       {loading && <Typography>Loading...</Typography>}
       {error && <Typography color="error">{error}</Typography>}
 
-      {stats && (
-        <Stack spacing={4}>
-          {/* Stat Cards + Quick Actions */}
-          <Stack
-            direction="row"
-            spacing={2}
-            alignItems="stretch"
-            flexWrap="wrap"
-          >
-            <Stack direction="row" spacing={2} flexWrap="wrap" flex={1}>
-              {statCards.map((card) => (
-                <Card key={card.label} sx={{ minWidth: 140, flex: 1 }}>
+{stats && (
+ <Stack spacing={4}>
+ {/* Stat Cards + Quick Actions */}
+ <Stack
+ direction={{ xs: "column", md: "row" }}
+ spacing={2}
+ alignItems="stretch"
+ >
+ <Stack
+ direction={{ xs: "column", md: "row" }}
+ spacing={2}
+ flexWrap="wrap"
+ flex={{ xs: "100%", md: 1 }}
+ >
+ {statCards.map((card) => (
+ <Card
+ key={card.label}
+ sx={{
+ flex: { xs: "100%", md: "1 1 0%" },
+ maxWidth: { xs: "100%", md: "calc(33.333% - 8px)" },
+ boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px",
+ }}
+ >
                   <CardContent>
                     <Typography variant="h3" fontWeight={700} color="primary">
                       {card.value}
                     </Typography>
                     <Typography color="text.secondary">{card.label}</Typography>
-                  </CardContent>
-                </Card>
-              ))}
-            </Stack>
+</CardContent>
+ </Card>
+ ))}
+ </Stack>
 
-            <Card sx={{ minWidth: 180 }}>
+ <Card
+ sx={{
+ flex: { xs: "100%", md: "0 0 auto" },
+ minWidth: 180,
+ boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px",
+ }}
+ >
               <CardContent>
                 <Typography variant="subtitle1" fontWeight={700} mb={1.5}>
                   Quick Actions
@@ -168,7 +185,7 @@ export default function KindergartenAdminDashboardPage() {
               </Typography>
             )}
 
-            <Stack direction="row" alignItems="center" spacing={4}>
+            <Stack direction={{ xs: "column", md: "row" }} alignItems={{ xs: "flex-start", md: "center" }} spacing={4}>
               <Box sx={{ position: "relative", width: 220, height: 220 }}>
                 <PieChart width={220} height={220}>
                   <Pie
