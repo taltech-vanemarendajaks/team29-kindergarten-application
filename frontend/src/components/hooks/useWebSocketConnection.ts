@@ -3,36 +3,38 @@
 import { useEffect, useRef } from "react";
 import { Client } from "@stomp/stompjs";
 import { useAuth } from "@/src/context/AuthContext";
+import { WsEvent } from "@/src/modules/announcements/types/ws";
 
-export function useWebSocketConnection() {
-  const { token, isAuthenticated } = useAuth();
+export function useWebSocketConnection(
+  onMessage?: (msg: WsEvent) => void
+) {
+  const { token, isAuthenticated, tenantId } = useAuth();
   const clientRef = useRef<Client | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated || !token) return;
-
-    if (clientRef.current?.active) return; // ✅ prevent duplicates
+    if (!isAuthenticated || !token || !tenantId) return;
 
     const client = new Client({
       brokerURL: "ws://localhost:8080/ws",
+
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },
+
+      onConnect: () => {
+        console.log("WebSocket connected");
+
+        const destination = `/topic/tenant/${tenantId}/messages`;
+        console.log("Subscribing to:", destination);
+
+        client.subscribe(destination, (message) => {
+          const parsed = JSON.parse(message.body);
+          onMessage?.(parsed);
+        });
+      },
+
       reconnectDelay: 5000,
-      debug: (str) => console.log(str),
     });
-
-    client.onConnect = () => {
-      console.log("✅ WebSocket connected");
-    };
-
-    client.onStompError = (frame) => {
-    console.error("❌ Broker error:", frame.headers["message"]);
-    };
-
-    client.onWebSocketError = (err) => {
-      console.error("❌ WS error:", err);
-    };
 
     client.activate();
     clientRef.current = client;
@@ -40,7 +42,7 @@ export function useWebSocketConnection() {
     return () => {
       client.deactivate();
     };
-  }, [token, isAuthenticated]);
+  }, [token, isAuthenticated, tenantId, onMessage]);
 
   return clientRef;
 }

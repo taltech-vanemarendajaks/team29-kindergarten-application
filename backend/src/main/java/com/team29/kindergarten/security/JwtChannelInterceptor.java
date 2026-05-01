@@ -48,11 +48,24 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                                 .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
                                 .toList();
 
-                        var auth = new UsernamePasswordAuthenticationToken(
-                                user,
+                         // extract fields from JWT
+                        Long userId = jwtService.extractUserId(token);
+                        Long tenantId = jwtService.extractTenantId(token);
+                        String username = jwtService.extractEmail(token);
+
+                        UserPrincipal principal = new UserPrincipal(
+                            userId,
+                            tenantId,
+                            username,
+                            authorities
+                     );
+
+                        UsernamePasswordAuthenticationToken auth =
+                            new UsernamePasswordAuthenticationToken(
+                                principal,
                                 null,
-                                authorities
-                        );
+                                principal.getAuthorities()
+                            );
 
                         // ✅ THIS replaces SecurityContextHolder
                         accessor.setUser(auth);

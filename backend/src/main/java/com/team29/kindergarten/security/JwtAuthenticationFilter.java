@@ -94,7 +94,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(
                                 principal,
                                 null,
-                                authorities
+                                principal.getAuthorities()
                         );
                 log.info("Authorities={}", authorities);
 

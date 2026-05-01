@@ -16,7 +16,9 @@ import java.time.LocalDate;
 
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +39,9 @@ public class AnnouncementService {
     private final AnnouncementReadRepository announcementReadRepository;  
     private final UserRepository userRepository;
     private final AnnouncementMapper announcementMapper;
-    private final CurrentUserService currentUser;   
+    private final CurrentUserService currentUser;  
+    private final MessageService messageService;    
+    private final SimpMessagingTemplate messagingTemplate;
 
 
     @Transactional(readOnly = true)
@@ -121,4 +125,22 @@ public class AnnouncementService {
 
         return true; // created
     }
+//tenantcontext is stored to event - so that service can be decoupled from security context and can be used in other contexts like batch jobs, etc.
+public void createMessage(AnnouncementResponseDto dto) {
+    Long tenantId = currentUser.getTenantId();
+    messageService.createMessage(dto, tenantId);
+}
+
+@EventListener
+public void handle(AnnouncementCreatedEvent event) {
+    Long tenantId = event.tenantId();
+    log.info("Sending announcement for tenantId={}, content={}", tenantId, event.dto().getTitle());
+
+    messagingTemplate.convertAndSend(
+        "/topic/tenant/" + tenantId + "/messages",
+        event.dto()
+    );
+}
+
+
 }

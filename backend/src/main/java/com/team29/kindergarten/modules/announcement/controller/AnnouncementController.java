@@ -4,6 +4,7 @@ import com.team29.kindergarten.common.exception.ApiErrorResponse;
 import com.team29.kindergarten.modules.announcement.dto.AnnouncementResponseDto;
 import com.team29.kindergarten.modules.announcement.dto.AnnouncementUserResponseDto;
 import com.team29.kindergarten.modules.announcement.service.AnnouncementService;
+import com.team29.kindergarten.modules.announcement.service.MessageService;
 import com.team29.kindergarten.modules.announcement.dto.AnnouncementRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 public class AnnouncementController {
 
         private final AnnouncementService announcementService;
+
 
         @GetMapping
         @Operation(summary = "List announcements for current tenant")
@@ -105,6 +107,8 @@ public class AnnouncementController {
 
 
         AnnouncementResponseDto createdAnnouncement = announcementService.create(request);
+        //broadcast to WebSocket subscribers
+        announcementService.createMessage(createdAnnouncement);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAnnouncement);
         }
 
