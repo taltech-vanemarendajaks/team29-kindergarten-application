@@ -16,7 +16,7 @@ export default function AppProvider({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <WebSocketInitializer />r
+        <WebSocketInitializer />
 
         <KindergartenProvider>
           <GroupsProvider>
