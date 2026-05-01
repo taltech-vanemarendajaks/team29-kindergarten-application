@@ -37,8 +37,8 @@ public class UserService {
 
     public Page<UserResponseDto> findUsersByRole(Long tenantId, RoleName roleName, String search, Pageable pageable) {
     Page<User> usersPage = (search != null && !search.isBlank())
-            ? userRepository.findDistinctByTenantIdAndRoles_NameAndFullNameContainingIgnoreCaseOrderByFullNameAsc(tenantId, roleName, search, pageable)
-            : userRepository.findDistinctByTenantIdAndRoles_NameOrderByFullNameAsc(tenantId, roleName, pageable);
+            ? userRepository.findDistinctByTenantIdAndRoles_NameAndFullNameContainingIgnoreCase(tenantId, roleName, search, pageable)
+            : userRepository.findDistinctByTenantIdAndRoles_Name(tenantId, roleName, pageable);
 
         Page<UserResponseDto> responsePage = usersPage.map(userMapper::toUserResponseDto);
 
