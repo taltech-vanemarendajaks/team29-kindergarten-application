@@ -71,14 +71,14 @@ export default function ParentDashboardPage() {
         reset();
     };
 
-const showFeedback = useCallback(
-    (message: string, severity: "success" | "error") => {
-        setSnackbarMessage(message);
-        setSnackbarSeverity(severity);
-        setSnackbarOpen(true);
-    },
-    []
-);
+    const [toastVersion, setToastVersion] = useState(0);
+
+    const showFeedback = (message: string, severity: "success" | "error") => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+    setToastVersion((v) => v + 1); // 🔥 forces re-render lifecycle
+    };
 
 /*
 useWebSocketConnection((msg) => {
@@ -88,12 +88,9 @@ useWebSocketConnection((msg) => {
 });
 
 /** */
-    const initializedRef = useRef(false);
 
     useWebSocketConnection((msg: WsEvent) => {
     console.log("RAW MSG:", msg);
-    if (initializedRef.current) return;
-    initializedRef.current = true;
 
     switch (msg.type) {
         case "ANNOUNCEMENT_CREATED":
@@ -253,13 +250,14 @@ useWebSocketConnection((msg) => {
                 </Stack>
             </Dialog>
 
-            <Snackbar
-                open={snackbarOpen}
-                onClose={() => setSnackbarOpen(false)}
-                message={snackbarMessage}
-                severity={snackbarSeverity}
-                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-            />
+<Snackbar
+  key={toastVersion}
+  open={snackbarOpen}
+  onClose={() => setSnackbarOpen(false)}
+  message={snackbarMessage}
+  severity={snackbarSeverity}
+  anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+/>
         </Paper>
     );
 }
