@@ -9,24 +9,20 @@ import {
     Button,
     Chip,
     CircularProgress,
-    FormControl,
-    InputLabel,
-    MenuItem,
     Paper,
-    Select,
     Stack,
     Tab,
     Tabs,
     TextField,
     Typography,
 } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Dialog from "@/src/components/ui/dialog";
 import Snackbar from "@/src/components/ui/snackbar";
 import AttendanceTab from "@/src/components/attendance/AttendanceTab";
 import { useAuth } from "@/src/context/AuthContext";
 import { useChildrenState } from "@/src/context/ChildrenContext";
-import { getGroups } from "@/src/modules/groups/api/getGroups";
-import type { Group } from "@/src/modules/groups/model/group";
 import { type Child, getChildById, updateChild } from "@/src/modules/parents";
 import { ApiRequestError } from "@/src/shared/utils/apiRequestError";
 
@@ -71,17 +67,13 @@ export default function ParentChildrenPage() {
     const [tab, setTab] = useState<ProfileTab>("profile");
     const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
     const [selectedChild, setSelectedChild] = useState<Child | null>(null);
-    const [groups, setGroups] = useState<Group[]>([]);
-    const [groupsLoadError, setGroupsLoadError] = useState<string | null>(null);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
     const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
-    const [isLoadingGroups, setIsLoadingGroups] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isSavingEdit, setIsSavingEdit] = useState(false);
     const [editFirstName, setEditFirstName] = useState("");
     const [editLastName, setEditLastName] = useState("");
     const [editBirthDate, setEditBirthDate] = useState("");
-    const [editGroupId, setEditGroupId] = useState("");
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState("");
     const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
@@ -104,30 +96,6 @@ export default function ParentChildrenPage() {
 
         return `Group #${child.group.id}`;
     };
-
-    const loadGroups = async (authToken: string) => {
-        setIsLoadingGroups(true);
-        setGroupsLoadError(null);
-
-        try {
-            const page = await getGroups(authToken, 0, 100);
-            setGroups(page.content);
-        } catch {
-            setGroups([]);
-            setGroupsLoadError("Full groups list is unavailable for your account. Showing known groups only.");
-        } finally {
-            setIsLoadingGroups(false);
-        }
-    };
-
-    useEffect(() => {
-        if (!token) {
-            setGroups([]);
-            return;
-        }
-
-        void loadGroups(token);
-    }, [token]);
 
     useEffect(() => {
         if (children.length === 0) {
@@ -212,36 +180,6 @@ export default function ParentChildrenPage() {
         return resolveGroupLabel(selectedChild);
     }, [selectedChild]);
 
-    const groupOptions = useMemo(() => {
-        const merged = new Map<number, string>();
-
-        groups.forEach((group) => {
-            merged.set(group.id, group.name);
-        });
-
-        children.forEach((child) => {
-            if (!child.group) {
-                return;
-            }
-
-            const knownName =
-                child.group.name && child.group.name.trim().length > 0
-                    ? child.group.name
-                    : `Group #${child.group.id}`;
-            if (!merged.has(child.group.id)) {
-                merged.set(child.group.id, knownName);
-            }
-        });
-
-        if (selectedChild?.group && !merged.has(selectedChild.group.id)) {
-            merged.set(selectedChild.group.id, resolveGroupLabel(selectedChild));
-        }
-
-        return Array.from(merged.entries())
-            .map(([id, name]) => ({ id, name }))
-            .sort((a, b) => a.name.localeCompare(b.name));
-    }, [groups, children, selectedChild]);
-
     const openEditDialog = () => {
         if (!selectedChild) {
             return;
@@ -250,7 +188,6 @@ export default function ParentChildrenPage() {
         setEditFirstName(selectedChild.firstName);
         setEditLastName(selectedChild.lastName);
         setEditBirthDate(selectedChild.birthDate ?? "");
-        setEditGroupId(selectedChild.group ? String(selectedChild.group.id) : "");
         setIsEditDialogOpen(true);
     };
 
@@ -286,12 +223,6 @@ export default function ParentChildrenPage() {
             return;
         }
 
-        const parsedGroupId = editGroupId === "" ? undefined : Number(editGroupId);
-        if (parsedGroupId !== undefined && (!Number.isInteger(parsedGroupId) || parsedGroupId <= 0)) {
-            showFeedback("Please select a valid group.", "error");
-            return;
-        }
-
         try {
             setIsSavingEdit(true);
 
@@ -299,7 +230,6 @@ export default function ParentChildrenPage() {
                 firstName: normalizedFirstName,
                 lastName: normalizedLastName,
                 birthDate: normalizedBirthDate,
-                groupId: parsedGroupId,
             });
 
             setSelectedChild(updatedChild);
@@ -403,9 +333,6 @@ export default function ParentChildrenPage() {
 
                             {!showLoadingIndicator && tab === "profile" ? (
                                 <Stack spacing={1}>
-                                    <Button variant="outlined" onClick={openEditDialog} sx={{ alignSelf: "flex-start" }}>
-                                        Edit Profile
-                                    </Button>
                                     <Typography>
                                         First name: <strong>{selectedChild.firstName}</strong>
                                     </Typography>
@@ -424,6 +351,20 @@ export default function ParentChildrenPage() {
                                             {selectedChild.group ? groupLabel : "Not assigned"}
                                         </strong>
                                     </Typography>
+                                    <Button
+                                        variant="outlined"
+                                        onClick={openEditDialog}
+                                        startIcon={<EditOutlinedIcon fontSize="small" />}
+                                        sx={{
+                                            alignSelf: "flex-start",
+                                            mt: 0.5,
+                                            textTransform: "none",
+                                            fontWeight: 500,
+                                            fontSize: "0.875rem",
+                                        }}
+                                    >
+                                        Edit Profile
+                                    </Button>
                                 </Stack>
                             ) : null}
 
@@ -440,7 +381,20 @@ export default function ParentChildrenPage() {
                     </Stack>
                 ) : null}
 
-                <Button component={Link} href="/parent/dashboard" variant="outlined" sx={{ alignSelf: "flex-start" }}>
+                <Button
+                    component={Link}
+                    href="/parent/dashboard"
+                    variant="outlined"
+                    startIcon={<ArrowBackIcon fontSize="small" />}
+                    sx={{
+                        alignSelf: "flex-start",
+                        textTransform: "none",
+                        fontWeight: 500,
+                        fontSize: "0.875rem",
+                        px: 1.25,
+                        minHeight: 28,
+                    }}
+                >
                     Back to Dashboard
                 </Button>
             </Stack>
@@ -454,7 +408,7 @@ export default function ParentChildrenPage() {
                         label: "Cancel",
                         onClick: closeEditDialog,
                         variant: "outlined",
-                        color: "inherit",
+                        color: "primary",
                         disabled: isSavingEdit,
                     },
                     {
@@ -487,28 +441,6 @@ export default function ParentChildrenPage() {
                         InputLabelProps={{ shrink: true }}
                         fullWidth
                     />
-                    <FormControl fullWidth>
-                        <InputLabel id="edit-child-group-label">Group</InputLabel>
-                        <Select
-                            labelId="edit-child-group-label"
-                            label="Group"
-                            value={editGroupId}
-                            onChange={(event) => setEditGroupId(event.target.value)}
-                            disabled={isLoadingGroups}
-                        >
-                            <MenuItem value="">Not assigned</MenuItem>
-                            {groupOptions.map((group) => (
-                                <MenuItem key={group.id} value={String(group.id)}>
-                                    {group.name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    {groupsLoadError ? (
-                        <Typography variant="body2" color="warning.main">
-                            {groupsLoadError}
-                        </Typography>
-                    ) : null}
                 </Stack>
             </Dialog>
 
