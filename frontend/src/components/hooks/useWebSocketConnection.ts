@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { Client } from "@stomp/stompjs";
 import { useAuth } from "@/src/context/AuthContext";
 import { WsEvent } from "@/src/modules/announcements/types/ws";
+import { getWsUrl } from "@/src/services/getWsUrl";
 
 export function useWebSocketConnection(onMessage?: (msg: WsEvent) => void) {
   const { token, isAuthenticated, tenantId } = useAuth();
@@ -17,7 +18,7 @@ export function useWebSocketConnection(onMessage?: (msg: WsEvent) => void) {
     if (clientRef.current) return;
 
     const client = new Client({
-      brokerURL: "ws://localhost:8080/ws",
+      brokerURL: getWsUrl(),
 
       connectHeaders: {
         Authorization: `Bearer ${token}`,
