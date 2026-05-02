@@ -1,8 +1,18 @@
+// WebSocketInitializer.tsx
 "use client";
 
-import { useWebSocketConnection } from "@/src/components/hooks/useWebSocketConnection";
+import { useEffect } from "react";
+import { useAuth } from "@/src/context/AuthContext";
+import { wsService } from "@/src/services/wsService";
 
 export default function WebSocketInitializer() {
-  useWebSocketConnection();
-  return null; // no UI
+  const { token, tenantId, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated || !token || !tenantId) return;
+
+    wsService.connect(token, tenantId);
+  }, [isAuthenticated, token, tenantId]);
+
+  return null;
 }

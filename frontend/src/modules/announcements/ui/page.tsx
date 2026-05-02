@@ -20,7 +20,7 @@ export default function MessagesPage() {
       <ul>
         {data?.content.map((msg) => (
           <li key={msg.id}>
-            {msg.author}: {msg.text}
+            {msg.createdByName}: {msg.content}
           </li>
         ))}
       </ul>

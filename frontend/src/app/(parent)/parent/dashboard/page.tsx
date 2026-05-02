@@ -16,12 +16,12 @@ import { useAuth } from "@/src/context/AuthContext";
 import { useChildrenState } from "@/src/context/ChildrenContext";
 import { childFormSchema, type ChildFormValues, createChild } from "@/src/modules/parents";
 import { ApiRequestError } from "@/src/shared/utils/apiRequestError";
-import { useWebSocketConnection } from "@/src/components/hooks/useWebSocketConnection";
 import { WsEvent } from "@/src/modules/announcements/types/ws";
 import { getParentJournalEntries } from "@/src/modules/parents/api/getJournalEntry";
 import type { DailyJournalEntry } from "@/src/modules/teachers/model/dailyJournalEntry";
 import { format } from "date-fns";
 import { getUserOptionsByRole } from "@/src/modules/users/api/getUsers";
+import { wsService } from "@/src/services/wsService";
 
 function getAgeLabel(birthDate: string | null): string {
     if (!birthDate) {
@@ -134,28 +134,18 @@ export default function ParentDashboardPage() {
     setToastVersion((v) => v + 1); // 🔥 forces re-render lifecycle
     };
 
-/*
-useWebSocketConnection((msg) => {
-    console.log("RAW MSG:", msg);
 
-    showFeedback("TEST TOAST", "success");
-});
+    useEffect(() => {
+    const unsubscribe = wsService.subscribe((msg) => {
+        console.log("EVENT:", msg);
 
-/** */
+        if (msg.type === "ANNOUNCEMENT_CREATED") {
+        showFeedback(msg.payload.title, "success");
+        }
+    });
 
-    useWebSocketConnection((msg: WsEvent) => {
-    console.log("RAW MSG:", msg);
-
-    switch (msg.type) {
-        case "ANNOUNCEMENT_CREATED":
-            showFeedback(msg.payload.title, "success");
-            break;
-
-        case "NEW_MESSAGE":
-            showFeedback("New message received", "success");
-            break;
-    }
-});    
+    return unsubscribe;
+    }, []);
 
     const onSubmit = async (data: ChildFormValues) => {
         if (!token) {

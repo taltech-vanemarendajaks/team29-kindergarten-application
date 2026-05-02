@@ -1,5 +1,5 @@
 import { Client } from "@stomp/stompjs";
-import { getWsUrl } from "./getWSUrl";
+import { getWsUrl } from "./getWsUrl";
 
 let client: Client | null = null;
 

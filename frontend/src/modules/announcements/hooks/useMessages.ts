@@ -1,13 +1,14 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { MessagePage } from "../types/messageTypes";
+import { useAuth } from "@/src/context/AuthContext";
+import { getAnnouncements } from "../api/getAnnouncements";
 
 export const useMessages = (page: number) => {
-  return useQuery<MessagePage>({
+  const { token } = useAuth();
+
+  return useQuery({
     queryKey: ["messages", page],
-    queryFn: async () => {
-      const res = await fetch(`/api/messages?page=${page}`);
-      return res.json();
-    },
+    queryFn: () => getAnnouncements(token!, page),
+    enabled: !!token, // prevents call before auth ready
     placeholderData: keepPreviousData,
   });
 };
