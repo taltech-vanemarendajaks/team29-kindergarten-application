@@ -6,9 +6,10 @@ import {
     Typography,
     Stack,
     Card,
-    CardContent,
     Box,
     Button,
+    CircularProgress,
+    IconButton
 } from "@mui/material";
 import Link from "next/link";
 import { useAuth } from "@/src/context/AuthContext";
@@ -16,33 +17,26 @@ import { API_URL } from "@/src/services/api";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import GroupIcon from "@mui/icons-material/Group";
-import MenuBookIcon from "@mui/icons-material/MenuBook";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import {getUserOptionsByRole} from "@/src/modules/users";
+import {Add} from "@mui/icons-material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 type JournalEntry = {
     id: number;
     date: string;
     summary: string;
+    milestones: string;
     photoUrls: string[];
 };
 
-function CollapsibleCard({
-                             title,
-                             children,
-                         }: {
-    title: string;
-    children: React.ReactNode;
-}) {
+function CollapsibleCard({ title, children }: { title: string; children: React.ReactNode }) {
     const [open, setOpen] = useState(true);
 
     return (
-        <Card
-            sx={{
-                p: 2,
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-            }}>
+        <Card sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
             <Box
                 sx={{
                     display: "flex",
@@ -51,7 +45,8 @@ function CollapsibleCard({
                     mb: open ? 2 : 0,
                     cursor: "pointer",
                 }}
-                onClick={() => setOpen(!open)}>
+                onClick={() => setOpen(!open)}
+            >
                 <Typography variant="h6" fontWeight={600}>
                     {title}
                 </Typography>
@@ -65,15 +60,15 @@ function CollapsibleCard({
 }
 
 function TeacherNotes() {
-    const [notes, setNotes] = useState<string[]>([]);
-    const [input, setInput] = useState("");
+    const [notes, setNotes] = useState<string[]>(() => {
+        if (typeof window === "undefined") return [];
+        const saved = localStorage.getItem("teacher_notes");
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    const [newNote, setNewNote] = useState("");
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [editingValue, setEditingValue] = useState("");
-
-    useEffect(() => {
-        const saved = localStorage.getItem("teacher_notes");
-        if (saved) setNotes(JSON.parse(saved));
-    }, []);
 
     const saveNotes = (updated: string[]) => {
         setNotes(updated);
@@ -81,15 +76,9 @@ function TeacherNotes() {
     };
 
     const addNote = () => {
-        if (!input.trim()) return;
-        const updated = [...notes, input.trim()];
-        saveNotes(updated);
-        setInput("");
-    };
-
-    const deleteNote = (i: number) => {
-        const updated = notes.filter((_, idx) => idx !== i);
-        saveNotes(updated);
+        if (!newNote.trim()) return;
+        saveNotes([...notes, newNote.trim()]);
+        setNewNote("");
     };
 
     const startEditing = (i: number) => {
@@ -97,7 +86,7 @@ function TeacherNotes() {
         setEditingValue(notes[i]);
     };
 
-    const saveEdit = () => {
+    const finishEditing = () => {
         if (editingIndex === null) return;
         const updated = [...notes];
         updated[editingIndex] = editingValue.trim();
@@ -106,14 +95,19 @@ function TeacherNotes() {
         setEditingValue("");
     };
 
+    const deleteNote = (i: number) => {
+        saveNotes(notes.filter((_, idx) => idx !== i));
+    };
+
     return (
-        <Box>
+        <Stack spacing={1.5}>
             {/* Add new note */}
-            <Stack direction="row" spacing={1} mb={2}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
                     placeholder="Add a note..."
+                    onKeyDown={(e) => e.key === "Enter" && addNote()}
                     style={{
                         flex: 1,
                         padding: "6px 10px",
@@ -121,70 +115,78 @@ function TeacherNotes() {
                         border: "1px solid #ccc",
                     }}
                 />
-                <Button variant="contained" size="small" onClick={addNote}>
-                    Add
-                </Button>
-            </Stack>
+                <IconButton onClick={addNote} size="small">
+                    <Add fontSize="small" />
+                </IconButton>
+            </Box>
 
             {/* Notes list */}
-            <Stack spacing={1}>
-                {notes.map((note, i) => (
-                    <Box
-                        key={i}
-                        sx={{
-                            p: 1,
-                            borderRadius: 1,
-                            bgcolor: "rgba(0,0,0,0.04)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 1,
-                        }}>
-                        {editingIndex === i ? (
-                            <input
-                                value={editingValue}
-                                onChange={(e) => setEditingValue(e.target.value)}
-                                style={{
-                                    flex: 1,
-                                    padding: "4px 8px",
-                                    borderRadius: "6px",
-                                    border: "1px solid #bbb",
-                                }}
-                            />
-                        ) : (
-                            <Typography sx={{ flex: 1 }}>{note}</Typography>
-                        )}
+            {notes.map((note, i) => (
+                <Box
+                    key={i}
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1,
+                        borderRadius: 1,
+                        bgcolor: "rgba(0,0,0,0.03)",
+                        "&:hover .note-actions": { opacity: 1 },
+                    }}
+                >
+                    {editingIndex === i ? (
+                        <input
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            onBlur={finishEditing}
+                            onKeyDown={(e) => e.key === "Enter" && finishEditing()}
+                            autoFocus
+                            style={{
+                                flex: 1,
+                                padding: "4px 8px",
+                                borderRadius: "6px",
+                                border: "1px solid #bbb",
+                            }}
+                        />
+                    ) : (
+                        <Typography
+                            sx={{ flex: 1, cursor: "pointer" }}
+                            onClick={() => startEditing(i)}
+                        >
+                            {note}
+                        </Typography>
+                    )}
 
-                        {editingIndex === i ? (
-                            <Button size="small" onClick={saveEdit}>
-                                Save
-                            </Button>
-                        ) : (
-                            <Button size="small" onClick={() => startEditing(i)}>
-                                Edit
-                            </Button>
-                        )}
-
-                        <Button size="small" color="error" onClick={() => deleteNote(i)}>
-                            Delete
-                        </Button>
-                    </Box>
-                ))}
-            </Stack>
-        </Box>
+                    {/* Hover actions */}
+                    <Stack
+                        direction="row"
+                        spacing={0.5}
+                        className="note-actions"
+                        sx={{ opacity: 0, transition: "opacity 0.2s" }}
+                    >
+                        <IconButton size="small" onClick={() => startEditing(i)}>
+                            <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small" onClick={() => deleteNote(i)}>
+                            <DeleteIcon fontSize="small" />
+                        </IconButton>
+                    </Stack>
+                </Box>
+            ))}
+        </Stack>
     );
 }
 
 function UpcomingEvents() {
-    const [events, setEvents] = useState<string[]>([]);
-    const [input, setInput] = useState("");
+    const [events, setEvents] = useState<string[]>(() => {
+        if (typeof window === "undefined") return [];
+        const saved = localStorage.getItem("teacher_events");
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    const [newEvent, setNewEvent] = useState("");
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [editingValue, setEditingValue] = useState("");
-
-    useEffect(() => {
-        const saved = localStorage.getItem("teacher_events");
-        if (saved) setEvents(JSON.parse(saved));
-    }, []);
 
     const saveEvents = (updated: string[]) => {
         setEvents(updated);
@@ -192,15 +194,9 @@ function UpcomingEvents() {
     };
 
     const addEvent = () => {
-        if (!input.trim()) return;
-        const updated = [...events, input.trim()];
-        saveEvents(updated);
-        setInput("");
-    };
-
-    const deleteEvent = (i: number) => {
-        const updated = events.filter((_, idx) => idx !== i);
-        saveEvents(updated);
+        if (!newEvent.trim()) return;
+        saveEvents([...events, newEvent.trim()]);
+        setNewEvent("");
     };
 
     const startEditing = (i: number) => {
@@ -208,7 +204,7 @@ function UpcomingEvents() {
         setEditingValue(events[i]);
     };
 
-    const saveEdit = () => {
+    const finishEditing = () => {
         if (editingIndex === null) return;
         const updated = [...events];
         updated[editingIndex] = editingValue.trim();
@@ -217,14 +213,19 @@ function UpcomingEvents() {
         setEditingValue("");
     };
 
+    const deleteEvent = (i: number) => {
+        saveEvents(events.filter((_, idx) => idx !== i));
+    };
+
     return (
-        <Box>
+        <Stack spacing={1.5}>
             {/* Add new event */}
-            <Stack direction="row" spacing={1} mb={2}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    value={newEvent}
+                    onChange={(e) => setNewEvent(e.target.value)}
                     placeholder="Add event..."
+                    onKeyDown={(e) => e.key === "Enter" && addEvent()}
                     style={{
                         flex: 1,
                         padding: "6px 10px",
@@ -232,58 +233,65 @@ function UpcomingEvents() {
                         border: "1px solid #ccc",
                     }}
                 />
-                <Button variant="contained" size="small" onClick={addEvent}>
-                    Add
-                </Button>
-            </Stack>
+                <IconButton onClick={addEvent} size="small">
+                    <Add fontSize="small" />
+                </IconButton>
+            </Box>
 
             {/* Events list */}
-            <Stack spacing={1}>
-                {events.map((ev, i) => (
-                    <Box
-                        key={i}
-                        sx={{
-                            p: 1,
-                            borderRadius: 1,
-                            bgcolor: "rgba(0,0,0,0.04)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 1,
-                        }}
+            {events.map((ev, i) => (
+                <Box
+                    key={i}
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1,
+                        borderRadius: 1,
+                        bgcolor: "rgba(0,0,0,0.03)",
+                        "&:hover .event-actions": { opacity: 1 },
+                    }}
+                >
+                    {editingIndex === i ? (
+                        <input
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            onBlur={finishEditing}
+                            onKeyDown={(e) => e.key === "Enter" && finishEditing()}
+                            autoFocus
+                            style={{
+                                flex: 1,
+                                padding: "4px 8px",
+                                borderRadius: "6px",
+                                border: "1px solid #bbb",
+                            }}
+                        />
+                    ) : (
+                        <Typography
+                            sx={{ flex: 1, cursor: "pointer" }}
+                            onClick={() => startEditing(i)}
+                        >
+                            {ev}
+                        </Typography>
+                    )}
+
+                    {/* Hover actions */}
+                    <Stack
+                        direction="row"
+                        spacing={0.5}
+                        className="event-actions"
+                        sx={{ opacity: 0, transition: "opacity 0.2s" }}
                     >
-                        {editingIndex === i ? (
-                            <input
-                                value={editingValue}
-                                onChange={(e) => setEditingValue(e.target.value)}
-                                style={{
-                                    flex: 1,
-                                    padding: "4px 8px",
-                                    borderRadius: "6px",
-                                    border: "1px solid #bbb",
-                                }}
-                            />
-                        ) : (
-                            <Typography sx={{ flex: 1 }}>{ev}</Typography>
-                        )}
-
-                        {editingIndex === i ? (
-                            <Button size="small" onClick={saveEdit}>
-                                Save
-                            </Button>
-                        ) : (
-                            <Button size="small" onClick={() => startEditing(i)}>
-                                Edit
-                            </Button>
-                        )}
-
-                        <Button size="small" color="error" onClick={() => deleteEvent(i)}>
-                            Delete
-                        </Button>
-                    </Box>
-                ))}
-            </Stack>
-        </Box>
+                        <IconButton size="small" onClick={() => startEditing(i)}>
+                            <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small" onClick={() => deleteEvent(i)}>
+                            <DeleteIcon fontSize="small" />
+                        </IconButton>
+                    </Stack>
+                </Box>
+            ))}
+        </Stack>
     );
 }
 
@@ -317,13 +325,148 @@ function RecentPhotos({ entries }: { entries: JournalEntry[] }) {
     );
 }
 
-export default function TeacherDashboard() {
-    const { token } = useAuth();
+function TeacherDailyJournalFeed({
+                                     entries,
+                                     loading,
+                                     error,
+                                 }: {
+    entries: JournalEntry[];
+    loading: boolean;
+    error: string | null;
+}) {
+    const getTimelineLabel = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+        });
+    };
 
+    return (
+        <Paper variant="outlined" sx={{ p: 2.5 }}>
+            <Stack spacing={2}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Typography variant="h6">Daily Journal Feed</Typography>
+
+                    <Button
+                        component={Link}
+                        href="/teacher/journal/list"
+                        variant="outlined"
+                        size="small"
+                        endIcon={<VisibilityOutlinedIcon fontSize="small" />}
+                        sx={{ textTransform: "none", fontWeight: 500, fontSize: "0.875rem" }}
+                    >
+                        View All
+                    </Button>
+                </Stack>
+
+                {loading && (
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <CircularProgress size={18} />
+                        <Typography color="text.secondary">Loading timeline...</Typography>
+                    </Stack>
+                )}
+
+                {error && <Typography color="error.main">{error}</Typography>}
+
+                {!loading && !error && entries.length === 0 && (
+                    <Typography color="text.secondary">
+                        No journal entries yet. New updates will appear here.
+                    </Typography>
+                )}
+
+                {!loading && !error && entries.length > 0 && (
+                    <Stack spacing={0}>
+                        {entries.map((entry, index) => (
+                            <Box key={entry.id} sx={{ display: "flex", gap: 1.5, py: 2 }}>
+                                <Stack alignItems="center" sx={{ minWidth: 28 }}>
+                                    <CheckCircleIcon color="primary" fontSize="small" />
+                                    {index < entries.length - 1 && (
+                                        <Box
+                                            sx={{
+                                                width: 2,
+                                                flex: 1,
+                                                bgcolor: "primary.main",
+                                                opacity: 0.45,
+                                                mt: 0.75,
+                                                minHeight: 24,
+                                            }}
+                                        />
+                                    )}
+                                </Stack>
+
+                                <Stack spacing={0.5} sx={{ flex: 1 }}>
+                                    <Typography fontWeight={600}>{entry.summary}</Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {entry.milestones}
+                                    </Typography>
+                                </Stack>
+
+                                <Stack alignItems="flex-end" spacing={0.75}>
+                                    <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        sx={{ whiteSpace: "nowrap" }}
+                                    >
+                                        {getTimelineLabel(entry.date)}
+                                    </Typography>
+
+                                    <Button
+                                        component={Link}
+                                        href={`/teacher/journal/${entry.id}`}
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ minWidth: "auto", px: 1, minHeight: 28 }}
+                                        aria-label="Open journal entry"
+                                    >
+                                        <VisibilityOutlinedIcon fontSize="small" />
+                                    </Button>
+                                </Stack>
+                            </Box>
+                        ))}
+                    </Stack>
+                )}
+            </Stack>
+        </Paper>
+    );
+}
+
+export default function TeacherDashboard() {
+    const { token, userId } = useAuth();
+
+    const [teacherName, setTeacherName] = useState("Teacher");
     const [entries, setEntries] = useState<JournalEntry[]>([]);
     const [childrenCount, setChildrenCount] = useState<number>(0);
     const [loading, setLoading] = useState(true);
 
+    /* Load teacher name */
+    useEffect(() => {
+        if (!token || !userId) return;
+
+        let isMounted = true;
+
+        const loadTeacherName = async () => {
+            try {
+                const teachers = await getUserOptionsByRole(token, "TEACHER");
+                if (!isMounted) return;
+
+                const currentTeacher = teachers.find((t) => t.id === userId);
+                const resolvedName = currentTeacher?.fullName?.trim();
+
+                setTeacherName(resolvedName && resolvedName.length > 0 ? resolvedName : "Teacher");
+            } catch {
+                // we are doing nothing with the error here since we have a fallback name
+            }
+        };
+
+        void loadTeacherName();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [token, userId]);
+
+    /* Load journal + children */
     useEffect(() => {
         if (!token) return;
 
@@ -331,15 +474,12 @@ export default function TeacherDashboard() {
 
         Promise.all([
             fetch(`${API_URL}/api/teacher/journal`, { headers }),
-            fetch(`${API_URL}/api/v1/children/class-records`, { headers }),
+            fetch(`${API_URL}/api/teacher/group/children`, { headers }),
         ])
             .then(async ([journalRes, childrenRes]) => {
-
-                // save parse journal
                 const journalText = await journalRes.text();
                 const journalData = journalText ? JSON.parse(journalText) : [];
 
-                // save parse children
                 const childrenText = await childrenRes.text();
                 const childrenData = childrenText ? JSON.parse(childrenText) : [];
 
@@ -349,9 +489,6 @@ export default function TeacherDashboard() {
             .finally(() => setLoading(false));
     }, [token]);
 
-
-    const recent = entries.slice(0, 3);
-
     return (
         <Paper sx={{ p: 4, borderRadius: 2 }}>
             <Stack spacing={4}>
@@ -359,10 +496,10 @@ export default function TeacherDashboard() {
                 {/* Header */}
                 <Box>
                     <Typography variant="h4" fontWeight={700}>
-                        Teacher Dashboard
+                        Welcome, {teacherName}
                     </Typography>
                     <Typography color="text.secondary">
-                        Welcome! Choose an action to get started.
+                        Here is your workspace for today.
                     </Typography>
                 </Box>
 
@@ -371,68 +508,7 @@ export default function TeacherDashboard() {
                     Your workspace
                 </Typography>
 
-                {/* Stats Overview */}
-                <Box
-                    sx={{
-                        display: "flex",
-                        flexDirection: { xs: "column", sm: "row" },
-                        gap: 2,
-                    }}
-                >
-                    <Card sx={{ flex: 1, borderRadius: 2 }}>
-                        <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                            <Box
-                                sx={{
-                                    bgcolor: "primary.light",
-                                    color: "primary.contrastText",
-                                    borderRadius: 2,
-                                    p: 1.5,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <GroupIcon />
-                            </Box>
-                            <Box>
-                                <Typography variant="h5" fontWeight={700}>
-                                    {loading ? "…" : childrenCount}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Children in Group
-                                </Typography>
-                            </Box>
-                        </CardContent>
-                    </Card>
-
-                    <Card sx={{ flex: 1, borderRadius: 2 }}>
-                        <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                            <Box
-                                sx={{
-                                    bgcolor: "secondary.light",
-                                    color: "secondary.contrastText",
-                                    borderRadius: 2,
-                                    p: 1.5,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <MenuBookIcon />
-                            </Box>
-                            <Box>
-                                <Typography variant="h5" fontWeight={700}>
-                                    {loading ? "…" : entries.length}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Journal Entries
-                                </Typography>
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Box>
-
-                {/* Notes + Events in two columns */}
+                {/* Notes + Events */}
                 <Box
                     sx={{
                         display: "flex",
@@ -441,14 +517,12 @@ export default function TeacherDashboard() {
                         width: "100%",
                     }}
                 >
-                    {/* Left column */}
                     <Box sx={{ flex: 1 }}>
                         <CollapsibleCard title="Notes for Teacher">
                             <TeacherNotes />
                         </CollapsibleCard>
                     </Box>
 
-                    {/* Vertical divider */}
                     <Box
                         sx={{
                             width: "1px",
@@ -457,7 +531,6 @@ export default function TeacherDashboard() {
                         }}
                     />
 
-                    {/* Right column */}
                     <Box sx={{ flex: 1 }}>
                         <CollapsibleCard title="Upcoming Events">
                             <UpcomingEvents />
@@ -468,51 +541,12 @@ export default function TeacherDashboard() {
                 {/* Recent Photos */}
                 <RecentPhotos entries={entries} />
 
-                {/* Recent Entries */}
-                <Box>
-                    <Typography variant="h6" fontWeight={600} mb={2}>
-                        Recent Journal Entries
-                    </Typography>
-
-                    {loading && <Typography color="text.secondary">Loading...</Typography>}
-
-                    {!loading && recent.length === 0 && (
-                        <Typography color="text.secondary">No entries yet.</Typography>
-                    )}
-
-                    {!loading && recent.length > 0 && (
-                        <Stack spacing={2}>
-                            {recent.map((entry) => (
-                                <Card key={entry.id} sx={{ borderRadius: 2 }}>
-                                    <CardContent>
-                                        <Typography variant="subtitle2" color="text.secondary">
-                                            {entry.date}
-                                        </Typography>
-
-                                        <Typography
-                                            variant="subtitle1"
-                                            fontWeight={600}
-                                            sx={{ mt: 1, mb: 1 }}>
-                                            {entry.summary.length > 60
-                                                ? entry.summary.slice(0, 60) + "..."
-                                                : entry.summary}
-                                        </Typography>
-
-                                        <Typography color="text.secondary" variant="body2" mb={2}>
-                                            📸 {entry.photoUrls?.length ?? 0} photos
-                                        </Typography>
-
-                                        <Link href={`/teacher/journal/${entry.id}`} passHref>
-                                            <Button variant="outlined" size="small">
-                                                View Entry
-                                            </Button>
-                                        </Link>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </Stack>
-                    )}
-                </Box>
+                {/* Daily Journal Feed */}
+                <TeacherDailyJournalFeed
+                    entries={entries}
+                    loading={loading}
+                    error={null}
+                />
             </Stack>
         </Paper>
     );
