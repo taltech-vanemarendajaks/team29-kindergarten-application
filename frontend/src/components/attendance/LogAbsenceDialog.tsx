@@ -80,11 +80,19 @@ export default function LogAbsenceDialog({
     );
     const minIso = useMemo(() => toIsoDate(monthStart), [monthStart]);
     const maxIso = useMemo(() => toIsoDate(monthEnd), [monthEnd]);
+    
+    // Parents can only select current and future dates
+    const parentMinIso = useMemo(() => toIsoDate(new Date()), []);
 
     const resolveInitialDate = (): string => {
         const fallback = toIsoDate(new Date());
         const candidate = initialDate ?? fallback;
-        return clampDateToMonth(candidate, monthStart, monthEnd);
+        const clamped = clampDateToMonth(candidate, monthStart, monthEnd);
+        // For parents, ensure the date is not in the past
+        if (!isTeacher && clamped < parentMinIso) {
+            return parentMinIso;
+        }
+        return clamped;
     };
 
     const [date, setDate] = useState<string>(resolveInitialDate);
@@ -99,9 +107,11 @@ export default function LogAbsenceDialog({
         }
         const baseIso = initialDate ?? toIsoDate(new Date());
         const nextDate = clampDateToMonth(baseIso, monthStart, monthEnd);
-        setDate(nextDate);
+        // For parents, ensure the date is not in the past
+        const finalDate = (!isTeacher && nextDate < parentMinIso) ? parentMinIso : nextDate;
+        setDate(finalDate);
         setValidationError(null);
-    }, [open, initialDate, monthStart, monthEnd]);
+    }, [open, initialDate, monthStart, monthEnd, isTeacher, parentMinIso]);
 
     useEffect(() => {
         if (!open) {
@@ -138,15 +148,21 @@ export default function LogAbsenceDialog({
             return;
         }
 
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-            setValidationError("Please choose a valid date.");
-            return;
-        }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        setValidationError("Please choose a valid date.");
+        return;
+    }
 
-        if (date < minIso || date > maxIso) {
-            setValidationError("Date must be within the selected month.");
-            return;
-        }
+    if (date < minIso || date > maxIso) {
+        setValidationError("Date must be within the selected month.");
+        return;
+    }
+
+    // Parents can only mark current and future dates
+    if (!isTeacher && date < parentMinIso) {
+        setValidationError("Parents can only mark attendance for current and future dates.");
+        return;
+    }
 
         setValidationError(null);
 
@@ -260,15 +276,18 @@ export default function LogAbsenceDialog({
                         : "Record an absence for this child within the currently viewed month."}
                 </Typography>
 
-                <TextField
-                    label="Date"
-                    type="date"
-                    value={date}
-                    onChange={(event) => setDate(event.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    inputProps={{ min: minIso, max: maxIso }}
-                    fullWidth
-                />
+        <TextField
+            label="Date"
+            type="date"
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ 
+                min: isTeacher ? minIso : (minIso > parentMinIso ? minIso : parentMinIso),
+                max: maxIso 
+            }}
+            fullWidth
+        />
 
                 <FormControl fullWidth>
                     <InputLabel id="absence-status-label">Status</InputLabel>
