@@ -4,7 +4,9 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import com.team29.kindergarten.modules.user.entity.User;
 import com.team29.kindergarten.modules.user.repository.UserRepository;
@@ -73,6 +75,38 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                     }
                 }
             }
+            if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+                String destination = accessor.getDestination();
+
+
+                if (!destination.startsWith("/topic/tenant/")) {
+                    throw new AccessDeniedException("Invalid topic");
+}
+
+                Authentication auth = (Authentication) accessor.getUser();
+
+                if (auth == null || destination == null) {
+                    throw new AccessDeniedException("Unauthorized subscription");
+                }
+
+                // Extract tenantId from destination
+                // e.g. /topic/tenant/1/messages
+                String[] parts = destination.split("/");
+                if (parts.length < 4) {
+                    throw new AccessDeniedException("Invalid destination");
+                }
+
+                String tenantIdFromPath = parts[3];
+
+                // Extract tenantId from authenticated user (adjust to your setup)
+                UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
+                String userTenantId = String.valueOf(principal.getTenantId());
+
+                if (!tenantIdFromPath.equals(userTenantId)) {
+                    throw new AccessDeniedException("Forbidden: tenant mismatch");
+                }
+            }
+
         }
 
         return message;
