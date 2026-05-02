@@ -79,6 +79,7 @@ public class AttendanceService {
     }
 
     public AttendanceResponseDto create(AttendanceRequestDto request, Long tenantId, User user) {
+        assertParentCannotMarkPastDates(user, request.getDate());
         assertParentCannotSetPresent(user, request.getStatus());
         Child child = childService.getChild(request.getChildId(), tenantId, user);
         Optional<Attendance> existingAttendance = attendanceRepository.findAnyByTenantIdAndChildIdAndDate(
@@ -103,6 +104,7 @@ public class AttendanceService {
     }
 
     public AttendanceResponseDto update(Long id, AttendanceRequestDto request, Long tenantId, User user) {
+        assertParentCannotMarkPastDates(user, request.getDate());
         assertParentCannotSetPresent(user, request.getStatus());
         Attendance attendance = getAttendance(id, tenantId);
         assertParentCannotEditPresentRecord(user, attendance);
@@ -136,6 +138,12 @@ public class AttendanceService {
     private void assertParentCannotSetPresent(User user, AttendanceStatus status) {
         if (status == AttendanceStatus.PRESENT && isParentOnly(user)) {
             throw new IllegalArgumentException("Parents cannot set attendance status to present.");
+        }
+    }
+
+    private void assertParentCannotMarkPastDates(User user, LocalDate date) {
+        if (isParentOnly(user) && date.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Parents can only mark attendance for current and future dates.");
         }
     }
 

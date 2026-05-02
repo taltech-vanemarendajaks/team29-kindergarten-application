@@ -163,5 +163,15 @@ public class AttendanceController {
         Long tenantId = TenantContext.getTenantId();
         attendanceService.delete(id, tenantId, user);
         return ResponseEntity.noContent().build();
-    }
+    }@GetMapping("/summary")
+@Operation(summary = "Get attendance summary for a tenant")
+@ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Attendance summary returned successfully")
+})
+     public ResponseEntity<AttendanceSummaryDto> getSummary(
+                @AuthenticationPrincipal User user
+        ) {
+        Long tenantId = TenantContext.getTenantId();
+        return ResponseEntity.ok(attendanceService.getAttendanceSummary(tenantId));
+        }
 }
