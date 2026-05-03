@@ -2,16 +2,17 @@
 
 import Link from "next/link";
 import {
-    AppBar,
-    Box,
-    Button,
-    IconButton,
-    Stack,
-    Toolbar,
-    Typography,
-    Menu,
-    MenuItem,
+  AppBar,
+  Box,
+  Button,
+  IconButton,
+  Stack,
+  Toolbar,
+  Typography,
+  Menu,
+  MenuItem,
 } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 import type { NavItem } from "./navigation";
 import { useAuth } from "@/src/context/AuthContext";
 import LogoutButton from "@/src/components/LogoutButton";
@@ -31,15 +32,15 @@ export default function Header({ title, navItems, onOpenDrawer }: HeaderProps) {
     return (
         <AppBar position="static">
             <Toolbar sx={{ gap: 2 }}>
-                <IconButton
-                    aria-label="open navigation menu"
-                    color="inherit"
-                    edge="start"
-                    onClick={onOpenDrawer}
-                    sx={{ display: { xs: "inline-flex", md: "none" } }}
-                >
-                    <Typography variant="button">Menu</Typography>
-                </IconButton>
+      <IconButton
+        aria-label="open navigation menu"
+        color="inherit"
+        edge="start"
+        onClick={onOpenDrawer}
+        sx={{ display: { xs: "inline-flex", md: "none" } }}
+      >
+        <MenuIcon />
+      </IconButton>
 
                 <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
                     {title}

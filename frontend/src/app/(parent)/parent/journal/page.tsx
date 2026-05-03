@@ -63,9 +63,9 @@ export default function ParentJournalFeed() {
                     Daily Journal Feed
                 </Typography>
 
-                <Stack spacing={3}>
-                    {[1, 2, 3].map((i) => (
-                        <Card key={i} sx={{ display: "flex", gap: 2, p: 2 }}>
+<Stack spacing={3}>
+ {[1, 2, 3].map((i) => (
+ <Card key={i} sx={{ display: "flex", gap: 2, p: 2, boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px" }}>
                             <Skeleton variant="rectangular" width={120} height={120} />
                             <CardContent sx={{ flex: 1 }}>
                                 <Skeleton width="40%" />
@@ -137,13 +137,13 @@ export default function ParentJournalFeed() {
 
                         <Stack spacing={3}>
                             {items.map((entry) => (
-                                <motion.div
-                                    key={entry.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                >
-                                    <Card sx={{ p: 2 }}>
+<motion.div
+ key={entry.id}
+ initial={{ opacity: 0, y: 10 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ duration: 0.3 }}
+ >
+<Card sx={{ p: 2, boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px" }}>
                                         {entry.photoUrls?.length > 0 && (
                                             <ImageList
                                                 cols={entry.photoUrls.length > 1 ? 2 : 1}

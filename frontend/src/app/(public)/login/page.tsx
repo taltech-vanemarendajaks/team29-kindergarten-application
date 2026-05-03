@@ -41,11 +41,11 @@ export default function LoginPage() {
     };
 
 
-    return (
-        <Paper sx={{ maxWidth: 420, mx: "auto", mt: 8, p: 3 }}>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <Stack spacing={2}>
-                    <Typography variant="h4">Login</Typography>
+  return (
+    <Paper sx={{ maxWidth: 500, mx: "auto", mt: 8, p: 3 }}>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Stack spacing={2}>
+          <Typography variant="h4" textAlign="center">Login</Typography>
 
                     <TextField
                         label="Email"

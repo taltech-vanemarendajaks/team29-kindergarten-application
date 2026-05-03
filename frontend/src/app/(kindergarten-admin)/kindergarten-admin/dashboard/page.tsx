@@ -5,17 +5,20 @@ import { useRouter } from "next/navigation";
 import { DashboardStats } from "@/src/modules/kindergarten-admin/model/dashboardStats";
 import { adminQuickActions } from "@/src/components/navigation/adminNav";
 import {
-  Paper,
-  Typography,
-  Stack,
-  Card,
-  CardContent,
-  Box,
-  Button,
+ Paper,
+ Typography,
+ Stack,
+ Card,
+ CardContent,
+ Box,
+ Button,
 } from "@mui/material";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { useAuth } from "@/src/context/AuthContext";
 import { API_URL } from "@/src/services/api";
+import GroupsIcon from "@mui/icons-material/Groups";
+import SchoolIcon from "@mui/icons-material/School";
+import PersonIcon from "@mui/icons-material/Person";
 
 const COLOURS = ["#4caf50", "#f44336", "#ff9800"];
 
@@ -55,17 +58,9 @@ export default function KindergartenAdminDashboardPage() {
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [token]);
+ }, [token]);
 
-  const statCards = stats
-    ? [
-        { label: "Children", value: stats.children },
-        { label: "Groups", value: stats.groups },
-        { label: "Teachers", value: stats.teachers },
-      ]
-    : [];
-
-  const total = stats
+ const total = stats
     ? stats.attendance.present + stats.attendance.absent + stats.attendance.sick
     : 0;
 
@@ -109,29 +104,107 @@ export default function KindergartenAdminDashboardPage() {
       {loading && <Typography>Loading...</Typography>}
       {error && <Typography color="error">{error}</Typography>}
 
-      {stats && (
-        <Stack spacing={4}>
-          {/* Stat Cards + Quick Actions */}
-          <Stack
-            direction="row"
-            spacing={2}
-            alignItems="stretch"
-            flexWrap="wrap"
-          >
-            <Stack direction="row" spacing={2} flexWrap="wrap" flex={1}>
-              {statCards.map((card) => (
-                <Card key={card.label} sx={{ minWidth: 140, flex: 1 }}>
-                  <CardContent>
-                    <Typography variant="h3" fontWeight={700} color="primary">
-                      {card.value}
-                    </Typography>
-                    <Typography color="text.secondary">{card.label}</Typography>
-                  </CardContent>
-                </Card>
-              ))}
-            </Stack>
+ {stats && (
+ <Stack spacing={4}>
+ {/* Stat Cards + Quick Actions */}
+ <Stack
+ direction={{ xs: "column", md: "row" }}
+ spacing={2}
+ alignItems="stretch"
+ >
+ <Stack
+ direction={{ xs: "column", md: "row" }}
+ spacing={2}
+ flexWrap="wrap"
+ flex={{ xs: "100%", md: 1 }}
+ >
+ {/* Children Card */}
+ <Card variant="outlined" sx={{ flex: 1, borderRadius: 2 }}>
+ <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+ <Box
+ sx={{
+ bgcolor: "success.main",
+ color: "common.white",
+ borderRadius: 2,
+ p: 1.5,
+ display: "flex",
+ alignItems: "center",
+ justifyContent: "center",
+ }}
+ >
+ <GroupsIcon />
+ </Box>
+ <Box>
+ <Typography variant="h5" fontWeight={700}>
+ {stats.children}
+ </Typography>
+ <Typography variant="body2" color="text.secondary">
+ Children in Group
+ </Typography>
+ </Box>
+ </CardContent>
+ </Card>
 
-            <Card sx={{ minWidth: 180 }}>
+ {/* Groups Card */}
+ <Card variant="outlined" sx={{ flex: 1, borderRadius: 2 }}>
+ <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+ <Box
+ sx={{
+ bgcolor: "warning.light",
+ borderRadius: 2,
+ p: 1.5,
+ display: "flex",
+ alignItems: "center",
+ justifyContent: "center",
+ }}
+ >
+ <SchoolIcon sx={{ color: "common.black" }} />
+ </Box>
+ <Box>
+ <Typography variant="h5" fontWeight={700}>
+ {stats.groups}
+ </Typography>
+ <Typography variant="body2" color="text.secondary">
+ Groups
+ </Typography>
+ </Box>
+ </CardContent>
+ </Card>
+
+ {/* Teachers Card */}
+ <Card variant="outlined" sx={{ flex: 1, borderRadius: 2 }}>
+ <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+ <Box
+ sx={{
+ bgcolor: "info.light",
+ borderRadius: 2,
+ p: 1.5,
+ display: "flex",
+ alignItems: "center",
+ justifyContent: "center",
+ }}
+ >
+ <PersonIcon sx={{ color: "common.black" }} />
+ </Box>
+ <Box>
+ <Typography variant="h5" fontWeight={700}>
+ {stats.teachers}
+ </Typography>
+ <Typography variant="body2" color="text.secondary">
+ Teachers
+ </Typography>
+ </Box>
+ </CardContent>
+ </Card>
+ </Stack>
+
+ <Card
+ variant="outlined"
+ sx={{
+ flex: { xs: "100%", md: "0 0 auto" },
+ minWidth: 180,
+ }}
+ >
               <CardContent>
                 <Typography variant="subtitle1" fontWeight={700} mb={1.5}>
                   Quick Actions
@@ -168,7 +241,7 @@ export default function KindergartenAdminDashboardPage() {
               </Typography>
             )}
 
-            <Stack direction="row" alignItems="center" spacing={4}>
+            <Stack direction={{ xs: "column", md: "row" }} alignItems={{ xs: "flex-start", md: "center" }} spacing={4}>
               <Box sx={{ position: "relative", width: 220, height: 220 }}>
                 <PieChart width={220} height={220}>
                   <Pie
