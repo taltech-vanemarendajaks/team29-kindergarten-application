@@ -2,13 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import {Paper, Typography, Stack, Box, Button, ImageList, ImageListItem} from "@mui/material";
+import {
+    Paper,
+    Typography,
+    Box,
+    Button,
+    ImageList,
+    ImageListItem
+} from "@mui/material";
 import { useAuth } from "@/src/context/AuthContext";
-import {getDailyJournalEntry} from "@/src/modules/teachers/api/callDailyJournalEntry";
+import { getDailyJournalEntry } from "@/src/modules/teachers/api/callDailyJournalEntry";
 import Link from "next/link";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import {API_URL} from "@/src/services/api";
-import {DailyJournalEntry} from "@/src/modules/teachers/model/dailyJournalEntry";
+import EditIcon from "@mui/icons-material/Edit";
+import { API_URL } from "@/src/services/api";
+import { DailyJournalEntry } from "@/src/modules/teachers/model/dailyJournalEntry";
 
 export default function JournalEntryPage() {
 
@@ -29,23 +37,49 @@ export default function JournalEntryPage() {
 
     return (
         <Paper sx={{ p: 3, maxWidth: 700, mx: "auto" }}>
-            <Button
-                component={Link}
-                href="/teacher/journal/list"
-                variant="text"
-                startIcon={<ArrowBackIcon />}
+
+            {/* Back + Edit */}
+            <Box
                 sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                     mb: 2,
-                    textTransform: "none",
-                    fontWeight: 500,
-                    color: "primary.main",
-                    "&:hover": {
-                        backgroundColor: "rgba(25, 118, 210, 0.08)",
-                    },
-                }}
-            >
-                Back to feed
-            </Button>
+                }}>
+                {/* Back to feed */}
+                <Button
+                    component={Link}
+                    href="/teacher/journal/list"
+                    variant="text"
+                    startIcon={<ArrowBackIcon />}
+                    sx={{
+                        textTransform: "none",
+                        fontWeight: 500,
+                        color: "primary.main",
+                        "&:hover": {
+                            backgroundColor: "rgba(25, 118, 210, 0.08)",
+                        },
+                    }}>
+                    Back to feed
+                </Button>
+
+                {/* Edit Entry */}
+                <Button
+                    component={Link}
+                    href={`/teacher/journal/edit/${id}`}
+                    variant="text"
+                    startIcon={<EditIcon />}
+                    sx={{
+                        textTransform: "none",
+                        fontWeight: 500,
+                        color: "primary.main",
+                        "&:hover": {
+                            backgroundColor: "rgba(25, 118, 210, 0.08)",
+                        },
+                    }}>
+                    Edit Entry
+                </Button>
+            </Box>
 
             <Typography variant="h4" sx={{ mb: 2 }}>
                 Daily Journal Entry
@@ -68,8 +102,7 @@ export default function JournalEntryPage() {
             <ImageList
                 cols={entry.photoUrls.length > 1 ? 2 : 1}
                 rowHeight={180}
-                sx={{ width: "100%", mb: 3 }}
-            >
+                sx={{ width: "100%", mb: 3 }}>
                 {entry.photoUrls.map((url: string, idx: number) => (
                     <ImageListItem key={idx}>
                         <img
