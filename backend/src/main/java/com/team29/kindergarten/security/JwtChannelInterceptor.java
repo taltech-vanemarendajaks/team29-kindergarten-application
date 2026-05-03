@@ -5,21 +5,18 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-import com.team29.kindergarten.modules.user.entity.User;
-import com.team29.kindergarten.modules.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 
-import java.util.List;
+
 
 @Component
-@RequiredArgsConstructor
 public class JwtChannelInterceptor implements ChannelInterceptor {
+public final JwtAuthenticationFactory authFactory;
 
-    private final JwtService jwtService;
-    private final UserRepository userRepository;
+ public JwtChannelInterceptor(JwtAuthenticationFactory authFactory) {
+        this.authFactory = authFactory;
+    }
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -33,82 +30,83 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
 
             String authHeader = accessor.getFirstNativeHeader("Authorization");
 
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                System.out.println("No valid Authorization header found in WebSocket CONNECT");
+                throw new AccessDeniedException("Missing token");}
+             
+            String token = authHeader.substring(7);
 
-                String email = jwtService.extractEmail(token);
+            var auth = authFactory.createAuthentication(token);
 
-                if (email != null) {
-                    User user = userRepository.findByEmail(email).orElse(null);
-
-                    if (user != null && jwtService.isTokenValid(token, user)) {
-
-                        List<String> roles = jwtService.extractRoles(token);
-
-                        var authorities = roles.stream()
-                                .map(role -> "ROLE_" + role)
-                                .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
-                                .toList();
-
-                         // extract fields from JWT
-                        Long userId = jwtService.extractUserId(token);
-                        Long tenantId = jwtService.extractTenantId(token);
-                        String username = jwtService.extractEmail(token);
-
-                        UserPrincipal principal = new UserPrincipal(
-                            userId,
-                            tenantId,
-                            username,
-                            authorities
-                     );
-
-                        UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(
-                                principal,
-                                null,
-                                principal.getAuthorities()
-                            );
-
-                        // ✅ THIS replaces SecurityContextHolder
-                        accessor.setUser(auth);
-
-                    }
-                }
+            if (auth != null) {
+                accessor.setUser(auth);
+                    // need to store auth in session attributes for later retrieval in validateTenantAccess
+                accessor.getSessionAttributes().put("SPRING.AUTH", auth);
+                System.out.println("Destination: " + accessor.getDestination());
+                System.out.println("User: " + accessor.getUser());
             }
+
+
+        } else if (accessor.getCommand() == StompCommand.SUBSCRIBE) {
+
+             System.out.println("SUBSCRIBE received");
+             System.out.println("Destination: " + accessor.getDestination());
+            
             if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
-                String destination = accessor.getDestination();
-
-
-                if (!destination.startsWith("/topic/tenant/")) {
-                    throw new AccessDeniedException("Invalid topic");
-}
-
-                Authentication auth = (Authentication) accessor.getUser();
-
-                if (auth == null || destination == null) {
-                    throw new AccessDeniedException("Unauthorized subscription");
+                    try {
+                            validateTenantAccess(accessor);
+                        } catch (Exception e) {
+                           // e.printStackTrace(); 
+                            throw e;
+                        }
                 }
-
-                // Extract tenantId from destination
-                // e.g. /topic/tenant/1/messages
-                String[] parts = destination.split("/");
-                if (parts.length < 4) {
-                    throw new AccessDeniedException("Invalid destination");
-                }
-
-                String tenantIdFromPath = parts[3];
-
-                // Extract tenantId from authenticated user (adjust to your setup)
-                UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
-                String userTenantId = String.valueOf(principal.getTenantId());
-
-                if (!tenantIdFromPath.equals(userTenantId)) {
-                    throw new AccessDeniedException("Forbidden: tenant mismatch");
-                }
-            }
 
         }
 
         return message;
     }
+
+    private void validateTenantAccess(StompHeaderAccessor accessor) {
+        String destination = accessor.getDestination();
+
+        if (destination == null) {
+            destination = accessor.getFirstNativeHeader("destination");
+            System.out.println("Destination (resolved from native header): " + destination);            
+        }
+
+        if (destination == null) {
+                throw new AccessDeniedException("Missing destination");
+            }        
+
+        if (destination == null || !destination.startsWith("/topic/tenant/")) {
+                    
+            throw new AccessDeniedException("Invalid topic");
+        }
+
+        Authentication auth = (Authentication) accessor.getUser();
+
+        // restore auth if missing
+        if (auth == null) {
+            auth = (Authentication) accessor.getSessionAttributes().get("SPRING.AUTH");
+            accessor.setUser(auth);
+        }
+
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new AccessDeniedException("Unauthenticated");
+        }
+
+        String[] parts = destination.split("/");
+        if (parts.length < 4) {
+            throw new AccessDeniedException("Invalid destination");
+        }
+
+        String tenantIdFromPath = parts[3];
+
+        UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
+
+        if (!tenantIdFromPath.equals(String.valueOf(principal.getTenantId()))) {
+            throw new AccessDeniedException("Forbidden: tenant mismatch");
+        }
+    }
+
 }

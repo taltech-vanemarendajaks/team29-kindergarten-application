@@ -1,4 +1,3 @@
-// WebSocketInitializer.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -9,9 +8,19 @@ export default function WebSocketInitializer() {
   const { token, tenantId, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    if (!isAuthenticated || !token || !tenantId) return;
+    // CONNECT
+    if (isAuthenticated && token && tenantId) {
+      wsService.connect(token, tenantId);
+    } 
+    //  DISCONNECT (logout / token missing)
+    else {
+      wsService.disconnect();
+    }
 
-    wsService.connect(token, tenantId);
+    // Cleanup (important on unmount / re-run)
+    return () => {
+      wsService.disconnect();
+    };
   }, [isAuthenticated, token, tenantId]);
 
   return null;

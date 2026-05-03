@@ -10,7 +10,7 @@ export function getStompClient(token: string) {
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },
-      reconnectDelay: 5000,
+      reconnectDelay: 0,
     });
   }
 
