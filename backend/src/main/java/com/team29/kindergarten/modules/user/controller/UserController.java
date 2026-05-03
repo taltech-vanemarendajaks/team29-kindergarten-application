@@ -47,12 +47,13 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Users returned successfully")
     })
     public ResponseEntity<PageResponseDto<UserResponseDto>> findUsersByRole(
-            @RequestParam RoleName role,
-            @ParameterObject @PageableDefault(size = 20, sort = "fullName") Pageable pageable
-    ) {
-        Long tenantId = TenantContext.getTenantId();
-        return ResponseEntity.ok(PageResponseDto.from(userService.findUsersByRole(tenantId, role, pageable)));
-    }
+        @RequestParam RoleName role,
+        @RequestParam(required = false) String search,
+        @ParameterObject @PageableDefault(size = 20, sort = "fullName") Pageable pageable
+) {
+    Long tenantId = TenantContext.getTenantId();
+    return ResponseEntity.ok(PageResponseDto.from(userService.findUsersByRole(tenantId, role, search, pageable)));
+}
 
     /**
      * Use this endpoint for select/dropdown options when the UI needs the full role-filtered list.

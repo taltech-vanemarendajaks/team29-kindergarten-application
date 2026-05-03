@@ -3,36 +3,52 @@ import type { PageResponse } from "@/src/shared/model/page";
 import type { User } from "../model/user";
 
 export async function getUsersByRole(
-    token: string,
-    role: string,
-    page: number,
-    size = 10,
+  token: string,
+  role: string,
+  page: number,
+  size = 10,
+  search?: string,
+  sortField = "fullName",
+  sortDirection = "asc",
 ): Promise<PageResponse<User>> {
-    const response = await fetch(`${API_URL}/api/v1/users?role=${role}&page=${page}&size=${size}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-        cache: "no-store",
-    });
+  const params = new URLSearchParams({
+    role,
+    page: String(page),
+    size: String(size),
+    sort: `${sortField},${sortDirection}`,
+  });
+  if (search && search.trim()) {
+    params.set("search", search.trim());
+  }
 
-    if (!response.ok) {
-        throw new Error("Failed to fetch users");
-    }
+  const response = await fetch(`${API_URL}/api/v1/users?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
 
-    return response.json();
+  if (!response.ok) {
+    throw new Error("Failed to fetch users");
+  }
+
+  return response.json();
 }
 
-export async function getUserOptionsByRole(token: string, role: string): Promise<User[]> {
-    const response = await fetch(`${API_URL}/api/v1/users/options?role=${role}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-        cache: "no-store",
-    });
+export async function getUserOptionsByRole(
+  token: string,
+  role: string,
+): Promise<User[]> {
+  const response = await fetch(`${API_URL}/api/v1/users/options?role=${role}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
 
-    if (!response.ok) {
-        throw new Error("Failed to fetch users");
-    }
+  if (!response.ok) {
+    throw new Error("Failed to fetch users");
+  }
 
-    return response.json();
+  return response.json();
 }

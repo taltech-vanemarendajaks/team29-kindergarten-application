@@ -14,6 +14,8 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 
     Page<Group> findAllByTenantId(Long tenantId, Pageable pageable);
 
+    Page<Group> findAllByTenantIdAndNameContainingIgnoreCase(Long tenantId, String name, Pageable pageable);
+
     List<Group> findAllByTenantIdOrderByNameAsc(Long tenantId);
 
     List<Group> findAllByTeacherUserIdInAndTenantId(List<Long> teacherUserIds, Long tenantId);

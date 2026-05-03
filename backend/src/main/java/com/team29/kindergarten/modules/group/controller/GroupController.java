@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.team29.kindergarten.tenant.TenantContext;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,16 +40,17 @@ public class GroupController {
 
     private final GroupService groupService;
 
-    @GetMapping
-    @Operation(summary = "List groups for a tenant")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Groups returned successfully")
-    })
-  public ResponseEntity<PageResponseDto<GroupResponseDto>> findAll(
+@GetMapping
+@Operation(summary = "List groups for a tenant")
+@ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Groups returned successfully")
+})
+public ResponseEntity<PageResponseDto<GroupResponseDto>> findAll(
+        @RequestParam(required = false) String search,
         @ParameterObject @PageableDefault(size = 20, sort = "name") Pageable pageable
 ) {
     Long tenantId = TenantContext.getTenantId();
-    return ResponseEntity.ok(PageResponseDto.from(groupService.findAll(tenantId, pageable)));
+    return ResponseEntity.ok(PageResponseDto.from(groupService.findAll(tenantId, search, pageable)));
 }
 
     @GetMapping("/options")

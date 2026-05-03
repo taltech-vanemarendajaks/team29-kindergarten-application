@@ -19,7 +19,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmailAndIdNot(String email, Long id);
 
-    Page<User> findDistinctByTenantIdAndRoles_NameOrderByFullNameAsc(Long tenantId, RoleName roleName, Pageable pageable);
+    Page<User> findDistinctByTenantIdAndRoles_Name(Long tenantId, RoleName roleName, Pageable pageable);
+
+    Page<User> findDistinctByTenantIdAndRoles_NameAndFullNameContainingIgnoreCase(
+    Long tenantId, RoleName roleName, String fullName, Pageable pageable);
 
     List<User> findDistinctByTenantIdAndRoles_NameOrderByFullNameAsc(Long tenantId, RoleName roleName);
 

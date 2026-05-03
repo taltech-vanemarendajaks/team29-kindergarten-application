@@ -77,7 +77,7 @@ export { default as ConfirmDialog } from "./confirm-dialog";
 export type { ConfirmDialogProps } from "./confirm-dialog";
 
 export { default as Table } from "./table";
-export type { TableProps, TableColumn } from "./table";
+export type { TableProps, TableColumn, SortDirection } from "./table";
 
 export { default as TableRowActions } from "./table-row-actions";
 export type { TableRowActionsProps } from "./table-row-actions";
