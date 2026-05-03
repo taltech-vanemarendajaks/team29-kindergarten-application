@@ -33,12 +33,17 @@ const drawerWidth = 280;
 export default function Drawer({ title, navItems, open, onClose }: DrawerProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, isAuthenticated } = useAuth();
 
   const handleLogout = () => {
     logout();
     router.push("/login");
   };
+
+  // Check if navItems contains a logout link
+  const hasLogoutItem = navItems.some(
+    item => "href" in item && item.href === "/logout"
+  );
 
   const toggle = (label: string) => {
     setOpenMenu((prev) => (prev === label ? null : label));
@@ -98,21 +103,23 @@ export default function Drawer({ title, navItems, open, onClose }: DrawerProps) 
             )}
       </List>
 
-      <Box sx={{ mt: "auto", pt: 2 }}>
-        <Divider />
-        <Button
-          fullWidth
-          onClick={handleLogout}
-          startIcon={<LogoutIcon />}
-          sx={{
-            mt: 2,
-            justifyContent: "flex-start",
-            px: 2,
-          }}
-        >
-          Logout
-        </Button>
-      </Box>
+      {isAuthenticated && (
+        <Box sx={{ mt: "auto", pt: 2 }}>
+          <Divider />
+          <Button
+            fullWidth
+            onClick={handleLogout}
+            startIcon={<LogoutIcon />}
+            sx={{
+              mt: 2,
+              justifyContent: "flex-start",
+              px: 2,
+            }}
+          >
+            Logout
+          </Button>
+        </Box>
+      )}
     </Box>
   </MuiDrawer>
 );
