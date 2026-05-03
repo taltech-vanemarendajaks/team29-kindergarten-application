@@ -36,7 +36,11 @@ out/
 ### VS Code ###
 .vscode/
 
+### Resources ###
 src/main/resources/.env.properties
 *.env
 *.env.*
 src/main/resources/.env
+
+### Photos uploading ###
+uploads
