@@ -1,32 +1,29 @@
 package com.team29.kindergarten.security;
 
-import com.team29.kindergarten.modules.user.entity.User;
-import com.team29.kindergarten.modules.user.repository.UserRepository;
 import com.team29.kindergarten.tenant.TenantContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
+
 
 @Component
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
-    private final UserRepository userRepository;
 
-    public JwtAuthenticationFilter(JwtService jwtService,
-                                   UserRepository userRepository) {
-        this.jwtService = jwtService;
-        this.userRepository = userRepository;
+    private final JwtAuthenticationFactory authFactory;
+
+    public JwtAuthenticationFilter(JwtAuthenticationFactory authFactory) {
+
+        this.authFactory = authFactory;
     }
 
     @Override
@@ -52,39 +49,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
 
-        String email;
-        try {
-            email = jwtService.extractEmail(token);
-        } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
+        UsernamePasswordAuthenticationToken authToken =
+                authFactory.createAuthentication(token);
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (authToken != null) {
 
-            User user = userRepository.findByEmail(email)
-                    .orElse(null);
+            // TenantContext duplicates SecurityContextHolder TODO: use CurrentUserService instead
+            UserPrincipal principal = (UserPrincipal) authToken.getPrincipal();
 
-            if (user != null && jwtService.isTokenValid(token, user)) {
-                List<String> roles = jwtService.extractRoles(token);
-
-                List<GrantedAuthority> authorities = roles.stream()
-                        .map(role -> (GrantedAuthority) new SimpleGrantedAuthority("ROLE_" + role))
-                        .toList();
-
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                user,
-                                null,
-                                authorities
-                        );
-
-                Long tenantId = jwtService.extractTenantId(token);
-                TenantContext.setTenantId(tenantId);
-
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (principal.getTenantId() != null) {
+                TenantContext.setTenantId(principal.getTenantId());
             }
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+        } else {
+            SecurityContextHolder.clearContext();
         }
+        
         try {
             filterChain.doFilter(request, response);
         } finally {

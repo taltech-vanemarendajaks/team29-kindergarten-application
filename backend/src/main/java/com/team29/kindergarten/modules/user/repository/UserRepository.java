@@ -47,4 +47,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     );
 
     Optional<User> findByIdAndTenantIdAndRoles_Name(Long id, Long tenantId, RoleName roleName);
+
+    List<User> findByIdIn(List<Long> ids);
 }

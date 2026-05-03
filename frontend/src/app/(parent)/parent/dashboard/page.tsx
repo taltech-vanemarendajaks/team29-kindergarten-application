@@ -16,10 +16,12 @@ import { useAuth } from "@/src/context/AuthContext";
 import { useChildrenState } from "@/src/context/ChildrenContext";
 import { childFormSchema, type ChildFormValues, createChild } from "@/src/modules/parents";
 import { ApiRequestError } from "@/src/shared/utils/apiRequestError";
+import { WsEvent } from "@/src/modules/announcements/types/ws";
 import { getParentJournalEntries } from "@/src/modules/parents/api/getJournalEntry";
 import type { DailyJournalEntry } from "@/src/modules/teachers/model/dailyJournalEntry";
 import { format } from "date-fns";
 import { getUserOptionsByRole } from "@/src/modules/users/api/getUsers";
+import { wsService } from "@/src/services/wsService";
 
 function getAgeLabel(birthDate: string | null): string {
     if (!birthDate) {
@@ -101,6 +103,7 @@ export default function ParentDashboardPage() {
         };
     }, [token, userId]);
 
+   
     const {
         register,
         handleSubmit,
@@ -122,11 +125,27 @@ export default function ParentDashboardPage() {
         reset();
     };
 
+    const [toastVersion, setToastVersion] = useState(0);
+
     const showFeedback = (message: string, severity: "success" | "error") => {
-        setSnackbarMessage(message);
-        setSnackbarSeverity(severity);
-        setSnackbarOpen(true);
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+    setToastVersion((v) => v + 1); // 🔥 forces re-render lifecycle
     };
+
+
+    useEffect(() => {
+    const unsubscribe = wsService.subscribe((msg) => {
+        console.log("EVENT:", msg);
+
+        if (msg.type === "ANNOUNCEMENT_CREATED") {
+        showFeedback(msg.payload.title, "success");
+        }
+    });
+
+    return unsubscribe;
+    }, []);
 
     const onSubmit = async (data: ChildFormValues) => {
         if (!token) {
@@ -399,13 +418,14 @@ export default function ParentDashboardPage() {
                 </Stack>
             </Dialog>
 
-            <Snackbar
-                open={snackbarOpen}
-                onClose={() => setSnackbarOpen(false)}
-                message={snackbarMessage}
-                severity={snackbarSeverity}
-                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-            />
+<Snackbar
+  key={toastVersion}
+  open={snackbarOpen}
+  onClose={() => setSnackbarOpen(false)}
+  message={snackbarMessage}
+  severity={snackbarSeverity}
+  anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+/>
         </Paper>
     );
 }
