@@ -48,11 +48,11 @@ export default function RegisterPage() {
         }
     };
 
-    return (
-        <Paper sx={{ maxWidth: 420, mx: "auto", mt: 8, p: 3 }}>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <Stack spacing={2}>
-                    <Typography variant="h4">Create Account</Typography>
+  return (
+    <Paper sx={{ maxWidth: 500, mx: "auto", mt: 8, p: 3 }}>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Stack spacing={2}>
+          <Typography variant="h4" textAlign="center">Create Account</Typography>
 
                     <TextField
                         fullWidth
